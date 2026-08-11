@@ -27,6 +27,19 @@ export async function fetchSourceHealth() {
   return data;
 }
 
+export async function fetchGeMHealth() {
+  const { data } = await safeJsonFetch(`${API_BASE}/gem/health`);
+  return data;
+}
+
+export async function fetchGeMRawScan(token) {
+  const { ok, data } = await safeJsonFetch(`${API_BASE}/admin/gem-raw-scan`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!ok) throw new Error(data.error || 'Failed to fetch raw scan diagnostic');
+  return data;
+}
+
 export async function loginUser(email, password) {
   const { ok, data } = await safeJsonFetch(`${API_BASE}/auth/login`, {
     method: 'POST',

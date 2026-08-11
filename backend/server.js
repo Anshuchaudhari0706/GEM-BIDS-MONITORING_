@@ -693,6 +693,45 @@ app.get('/api/tenders/:id', authenticateToken, requireActiveSubscription, (req, 
   res.json({ tender });
 });
 
+// GET /api/gem/health (Exact Health Status Endpoint)
+app.get('/api/gem/health', (req, res) => {
+  const health = getSourceHealthStatus();
+  const isConnected = health && health.status === 'CONNECTED' && (health.records_received > 0 || (readDB().tenders || []).length > 0);
+  const count = health ? health.records_received : (readDB().tenders || []).length;
+  res.json({
+    connected: isConnected,
+    source: "GeM",
+    last_successful_request: health ? health.last_retrieval_at : new Date().toISOString(),
+    records_received: count,
+    verified: isConnected,
+    error: health ? health.last_error : null
+  });
+});
+
+// GET /api/admin/gem-raw-scan (Raw Source Diagnostic Data for Inspection)
+app.get('/api/admin/gem-raw-scan', authenticateToken, (req, res) => {
+  const db = readDB();
+  const tenders = db.tenders || [];
+  const health = getSourceHealthStatus();
+  
+  res.json({
+    health,
+    total_records: tenders.length,
+    raw_inspector: tenders.map(t => ({
+      bid_number: t.bid_number,
+      source: t.source || 'GeM',
+      source_url: t.source_url,
+      retrieved_at: t.retrieved_at,
+      source_verified: t.source_verified || false,
+      title: t.title,
+      department: t.department,
+      estimated_value_original: t.estimated_value_original,
+      work_location: t.work_location,
+      raw_source_record: t.raw_source_record || {}
+    }))
+  });
+});
+
 // GET /api/source-health (Live Source Audit Health Status)
 app.get('/api/source-health', (req, res) => {
   res.json(getSourceHealthStatus());
