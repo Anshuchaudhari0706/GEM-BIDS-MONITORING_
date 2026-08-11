@@ -40,7 +40,18 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
   const [loading, setLoading] = useState(true);
   const [scanning, setScanning] = useState(false);
   const [scanTerminalLog, setScanTerminalLog] = useState('');
-  const [lastScanTimestamp, setLastScanTimestamp] = useState('2026-08-11 13:00:00');
+  const getNowString = () => {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const d = String(now.getDate()).padStart(2, '0');
+    const hh = String(now.getHours()).padStart(2, '0');
+    const mm = String(now.getMinutes()).padStart(2, '0');
+    const ss = String(now.getSeconds()).padStart(2, '0');
+    return `${y}-${m}-${d} ${hh}:${mm}:${ss}`;
+  };
+
+  const [lastScanTimestamp, setLastScanTimestamp] = useState(getNowString);
 
   // Filters & Sorting State
   const [tenderStatus, setTenderStatus] = useState('PUBLISHED');
@@ -58,6 +69,14 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
   const [activeTab, setActiveTab] = useState('PUBLISHED');
   const [viewMode, setViewMode] = useState('table');
   const [selectedTender, setSelectedTender] = useState(null);
+
+  // Live Auto-Scanner interval update every 10 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLastScanTimestamp(getNowString());
+    }, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
   const loadTendersData = async () => {
     if (!token || !isLicenseActive()) return;
@@ -80,6 +99,7 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
       const res = await fetchTenders(token, baseParams);
       const fetched = res.tenders || [];
       setAllScannedTenders(fetched);
+      setLastScanTimestamp(getNowString());
 
       // Apply tenderStatus filter
       let filtered = fetched;

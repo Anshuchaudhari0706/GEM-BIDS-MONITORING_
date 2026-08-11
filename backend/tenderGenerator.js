@@ -24,13 +24,27 @@ function generateGeMScannedTenders(selectedDateStr, statusFilter) {
     { city: 'Hyderabad', district: 'Hyderabad', state: 'Telangana', pin: '500001', office: 'NIC State Centre' }
   ];
 
+  let dateSeed = 100;
+  if (selectedDateStr) {
+    for (let charIdx = 0; charIdx < selectedDateStr.length; charIdx++) {
+      dateSeed += selectedDateStr.charCodeAt(charIdx) * (charIdx + 3);
+    }
+  }
+
+  const customCount = 70 + (dateSeed % 95);         // e.g. 70-164 Custom Bids
+  const wageCount = 10 + ((dateSeed * 3) % 35);     // e.g. 10-44 Minimum Wage
+  const cleaningCount = 8 + ((dateSeed * 5) % 25);  // e.g. 8-32 Cleaning
+  const securityCount = 5 + ((dateSeed * 7) % 22);  // e.g. 5-26 Security
+  const fixedCount = 3 + ((dateSeed * 11) % 15);    // e.g. 3-17 Fixed
+  const facilityCount = 2 + ((dateSeed * 13) % 12); // e.g. 2-13 Facility
+
   const categoryDistribution = [
-    { category: 'Custom Bid', items: 'Custom Bid for High Performance Computing & Infrastructure', count: 150 },
-    { category: 'Manpower Minimum Wage', items: 'Manpower Outsourcing Services - Minimum Wage Rate', count: 20 },
-    { category: 'Cleaning Services', items: 'Cleaning, Sanitation and Disinfection Services', count: 12 },
-    { category: 'Security Guards', items: 'Security Guard Services - Unarmed & Armed Personnel', count: 8 },
-    { category: 'Manpower Fixed', items: 'Manpower Fixed & Facility Management Operations Contract', count: 4 },
-    { category: 'Facility Management', items: 'Comprehensive Housekeeping & Facility Management Services', count: 2 }
+    { category: 'Custom Bid', items: 'Custom Bid for High Performance Computing & Infrastructure', count: customCount },
+    { category: 'Manpower Minimum Wage', items: 'Manpower Outsourcing Services - Minimum Wage Rate', count: wageCount },
+    { category: 'Cleaning Services', items: 'Cleaning, Sanitation and Disinfection Services', count: cleaningCount },
+    { category: 'Security Guards', items: 'Security Guard Services - Unarmed & Armed Personnel', count: securityCount },
+    { category: 'Manpower Fixed', items: 'Manpower Fixed & Facility Management Operations Contract', count: fixedCount },
+    { category: 'Facility Management', items: 'Comprehensive Housekeeping & Facility Management Services', count: facilityCount }
   ];
 
   const tenders = [];

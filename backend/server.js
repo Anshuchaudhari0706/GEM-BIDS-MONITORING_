@@ -451,30 +451,9 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
     });
   }
 
-  // Dynamic Date-based Generation: If selectedDate is provided, generate matching GeM bids for that specific date if needed
+  // Dynamic Date-based Generation: Generate fresh matching GeM bids dynamically for the selected date
   if (selectedDate) {
-    const selDateObj = new Date(selectedDate);
-    selDateObj.setHours(0, 0, 0, 0);
-    const selTime = selDateObj.getTime();
-
-    let matchingForDate = results.filter(t => {
-      const startObj = new Date(t.startDate);
-      startObj.setHours(0, 0, 0, 0);
-      const endObj = new Date(t.endDate);
-      endObj.setHours(0, 0, 0, 0);
-
-      const sTime = startObj.getTime();
-      const eTime = endObj.getTime();
-      return eTime === selTime || (selTime >= sTime && selTime <= eTime);
-    });
-
-    // If DB has no bids for this newly selected date, dynamically generate scanned tenders for it
-    if (matchingForDate.length === 0) {
-      const generated = generateGeMScannedTenders(selectedDate, status || 'ALL');
-      db.tenders = generated;
-      writeDB(db);
-      results = [...generated];
-    }
+    results = generateGeMScannedTenders(selectedDate, status || 'ALL');
   }
 
   if (state && state !== 'ALL') {
