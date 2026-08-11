@@ -471,9 +471,10 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
             {displayedTenders.map((t) => {
               const isSaved = savedTenders.some(s => s.id === t.id);
               // Live badge: calculate from REAL current time vs actual end date/time
-              const endDateTime = new Date(t.endDate);
+              const endDateTime = t.endDate ? new Date(t.endDate) : new Date();
               const nowTime = new Date();
-              const isLiveClosed = endDateTime < nowTime;  // true if end time has already passed
+              const isLiveClosed = t.status === 'FINISHED' || endDateTime < nowTime;  // true if end time has passed or status is FINISHED
+              const isFinished = isLiveClosed;
               const isEndingToday = endDateTime.toDateString() === nowTime.toDateString();
 
               return (

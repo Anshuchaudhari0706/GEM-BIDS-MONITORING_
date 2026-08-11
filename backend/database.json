@@ -143,9 +143,34 @@
       "activationDate": "2026-08-01T00:00:00.000Z",
       "expiryDate": "2027-08-01T23:59:59.000Z",
       "paymentId": "pay_O9x81P2kL"
+    },
+    {
+      "id": "lic_1786453173783_tvdr",
+      "key": "GEMI-GSZE-TRDW-WMFT",
+      "userId": "usr_1786452678313_z19d",
+      "userEmail": "chaudharianshu0706@gmail.com",
+      "planId": "plan_monthly",
+      "plan": "monthly",
+      "amountPaid": 999,
+      "status": "ACTIVE",
+      "createdAt": "2026-08-11T12:59:33.717Z",
+      "activationDate": "2026-08-11T12:59:33.717Z",
+      "expiryDate": "2026-09-10T12:59:33.717Z",
+      "paymentId": "upi_592438603098"
     }
   ],
   "subscriptions": [
+    {
+      "id": "sub_1786453173783",
+      "userId": "usr_1786452678313_z19d",
+      "planId": "plan_monthly",
+      "planName": "Monthly Pass",
+      "licenseKeyId": "lic_1786453173783_tvdr",
+      "paymentId": "upi_592438603098",
+      "startDate": "2026-08-11T12:59:33.717Z",
+      "expiryDate": "2026-09-10T12:59:33.717Z",
+      "status": "ACTIVE"
+    },
     {
       "id": "sub_demo_002",
       "userId": "usr_demo_002",
@@ -172,6 +197,22 @@
       "razorpaySignature": "simulated_signature_verified",
       "status": "SUCCESS",
       "createdAt": "2026-08-01T10:00:00.000Z"
+    },
+    {
+      "id": "upi_592438603098",
+      "userId": "usr_1786452678313_z19d",
+      "userEmail": "chaudharianshu0706@gmail.com",
+      "gateway": "UPI_DIRECT",
+      "upiId": "6353731568-2@ybl",
+      "utr": "592438603098",
+      "plan": "monthly",
+      "amount": 999,
+      "currency": "INR",
+      "razorpayOrderId": "order_1786453173717_rhqm3y",
+      "razorpayPaymentId": "upi_592438603098",
+      "razorpaySignature": "verified_hmac_sha256",
+      "status": "SUCCESS",
+      "createdAt": "2026-08-11T12:59:33.717Z"
     }
   ],
   "saved_tenders": [],

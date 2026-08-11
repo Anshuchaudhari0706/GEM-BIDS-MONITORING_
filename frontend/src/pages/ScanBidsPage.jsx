@@ -357,11 +357,15 @@ export default function ScanBidsPage({ searchQuery }) {
             ))}
           </div>
 
-          {/* Exact GeM Portal Format List View matching User Screenshots 1 & 2 */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             {displayedTenders.map((t) => {
               const isSaved = savedTenders.some(s => s.id === t.id);
-              const isFinished = t.status === 'FINISHED';
+              const endDateTime = t.endDate ? new Date(t.endDate) : new Date();
+              const nowTime = new Date();
+              const isLiveClosed = t.status === 'FINISHED' || endDateTime < nowTime;
+              const isFinished = isLiveClosed;
+              const isEndingToday = endDateTime.toDateString() === nowTime.toDateString();
+
               return (
                 <div
                   key={t.id}
@@ -369,8 +373,12 @@ export default function ScanBidsPage({ searchQuery }) {
                   style={{
                     padding: '20px 24px',
                     borderRadius: '14px',
-                    background: 'linear-gradient(135deg, rgba(13, 21, 39, 0.95), rgba(15, 23, 42, 0.9))',
-                    border: '1px solid var(--border-color)',
+                    background: isLiveClosed
+                      ? 'linear-gradient(135deg, rgba(20, 10, 10, 0.95), rgba(15, 23, 42, 0.9))'
+                      : 'linear-gradient(135deg, rgba(10, 20, 15, 0.95), rgba(13, 21, 39, 0.9))',
+                    border: isLiveClosed
+                      ? '1px solid rgba(239, 68, 68, 0.3)'
+                      : '1px solid rgba(52, 211, 153, 0.3)',
                     display: 'flex',
                     flexDirection: 'column',
                     gap: '12px'
@@ -383,13 +391,45 @@ export default function ScanBidsPage({ searchQuery }) {
                         BID NO: <span style={{ color: '#38bdf8', fontFamily: 'monospace' }}>{t.bid_number || t.id}</span>
                       </span>
 
-                      {/* Status Badge */}
+                      {/* LIVE Status Badge — based on real current time */}
                       <span
-                        className={`badge ${isFinished ? 'badge-finished' : 'badge-published'}`}
-                        style={{ padding: '3px 10px', fontSize: '0.74rem' }}
+                        className={`badge ${isLiveClosed ? 'badge-finished' : 'badge-published'}`}
+                        style={{
+                          padding: '4px 12px',
+                          fontSize: '0.74rem',
+                          background: isLiveClosed
+                            ? 'rgba(239,68,68,0.15)'
+                            : 'rgba(52,211,153,0.15)',
+                          border: `1px solid ${isLiveClosed ? '#ef4444' : '#34d399'}`,
+                          color: isLiveClosed ? '#f87171' : '#34d399',
+                          borderRadius: '20px',
+                          fontWeight: 700,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '5px'
+                        }}
                       >
-                        {t.status_badge || (isFinished ? '🔴 CLOSED / ENDED' : '🟢 OPEN FOR SUBMISSION')}
+                        <span style={{
+                          width: '7px', height: '7px', borderRadius: '50%',
+                          background: isLiveClosed ? '#ef4444' : '#34d399',
+                          animation: isLiveClosed ? 'none' : 'pulse 2s infinite'
+                        }} />
+                        {isLiveClosed ? '🔴 CLOSED / ENDED' : '🟢 ACTIVE — OPEN FOR SUBMISSION'}
                       </span>
+
+                      {!isLiveClosed && isEndingToday && (
+                        <span style={{
+                          padding: '3px 10px',
+                          background: 'rgba(245, 158, 11, 0.15)',
+                          border: '1px solid #f59e0b',
+                          color: '#fbbf24',
+                          borderRadius: '20px',
+                          fontSize: '0.72rem',
+                          fontWeight: 700
+                        }}>
+                          ⏰ ENDS TODAY — {new Date(t.endDate).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                        </span>
+                      )}
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontSize: '0.82rem' }}>
