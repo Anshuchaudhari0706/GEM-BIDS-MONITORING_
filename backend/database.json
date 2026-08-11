@@ -65,7 +65,7 @@
       "companyName": "GeMIntel HQ",
       "email": "admin@gemintel.com",
       "mobile": "9876543210",
-      "passwordHash": "$2a$10$I9v4bzu0kW4SgOGnFQYmy.aSCi0rpcTtmatyQbuJpZPSn5MeEOQDG",
+      "passwordHash": "$2a$10$V6GDzcOvP6yC1o..3gfBpOfjwiqCLyMdWhtt5HzQtYZuiZBl3l0RC",
       "role": "admin",
       "status": "ACTIVE",
       "createdAt": "2026-01-01T00:00:00.000Z"
@@ -102,6 +102,17 @@
       "role": "user",
       "status": "ACTIVE",
       "createdAt": "2026-08-10T07:17:35.815Z"
+    },
+    {
+      "id": "usr_1786452678313_z19d",
+      "fullName": "chaudhari anshu",
+      "companyName": "ARM SERVICE",
+      "email": "chaudharianshu0706@gmail.com",
+      "mobile": "635373156",
+      "passwordHash": "$2a$10$BL62ZvsXrWVMcRgTQPbBOOi5JaerQ8t4OuYWUfS2a/93NA8Xg3txC",
+      "role": "user",
+      "status": "ACTIVE",
+      "createdAt": "2026-08-11T12:51:18.313Z"
     }
   ],
   "license_keys": [

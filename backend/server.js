@@ -340,7 +340,7 @@ app.post('/api/payment/create-order', authenticateToken, (req, res) => {
 
 // POST /api/payment/verify
 app.post('/api/payment/verify', authenticateToken, (req, res) => {
-  const { razorpayOrderId, razorpayPaymentId, razorpaySignature, plan } = req.body;
+  const { razorpayOrderId, razorpayPaymentId, razorpaySignature, plan, paymentMethod, upiId, utr } = req.body;
   const db = readDB();
 
   const planKey = plan || 'monthly';
@@ -348,7 +348,7 @@ app.post('/api/payment/verify', authenticateToken, (req, res) => {
   const amountPaid = planObj ? planObj.price : (planKey === 'yearly' ? 7999 : (planKey === 'quarterly' ? 2499 : 999));
   const durationDays = planObj ? planObj.duration_days : (planKey === 'yearly' ? 365 : (planKey === 'quarterly' ? 90 : 30));
 
-  const paymentId = razorpayPaymentId || `pay_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+  const paymentId = razorpayPaymentId || (utr ? `upi_${utr}` : `pay_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`);
   const orderId = razorpayOrderId || `order_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
 
   // Log Payment
@@ -356,7 +356,9 @@ app.post('/api/payment/verify', authenticateToken, (req, res) => {
     id: paymentId,
     userId: req.user.id,
     userEmail: req.user.email,
-    gateway: 'Razorpay',
+    gateway: paymentMethod === 'upi' ? 'UPI_DIRECT' : 'Razorpay',
+    upiId: upiId || '6353731568-2@ybl',
+    utr: utr || null,
     plan: planKey,
     amount: amountPaid,
     currency: 'INR',

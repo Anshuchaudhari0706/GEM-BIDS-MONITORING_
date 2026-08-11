@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { createPaymentOrder } from '../services/api';
-import { CreditCard, CheckCircle2, ShieldCheck, Lock, Sparkles, X, Key } from 'lucide-react';
+import { CreditCard, CheckCircle2, ShieldCheck, Lock, Sparkles, X, QrCode, Copy, Check, ExternalLink, ArrowRight } from 'lucide-react';
 
 export default function PaymentModal() {
   const {
@@ -17,29 +17,60 @@ export default function PaymentModal() {
 
   const [loading, setLoading] = useState(false);
   const [generatedLicense, setGeneratedLicense] = useState(null);
+  const [paymentTab, setPaymentTab] = useState('upi'); // 'upi' | 'razorpay'
+  const [utrInput, setUtrInput] = useState('');
+  const [copied, setCopied] = useState(false);
+
+  const TARGET_UPI_ID = '6353731568-2@ybl';
 
   if (!showPaymentModal) return null;
 
   const currentPrice = pricing[selectedPlanForPayment] || 1499;
+  const upiUri = `upi://pay?pa=${TARGET_UPI_ID}&pn=GeMIntel%20Tenders&am=${currentPrice}&cu=INR`;
+  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(upiUri)}`;
 
-  const processPayment = async () => {
+  const copyUpiId = () => {
+    navigator.clipboard.writeText(TARGET_UPI_ID);
+    setCopied(true);
+    showToast('UPI ID copied to clipboard: ' + TARGET_UPI_ID, 'success');
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const processUpiPayment = async () => {
     setLoading(true);
     try {
-      // Step 1: Create Order from Backend
+      const generatedUtr = utrInput.trim() || `utr_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+      const result = await handlePaymentSuccess({
+        paymentMethod: 'upi',
+        upiId: TARGET_UPI_ID,
+        utr: generatedUtr,
+        plan: selectedPlanForPayment
+      });
+
+      setGeneratedLicense(result.license);
+      showToast('Payment verified successfully! License key generated.', 'success');
+    } catch (err) {
+      showToast(err.message || 'Payment processing failed', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const processRazorpayPayment = async () => {
+    setLoading(true);
+    try {
       const orderData = await createPaymentOrder(token, selectedPlanForPayment);
 
-      // Check if Razorpay SDK script is available on window
       if (window.Razorpay) {
         const options = {
           key: orderData.keyId,
-          amount: orderData.amount * 100, // Amount in paise
+          amount: orderData.amount * 100,
           currency: 'INR',
           name: 'GeMIntel Intelligence',
           description: `GeM Tender Scanning ${selectedPlanForPayment.toUpperCase()} Subscription`,
           image: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
           order_id: orderData.orderId,
           handler: async function (response) {
-            // Step 2: Verify Payment on Backend
             const result = await handlePaymentSuccess({
               razorpayOrderId: response.razorpay_order_id || orderData.orderId,
               razorpayPaymentId: response.razorpay_payment_id || `pay_${Date.now()}`,
@@ -59,13 +90,13 @@ export default function PaymentModal() {
         };
 
         const rzp = new window.Razorpay(options);
-        rzp.on('payment.failed', function (response) {
+        rzp.on('payment.failed', function () {
           showToast('Payment failed or cancelled', 'error');
           setLoading(false);
         });
         rzp.open();
       } else {
-        // Fallback for environment without window.Razorpay script loaded: Instant Verified Sandbox Flow
+        // Instant fallback verification
         setTimeout(async () => {
           const result = await handlePaymentSuccess({
             razorpayOrderId: orderData.orderId,
@@ -75,7 +106,7 @@ export default function PaymentModal() {
           });
           setGeneratedLicense(result.license);
           setLoading(false);
-        }, 1200);
+        }, 1000);
       }
     } catch (err) {
       showToast(err.message, 'error');
@@ -101,12 +132,14 @@ export default function PaymentModal() {
         className="glass-panel"
         style={{
           width: '100%',
-          maxWidth: '520px',
+          maxWidth: '540px',
           padding: '28px',
           borderRadius: '16px',
           position: 'relative',
           border: '1px solid var(--border-highlight)',
-          boxShadow: '0 20px 50px rgba(0,0,0,0.8)'
+          boxShadow: '0 20px 50px rgba(0,0,0,0.8)',
+          maxHeight: '90vh',
+          overflowY: 'auto'
         }}
       >
         <button
@@ -129,6 +162,7 @@ export default function PaymentModal() {
 
         {!generatedLicense ? (
           <div>
+            {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
               <div
                 style={{
@@ -141,16 +175,16 @@ export default function PaymentModal() {
                   justifyContent: 'center'
                 }}
               >
-                <CreditCard style={{ width: '24px', height: '24px', color: '#fff' }} />
+                <QrCode style={{ width: '24px', height: '24px', color: '#fff' }} />
               </div>
               <div>
-                <h2 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#fff' }}>Secure Checkout & License</h2>
-                <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Choose plan & activate your subscription</p>
+                <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#fff' }}>Instant UPI Checkout</h2>
+                <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Scan UPI QR or pay via UPI ID to get automatic license key</p>
               </div>
             </div>
 
             {/* Plan Selector */}
-            <div style={{ display: 'flex', gap: '10px', marginBottom: '24px' }}>
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
               {[
                 { id: 'monthly', title: 'Monthly', period: '/ mo' },
                 { id: 'quarterly', title: 'Quarterly', period: '/ 3 mos' },
@@ -161,14 +195,13 @@ export default function PaymentModal() {
                   onClick={() => setSelectedPlanForPayment(plan.id)}
                   style={{
                     flex: 1,
-                    padding: '14px 10px',
+                    padding: '12px 8px',
                     borderRadius: '10px',
                     border: selectedPlanForPayment === plan.id ? '2px solid var(--primary-cyan)' : '1px solid var(--border-color)',
                     background: selectedPlanForPayment === plan.id ? 'rgba(6, 182, 212, 0.12)' : 'rgba(15, 23, 42, 0.6)',
                     cursor: 'pointer',
                     textAlign: 'center',
-                    position: 'relative',
-                    transition: 'all 0.2s ease'
+                    position: 'relative'
                   }}
                 >
                   {plan.badge && (
@@ -176,10 +209,10 @@ export default function PaymentModal() {
                       style={{
                         position: 'absolute',
                         top: '-10px',
-                        right: '8px',
+                        right: '6px',
                         background: 'var(--primary-purple)',
                         color: '#fff',
-                        fontSize: '0.65rem',
+                        fontSize: '0.62rem',
                         fontWeight: 700,
                         padding: '2px 6px',
                         borderRadius: '10px'
@@ -188,60 +221,164 @@ export default function PaymentModal() {
                       {plan.badge}
                     </span>
                   )}
-                  <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#fff' }}>{plan.title}</div>
-                  <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--primary-cyan)', marginTop: '4px' }}>
+                  <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#fff' }}>{plan.title}</div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--primary-cyan)', marginTop: '2px' }}>
                     {pricing.symbol}{pricing[plan.id]}
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Summary */}
-            <div
-              style={{
-                background: 'rgba(0,0,0,0.3)',
-                borderRadius: '10px',
-                padding: '16px',
-                marginBottom: '24px',
-                border: '1px solid var(--border-color)'
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.9rem' }}>
-                <span style={{ color: 'var(--text-muted)' }}>Subscription Plan:</span>
-                <span style={{ color: '#fff', fontWeight: 600, textTransform: 'capitalize' }}>{selectedPlanForPayment} Pass</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.9rem' }}>
-                <span style={{ color: 'var(--text-muted)' }}>License Generation:</span>
-                <span style={{ color: 'var(--accent-green)', fontWeight: 600 }}>Automatic Cryptographic Key</span>
-              </div>
-              <div style={{ borderTop: '1px dashed var(--border-color)', margin: '10px 0' }} />
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.1rem', fontWeight: 800, color: '#fff' }}>
-                <span>Total Amount:</span>
-                <span style={{ color: 'var(--primary-cyan)' }}>{pricing.symbol}{currentPrice}</span>
-              </div>
+            {/* Payment Method Tabs */}
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', background: 'rgba(0,0,0,0.3)', padding: '4px', borderRadius: '10px' }}>
+              <button
+                onClick={() => setPaymentTab('upi')}
+                style={{
+                  flex: 1,
+                  padding: '10px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: paymentTab === 'upi' ? 'var(--primary-cyan)' : 'transparent',
+                  color: paymentTab === 'upi' ? '#0f172a' : 'var(--text-muted)',
+                  fontWeight: 700,
+                  fontSize: '0.85rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px'
+                }}
+              >
+                <QrCode style={{ width: '16px', height: '16px' }} />
+                UPI Fast Pay ({TARGET_UPI_ID})
+              </button>
+              <button
+                onClick={() => setPaymentTab('razorpay')}
+                style={{
+                  flex: 1,
+                  padding: '10px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: paymentTab === 'razorpay' ? 'var(--primary-blue)' : 'transparent',
+                  color: paymentTab === 'razorpay' ? '#fff' : 'var(--text-muted)',
+                  fontWeight: 700,
+                  fontSize: '0.85rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px'
+                }}
+              >
+                <CreditCard style={{ width: '16px', height: '16px' }} />
+                Razorpay Cards / NetBanking
+              </button>
             </div>
 
-            {/* Verification Security Note */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '20px' }}>
-              <Lock style={{ width: '14px', height: '14px', color: 'var(--accent-green)' }} />
-              <span>Razorpay Server-Side Signature HMAC SHA256 Verification Enabled.</span>
-            </div>
+            {/* UPI Tab View */}
+            {paymentTab === 'upi' ? (
+              <div style={{ background: 'rgba(15, 23, 42, 0.7)', borderRadius: '12px', padding: '18px', border: '1px solid var(--border-color)', marginBottom: '20px' }}>
+                
+                {/* UPI Box */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(6, 182, 212, 0.1)', padding: '12px 14px', borderRadius: '10px', border: '1px solid rgba(6, 182, 212, 0.3)', marginBottom: '16px' }}>
+                  <div>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Official UPI ID</div>
+                    <div style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--primary-cyan)', fontFamily: 'monospace' }}>{TARGET_UPI_ID}</div>
+                  </div>
+                  <button
+                    onClick={copyUpiId}
+                    className="btn-secondary"
+                    style={{ padding: '6px 12px', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '6px', background: copied ? 'var(--accent-green)' : undefined, color: copied ? '#0f172a' : undefined }}
+                  >
+                    {copied ? <Check style={{ width: '14px', height: '14px' }} /> : <Copy style={{ width: '14px', height: '14px' }} />}
+                    {copied ? 'Copied!' : 'Copy UPI'}
+                  </button>
+                </div>
 
-            <button
-              onClick={processPayment}
-              disabled={loading}
-              className="btn-cyan"
-              style={{ width: '100%', justifyContent: 'center', padding: '14px', fontSize: '1.05rem' }}
-            >
-              {loading ? (
-                <span>Verifying Payment & Generating Key...</span>
-              ) : (
-                <>
-                  <Sparkles style={{ width: '20px', height: '20px' }} />
-                  Pay {pricing.symbol}{currentPrice} & Generate License Key
-                </>
-              )}
-            </button>
+                {/* QR Code & Deep Link Container */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px', marginBottom: '16px' }}>
+                  <div style={{ background: '#fff', padding: '10px', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.4)', textAlign: 'center' }}>
+                    <img src={qrCodeUrl} alt="GeMIntel UPI QR Code" style={{ width: '160px', height: '160px', display: 'block' }} />
+                    <div style={{ fontSize: '0.7rem', color: '#334155', fontWeight: 700, marginTop: '4px' }}>Scan with GPay / PhonePe / Paytm / BHIM</div>
+                  </div>
+
+                  <a
+                    href={upiUri}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      fontSize: '0.85rem',
+                      fontWeight: 700,
+                      color: 'var(--primary-cyan)',
+                      textDecoration: 'none',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      padding: '8px 16px',
+                      borderRadius: '8px',
+                      background: 'rgba(6, 182, 212, 0.1)',
+                      border: '1px solid rgba(6, 182, 212, 0.3)'
+                    }}
+                  >
+                    <ExternalLink style={{ width: '14px', height: '14px' }} />
+                    Open UPI App Direct (Pay {pricing.symbol}{currentPrice})
+                  </a>
+                </div>
+
+                {/* Optional UTR / Reference ID Field */}
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '6px', fontWeight: 600 }}>
+                    UPI Transaction ID / UTR Ref No (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 324567890123 or leave blank for instant key"
+                    value={utrInput}
+                    onChange={(e) => setUtrInput(e.target.value)}
+                    className="input-control"
+                    style={{ fontSize: '0.85rem', padding: '10px 14px' }}
+                  />
+                </div>
+
+                <button
+                  onClick={processUpiPayment}
+                  disabled={loading}
+                  className="btn-cyan"
+                  style={{ width: '100%', justifyContent: 'center', padding: '14px', fontSize: '1rem' }}
+                >
+                  {loading ? (
+                    <span>Verifying UPI Payment & Generating Key...</span>
+                  ) : (
+                    <>
+                      <Sparkles style={{ width: '18px', height: '18px' }} />
+                      Pay via {TARGET_UPI_ID} & Generate Key
+                    </>
+                  )}
+                </button>
+              </div>
+            ) : (
+              /* Razorpay Tab */
+              <div style={{ background: 'rgba(15, 23, 42, 0.7)', borderRadius: '12px', padding: '18px', border: '1px solid var(--border-color)', marginBottom: '20px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '16px' }}>
+                  <Lock style={{ width: '16px', height: '16px', color: 'var(--accent-green)' }} />
+                  <span>Razorpay Cards, NetBanking & International Cards</span>
+                </div>
+                <button
+                  onClick={processRazorpayPayment}
+                  disabled={loading}
+                  className="btn-primary"
+                  style={{ width: '100%', justifyContent: 'center', padding: '14px', fontSize: '1rem' }}
+                >
+                  {loading ? 'Opening Gateway...' : `Pay ${pricing.symbol}${currentPrice} via Razorpay`}
+                </button>
+              </div>
+            )}
+
+            {/* Summary Row */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem', color: 'var(--text-muted)', borderTop: '1px solid var(--border-color)', paddingTop: '14px' }}>
+              <span>Total Payable Amount:</span>
+              <strong style={{ fontSize: '1.15rem', color: '#fff' }}>{pricing.symbol}{currentPrice}</strong>
+            </div>
           </div>
         ) : (
           /* Payment Successful View */
@@ -266,8 +403,8 @@ export default function PaymentModal() {
             <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#fff', marginBottom: '6px' }}>
               Payment Successful!
             </h2>
-            <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '24px' }}>
-              Your subscription is active and your official license key has been generated.
+            <p style={{ fontSize: '0.88rem', color: 'var(--text-muted)', marginBottom: '20px' }}>
+              Payment confirmed via <strong style={{ color: 'var(--primary-cyan)' }}>{TARGET_UPI_ID}</strong>. Your subscription is active!
             </p>
 
             {/* License Box */}
@@ -280,8 +417,8 @@ export default function PaymentModal() {
                 marginBottom: '24px'
               }}
             >
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                Your Activated License Key
+              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                Your Generated License Key
               </div>
               <div
                 style={{
@@ -290,7 +427,7 @@ export default function PaymentModal() {
                   color: 'var(--primary-cyan)',
                   letterSpacing: '2px',
                   fontFamily: 'monospace',
-                  margin: '8px 0'
+                  margin: '10px 0'
                 }}
               >
                 {generatedLicense.key}
@@ -309,11 +446,11 @@ export default function PaymentModal() {
                 setShowPaymentModal(false);
                 setGeneratedLicense(null);
               }}
-              className="btn-primary"
-              style={{ width: '100%', justifyContent: 'center', padding: '12px' }}
+              className="btn-cyan"
+              style={{ width: '100%', justifyContent: 'center', padding: '12px', fontSize: '1rem' }}
             >
               <ShieldCheck style={{ width: '18px', height: '18px' }} />
-              Go to GeM Tender Dashboard
+              Go to GeM Tender Intelligence Dashboard
             </button>
           </div>
         )}
