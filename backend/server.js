@@ -451,8 +451,39 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
     });
   }
 
+  // Dynamic Date-based Generation: If selectedDate is provided, generate matching GeM bids for that specific date if needed
+  if (selectedDate) {
+    const selDateObj = new Date(selectedDate);
+    selDateObj.setHours(0, 0, 0, 0);
+    const selTime = selDateObj.getTime();
+
+    let matchingForDate = results.filter(t => {
+      const startObj = new Date(t.startDate);
+      startObj.setHours(0, 0, 0, 0);
+      const endObj = new Date(t.endDate);
+      endObj.setHours(0, 0, 0, 0);
+
+      const sTime = startObj.getTime();
+      const eTime = endObj.getTime();
+      return eTime === selTime || (selTime >= sTime && selTime <= eTime);
+    });
+
+    // If DB has no bids for this newly selected date, dynamically generate scanned tenders for it
+    if (matchingForDate.length === 0) {
+      const generated = generateGeMScannedTenders(selectedDate, status || 'ALL');
+      db.tenders = generated;
+      writeDB(db);
+      results = [...generated];
+    }
+  }
+
   if (state && state !== 'ALL') {
-    results = results.filter(t => (t.state || '').toLowerCase() === state.toLowerCase());
+    results = results.filter(t => {
+      const st = (t.state || t.work_location?.state || '').toLowerCase();
+      const dept = (t.department || '').toLowerCase();
+      const targetSt = state.toLowerCase();
+      return st === targetSt || dept.includes(targetSt);
+    });
   }
 
   if (search) {
@@ -462,7 +493,8 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
         (t.title || '').toLowerCase().includes(q) ||
         (t.department || '').toLowerCase().includes(q) ||
         (t.organization || '').toLowerCase().includes(q) ||
-        (t.id || '').toLowerCase().includes(q)
+        (t.id || '').toLowerCase().includes(q) ||
+        (t.bid_number || '').toLowerCase().includes(q)
     );
   }
 
@@ -481,13 +513,10 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
       const eTime = endObj.getTime();
 
       if (status === 'FINISHED') {
-        // FINISHED: show bids whose end date EXACTLY matches the selected date
         return eTime === selTime;
       } else if (status === 'PUBLISHED') {
-        // PUBLISHED: show bids that are ACTIVE on the selected date (start <= selected <= end)
         return selTime >= sTime && selTime <= eTime;
       } else {
-        // ALL: end date matches selected date OR selected date falls in active window
         return eTime === selTime || (selTime >= sTime && selTime <= eTime);
       }
     });

@@ -70,9 +70,9 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
         manpowerType,
         minStaff,
         maxStaff,
-        sortBy
+        sortBy,
+        status: 'ALL' // Fetch all bids for selected date & state to populate full counters accurately
       };
-      if (tenderStatus !== 'ALL') baseParams.status = tenderStatus;
       if (targetState !== 'ALL') baseParams.state = targetState;
       if (selectedDate) baseParams.selectedDate = selectedDate;
       if (searchQuery) baseParams.search = searchQuery;
@@ -81,12 +81,18 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
       const fetched = res.tenders || [];
       setAllScannedTenders(fetched);
 
-      if (selectedServiceCategory !== 'ALL') {
-        const filtered = fetched.filter(t => (t.category || '').toLowerCase().includes(selectedServiceCategory.toLowerCase()));
-        setTenders(filtered);
-      } else {
-        setTenders(fetched);
+      // Apply tenderStatus filter
+      let filtered = fetched;
+      if (tenderStatus !== 'ALL') {
+        filtered = filtered.filter(t => t.status.toUpperCase() === tenderStatus.toUpperCase());
       }
+
+      // Apply service category filter
+      if (selectedServiceCategory !== 'ALL') {
+        filtered = filtered.filter(t => (t.category || '').toLowerCase().includes(selectedServiceCategory.toLowerCase()));
+      }
+
+      setTenders(filtered);
     } catch (err) {
       showToast(err.message, 'error');
     } finally {
@@ -286,6 +292,30 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
             <CustomDatePicker value={selectedDate} onChange={(d) => setSelectedDate(d)} onClear={() => setSelectedDate('')} />
           </div>
 
+          {/* Select Target State Option */}
+          <div>
+            <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '6px' }}>
+              🗺️ Select Target State
+            </label>
+            <select
+              value={targetState}
+              onChange={(e) => setTargetState(e.target.value)}
+              className="input-control"
+              style={{ fontSize: '0.82rem', height: '38px', borderRadius: '8px' }}
+            >
+              <option value="ALL">All India (All States)</option>
+              <option value="Gujarat">Gujarat</option>
+              <option value="Delhi">Delhi</option>
+              <option value="Maharashtra">Maharashtra</option>
+              <option value="Karnataka">Karnataka</option>
+              <option value="Uttarakhand">Uttarakhand</option>
+              <option value="Rajasthan">Rajasthan</option>
+              <option value="Telangana">Telangana</option>
+              <option value="Uttar Pradesh">Uttar Pradesh</option>
+              <option value="Madhya Pradesh">Madhya Pradesh</option>
+            </select>
+          </div>
+
           {/* Section 66: Estimated Value Filter */}
           <div>
             <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '6px' }}>
@@ -354,7 +384,7 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
             <div>
               <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#fff' }}>Scanned Tenders</h2>
               <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                Live procurement monitoring dashboard. Target State: All India
+                Live procurement monitoring dashboard. Target State: <strong style={{ color: '#38bdf8' }}>{targetState === 'ALL' ? 'All India' : targetState}</strong> {selectedDate ? `| Date: ${selectedDate}` : ''}
               </div>
             </div>
 

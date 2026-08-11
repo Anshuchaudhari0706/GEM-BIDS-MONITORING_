@@ -61,8 +61,8 @@ export default function ScanBidsPage({ searchQuery }) {
     if (!token || !isLicenseActive()) return;
     setLoading(true);
     try {
-      const baseParams = {};
-      if (tenderStatus !== 'ALL') baseParams.status = tenderStatus;
+      const baseParams = { status: 'ALL' };
+      if (targetState !== 'ALL') baseParams.state = targetState;
       if (selectedDate) baseParams.selectedDate = selectedDate;
       if (searchQuery) baseParams.search = searchQuery;
 
@@ -70,14 +70,17 @@ export default function ScanBidsPage({ searchQuery }) {
       const fetched = res.tenders || [];
       setAllScannedTenders(fetched);
 
+      let filtered = fetched;
+      if (tenderStatus !== 'ALL') {
+        filtered = filtered.filter(t => t.status.toUpperCase() === tenderStatus.toUpperCase());
+      }
+
       if (selectedServices.length > 0) {
-        const filtered = fetched.filter(t =>
+        filtered = filtered.filter(t =>
           selectedServices.some(srv => (t.category || '').toLowerCase().includes(srv.toLowerCase()))
         );
-        setTenders(filtered);
-      } else {
-        setTenders(fetched);
       }
+      setTenders(filtered);
     } catch (err) {
       showToast(err.message, 'error');
     } finally {
@@ -91,7 +94,7 @@ export default function ScanBidsPage({ searchQuery }) {
 
   useEffect(() => {
     loadFilteredTenders();
-  }, [token, tenderStatus, selectedServices, selectedDate, searchQuery]);
+  }, [token, tenderStatus, selectedServices, targetState, selectedDate, searchQuery]);
 
   const toggleService = (srv) => {
     setSelectedServices(prev =>
@@ -222,6 +225,30 @@ export default function ScanBidsPage({ searchQuery }) {
               </span>
             </div>
             <CustomDatePicker value={selectedDate} onChange={(d) => setSelectedDate(d)} onClear={() => setSelectedDate('')} />
+          </div>
+
+          {/* Select Target State Option */}
+          <div>
+            <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '6px' }}>
+              🗺️ Select Target State
+            </label>
+            <select
+              value={targetState}
+              onChange={(e) => setTargetState(e.target.value)}
+              className="input-control"
+              style={{ fontSize: '0.82rem', height: '38px', borderRadius: '8px' }}
+            >
+              <option value="ALL">All India (All States)</option>
+              <option value="Gujarat">Gujarat</option>
+              <option value="Delhi">Delhi</option>
+              <option value="Maharashtra">Maharashtra</option>
+              <option value="Karnataka">Karnataka</option>
+              <option value="Uttarakhand">Uttarakhand</option>
+              <option value="Rajasthan">Rajasthan</option>
+              <option value="Telangana">Telangana</option>
+              <option value="Uttar Pradesh">Uttar Pradesh</option>
+              <option value="Madhya Pradesh">Madhya Pradesh</option>
+            </select>
           </div>
 
           <button
