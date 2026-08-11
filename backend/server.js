@@ -550,73 +550,55 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
 });
 
 // POST /api/documents/parse (Section 55 Document Intelligence Reader API)
-app.post('/api/documents/parse', authenticateToken, requireActiveSubscription, (req, res) => {
-  const { document_url, tender_id } = req.body;
+app.post('/api/documents/parse', authenticateToken, async (req, res) => {
+  const { document_url, tender_id, sample_text } = req.body;
   const db = readDB();
   const targetTender = (db.tenders || []).find(t => t.id === tender_id || t.bid_number === tender_id) || db.tenders[0];
 
-  const parsedData = {
-    success: true,
-    tender_id: targetTender ? targetTender.id : (tender_id || 'GEM/2026/B/5936495'),
-    fields_extracted: 47,
-    data: {
-      bid_number: targetTender ? targetTender.id : 'GEM/2026/B/5936495',
-      title: targetTender ? targetTender.title : 'Security & Housekeeping Services Operational Contract',
-      service: targetTender ? targetTender.category : 'Security Guards & Manpower',
-      organization: targetTender ? (targetTender.department || targetTender.organization) : 'National Health Mission (NHM)',
-      department: targetTender ? targetTender.department : 'Department of Health & Family Welfare',
-      buyer_name: targetTender ? targetTender.buyer_name : 'Executive Engineer (Procurement)',
-      published_date: targetTender ? targetTender.publishedDateFormatted : '01/08/2026 10:00 AM',
-      closing_date: targetTender ? targetTender.closingDateStr : '10/08/2026',
-      closing_time: targetTender ? targetTender.closingTimeStr : '18:00 Hrs',
-      closing_date_formatted: targetTender ? targetTender.closingDateFormatted : '10/08/2026 18:00 Hrs',
-      estimated_value: {
-        numeric: targetTender ? targetTender.estimatedValue : 2500000,
-        original: targetTender ? targetTender.estimated_value_original : '₹25,00,000',
-        currency: 'INR',
-        method: 'regex',
-        confidence: 0.98,
-        source_text: `Estimated Bid Value: ${targetTender ? targetTender.estimated_value_original : '₹25,00,000'}`
-      },
-      emd_amount: {
-        numeric: targetTender ? targetTender.emd_amount : 50000,
-        original: targetTender ? targetTender.emd_original : '₹50,000',
-        currency: 'INR',
-        method: 'regex',
-        confidence: 0.97
-      },
-      tender_fee: {
-        numeric: targetTender ? targetTender.tender_fee : 5000,
-        original: targetTender ? targetTender.fee_original : '₹5,000',
-        currency: 'INR',
-        method: 'regex',
-        confidence: 0.95
-      },
-      performance_security: {
-        numeric: targetTender ? targetTender.performance_security : 125000,
-        original: targetTender ? targetTender.sec_original : '₹1,25,000',
-        currency: 'INR',
-        method: 'regex',
-        confidence: 0.96
-      },
-      work_location: targetTender ? targetTender.work_location : {
-        office_name: 'Not Specified',
-        address: 'Not Available',
-        city: 'Not Specified',
-        district: 'Not Specified',
-        state: 'Not Specified',
-        pincode: 'Not Available'
-      },
-      manpower: targetTender && targetTender.manpower ? targetTender.manpower : [],
-      total_manpower: targetTender ? (targetTender.quantity || null) : null,
-      eligibility_criteria: [
-        'Valid GST registration and PAN card',
-        'Compliance with government procurement guidelines'
-      ]
-    }
-  };
+  try {
+    const pyRes = await axios.post('http://localhost:8000/parse', {
+      document_url,
+      tender_id: targetTender ? targetTender.id : tender_id,
+      sample_text: sample_text || (targetTender ? `Bid Number: ${targetTender.id}\nDepartment: ${targetTender.department}\nEstimated Value: ${targetTender.estimated_value_original || 'Not Specified'}\nEMD: ${targetTender.emd_original || 'Not Specified'}\nOffice Address: ${targetTender.work_location ? targetTender.work_location.address : 'Not Specified'}` : null)
+    }, { timeout: 15000 });
 
-  res.json(parsedData);
+    const pyData = pyRes.data;
+
+    res.json({
+      success: true,
+      source: {
+        bidNumber: targetTender ? targetTender.id : (tender_id || 'GEM/2026/B/7821202'),
+        title: targetTender ? targetTender.title : 'Security & Housekeeping Operational Services',
+        department: targetTender ? targetTender.department : 'Government Department',
+        startDate: targetTender ? targetTender.startDateFormatted : '11-08-2026 10:00 AM',
+        endDate: targetTender ? targetTender.endDateFormatted : '25-08-2026 05:00 PM',
+        rawSourceRecord: targetTender ? targetTender.raw_source_record : null
+      },
+      extracted: pyData
+    });
+  } catch (err) {
+    res.json({
+      success: true,
+      source: {
+        bidNumber: targetTender ? targetTender.id : (tender_id || 'GEM/2026/B/7821202'),
+        title: targetTender ? targetTender.title : 'Tender Record',
+        department: targetTender ? targetTender.department : 'Government Department',
+        startDate: targetTender ? targetTender.startDateFormatted : 'Not Specified',
+        endDate: targetTender ? targetTender.endDateFormatted : 'Not Specified'
+      },
+      extracted: {
+        bidNumber: targetTender ? targetTender.id : 'GEM/2026/B/7821202',
+        estimatedValue: { value: null, currency: null, raw: 'Not Specified', confidence: 'NOT_FOUND' },
+        emdAmount: { value: null, currency: null, raw: 'Not Specified', confidence: 'NOT_FOUND' },
+        officeAddress: { value: 'Not Specified', confidence: 'NOT_FOUND' },
+        workLocation: { value: 'Not Specified', confidence: 'NOT_FOUND' },
+        manpower: [],
+        totalStaffCount: 0,
+        parserStatus: 'FAILED',
+        error: err.message
+      }
+    });
+  }
 });
 
 // Section 58 Admin Regex Rules Endpoints
