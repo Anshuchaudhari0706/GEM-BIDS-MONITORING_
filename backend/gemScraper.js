@@ -204,5 +204,6 @@ function startRealGeMBackgroundScraper() {
 
 module.exports = {
   scrapeLiveGeMPortal,
-  startRealGeMBackgroundScraper
+  startRealGeMBackgroundScraper,
+  fetchRealGeMBids: scrapeLiveGeMPortal
 };

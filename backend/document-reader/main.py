@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
 from tender_parser import parse_tender_document
-from gem_scraper import scan_published_tenders, scan_finished_tenders
+from gem_scraper import scan_real_gem_portal
 
 app = FastAPI(title="GeM Intel Document Intelligence Service")
 
@@ -33,10 +33,7 @@ def read_root():
 @app.post("/api/scan")
 def scan_tenders_endpoint(req: ScanRequest):
     scan_type = (req.type or "published").lower()
-    if scan_type == "finished":
-        bids = scan_finished_tenders(req.date, req.state)
-    else:
-        bids = scan_published_tenders(req.date, req.state)
+    bids = scan_real_gem_portal(req.date, req.state, 50, scan_type.upper())
 
     return {
         "success": True,

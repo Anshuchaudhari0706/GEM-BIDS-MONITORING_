@@ -699,7 +699,7 @@ app.get('/api/tenders/:id', authenticateToken, requireActiveSubscription, (req, 
 const { fetchRealGeMBids } = require('./gemScraper');
 const { generateGeMScannedTenders } = require('./tenderGenerator');
 
-// POST /api/tenders/scan (Scans 200-500 pages of GeM bids via live scraper)
+// POST /api/tenders/scan (Scans live pages from official GeM portal API)
 app.post('/api/tenders/scan', authenticateToken, requireActiveSubscription, async (req, res) => {
   const { services, selectedDate, date, type, tenderStatus, state } = req.body;
   const db = readDB();
@@ -715,18 +715,14 @@ app.post('/api/tenders/scan', authenticateToken, requireActiveSubscription, asyn
       writeDB(db);
     }
   } catch (err) {
-    console.warn('Live GeM Scraper notice (using fallback generator):', err.message);
-    const newScannedTenders = generateGeMScannedTenders(scanDateStr, tenderStatus);
-    db.tenders = newScannedTenders;
-    writeDB(db);
+    console.warn('Live GeM Scraper notice:', err.message);
   }
 
   res.json({
-    message: 'GeM Tender Portal Scanned (200-500 Pages Processed Successfully)',
-    scannedPages: 384,
-    scannedCount: db.tenders.length,
+    message: 'Official GeM Tender Portal Scanned Successfully',
+    scannedCount: (db.tenders || []).length,
     scannedAt: new Date().toISOString(),
-    newBids: db.tenders.slice(0, 10)
+    tenders: db.tenders || []
   });
 });
 
