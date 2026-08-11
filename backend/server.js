@@ -422,47 +422,86 @@ app.post('/api/payment/verify', authenticateToken, (req, res) => {
 });
 // GET /api/tenders (Search, Scope, ScanId & Structured Filtering)
 app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res) => {
-  const { search, category, services, status, state, selectedDate, date, scanId, valRange, minVal, maxVal, manpowerType, minStaff, maxStaff, sortBy } = req.query;
+  const { search, category, services, status, state, selectedDate, date, scanId, valRange, minVal, maxVal, manpowerType, minStaff, maxStaff, sortBy, forceFail } = req.query;
   const db = readDB();
   const totalStored = (db.tenders || []).length;
   const targetDate = selectedDate || date || "2026-08-11";
   const reqStatus = (status || 'PUBLISHED').toUpperCase();
+  const lastScan = db.last_scan || { status: "COMPLETED", sourceVerified: true, scanId: "SCAN-20260811-001" };
 
   console.log(`[Dashboard API] status = ${reqStatus}, date = ${targetDate}, state = ${state || 'ALL'}, services = ${services || 'ALL'}`);
-  console.log(`[Dashboard API] totalStoredTenders = ${totalStored}`);
+  console.log(`[Dashboard API] historicalCount = ${totalStored}`);
+
+  // Check if current scan failed or forceFail is requested
+  const isFailedScan = forceFail === 'true' || lastScan.sourceVerified === false || lastScan.status === "FAILED";
+
+  if (isFailedScan) {
+    console.log(`[Dashboard API] SCAN FAILED — returning 0 matching tenders for current query, preserving ${totalStored} historical tenders.`);
+    return res.json({
+      scan: {
+        scanId: lastScan.scanId || "SCAN-FAILED-001",
+        status: "FAILED",
+        sourceVerified: false,
+        queryDate: targetDate,
+        bidType: reqStatus,
+        recordCount: 0,
+        error: lastScan.error || "GeM source could not be verified"
+      },
+      historicalCount: totalStored,
+      matchingCount: 0,
+      total: 0,
+      filters: {
+        date: targetDate,
+        status: reqStatus,
+        state: state || "ALL",
+        services: services || "ALL"
+      },
+      tenders: []
+    });
+  }
 
   let results = [...(db.tenders || [])];
   const now = new Date();
 
-  // 1. Dynamic Real-time Status Calculation & Filter
+  // 1. Dynamic Real-time Status & Strict Date Validation Layer
   results = results.filter(t => {
-    let computedStatus = t.status ? t.status.toUpperCase() : 'PUBLISHED';
+    let isFinished = false;
     if (t.endDate) {
       const endDt = new Date(t.endDate);
       if (!isNaN(endDt.getTime())) {
-        computedStatus = now >= endDt ? 'FINISHED' : 'PUBLISHED';
+        isFinished = now >= endDt;
       }
     }
+    const computedStatus = isFinished ? 'FINISHED' : 'PUBLISHED';
     t.computedStatus = computedStatus;
 
-    if (reqStatus === 'ALL') return true;
-    return computedStatus === reqStatus;
+    if (reqStatus === 'FINISHED') {
+      // FINISHED requirement: endDateTime <= now AND closing date must match targetDate
+      if (!isFinished) return false;
+      if (targetDate && targetDate !== 'ALL') {
+        const endStr = t.endDateFormatted || t.closingDateStr || t.endDate || '';
+        return endStr.includes(targetDate) || t.queryDate === targetDate;
+      }
+      return true;
+    } else if (reqStatus === 'PUBLISHED') {
+      // PUBLISHED requirement: must be active (now < endDateTime) AND start date matches targetDate
+      if (isFinished) return false;
+      if (targetDate && targetDate !== 'ALL') {
+        const startStr = t.startDateFormatted || t.publishedDate || t.startDate || '';
+        return startStr.includes(targetDate) || t.queryDate === targetDate || t.is_real_gem_bid;
+      }
+      return true;
+    }
+
+    return true;
   });
 
-  // 2. Date / Scan Filter
-  if (targetDate && targetDate !== 'ALL') {
-    results = results.filter(t => {
-      const startStr = t.startDateFormatted || t.publishedDate || t.startDate || '';
-      return startStr.includes(targetDate) || t.queryDate === targetDate || t.is_real_gem_bid;
-    });
-  }
-
-  // 3. Scan ID Filter
+  // 2. Scan ID Filter
   if (scanId && scanId !== 'ALL') {
     results = results.filter(t => t.scanId === scanId);
   }
 
-  // 4. Services / Category Filter
+  // 3. Services / Category Filter
   const activeServices = services || category;
   if (activeServices && activeServices !== 'ALL') {
     const list = activeServices.split(',').map(s => s.trim().toLowerCase());
@@ -473,7 +512,7 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
     });
   }
 
-  // 5. State Filter
+  // 4. State Filter
   if (state && state !== 'ALL') {
     results = results.filter(t => {
       if (t.is_real_gem_bid) return true;
@@ -484,7 +523,7 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
     });
   }
 
-  // 6. Manpower Designation Filter (Search extracted manpower array)
+  // 5. Manpower Designation Filter
   if (manpowerType && manpowerType !== 'ALL') {
     const mpTarget = manpowerType.toLowerCase();
     results = results.filter(t => {
@@ -495,7 +534,7 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
     });
   }
 
-  // 7. Global Search Filter
+  // 6. Global Search Filter
   if (search) {
     const q = search.toLowerCase();
     results = results.filter(t => {
@@ -511,28 +550,24 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
     });
   }
 
-  // Value Range Filter
-  if (valRange && valRange !== 'ALL') {
-    results = results.filter(t => {
-      const val = t.extracted?.estimatedValue?.value || t.estimatedValue || 0;
-      if (valRange === '0-1L') return val <= 100000;
-      if (valRange === '1L-5L') return val > 100000 && val <= 500000;
-      if (valRange === '5L-10L') return val > 500000 && val <= 1000000;
-      if (valRange === '10L-50L') return val > 1000000 && val <= 5000000;
-      if (valRange === '50L-1Cr') return val > 5000000 && val <= 10000000;
-      if (valRange === '1Cr+') return val > 10000000;
-      return true;
-    });
-  }
-
   const matchingCount = results.length;
-  console.log(`[Dashboard API] matchingTenders = ${matchingCount}`);
+  console.log(`[Dashboard API] matchingCount = ${matchingCount}`);
 
   res.json({
+    scan: {
+      scanId: scanId || lastScan.scanId || "SCAN-20260811-001",
+      status: "COMPLETED",
+      sourceVerified: true,
+      queryDate: targetDate,
+      bidType: reqStatus,
+      recordCount: matchingCount,
+      error: null
+    },
+    historicalCount: totalStored,
     totalStoredTenders: totalStored,
+    matchingCount: matchingCount,
     matchingTenders: matchingCount,
     total: matchingCount,
-    scanId: scanId || "SCAN-20260811-001",
     filters: {
       date: targetDate,
       status: reqStatus,
