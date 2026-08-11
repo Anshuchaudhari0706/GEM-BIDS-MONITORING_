@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - NODE_ENV=production
+      - JWT_SECRET=gemintel_jwt_super_secret_key_2026_production_x89a
+      - RAZORPAY_KEY_ID=rzp_test_GeMIntelDemoKey
+      - RAZORPAY_KEY_SECRET=GeMIntelTestSecretKey987654321
+      - ADMIN_EMAIL=admin@gemintel.com
+      - ADMIN_PASSWORD=admin123
+    restart: always
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    restart: always
