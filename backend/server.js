@@ -420,28 +420,23 @@ app.post('/api/payment/verify', authenticateToken, (req, res) => {
     payment: paymentLog
   });
 });
-
 // GET /api/tenders (Search, Value Range, Manpower & Sorting)
 app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res) => {
   const { search, category, services, status, state, selectedDate, valRange, minVal, maxVal, manpowerType, minStaff, maxStaff, sortBy } = req.query;
   const db = readDB();
-  let results = [...(db.tenders || [])];
+  let dbTenders = db.tenders || [];
 
-  // Status filter: when selectedDate is also set and status=FINISHED, we show ALL bids ending
-  // on that date (even if still active at 8 PM / 11 PM). The live badge on each card shows real status.
-  // So only pre-filter by status when there's NO selectedDate, or when status=PUBLISHED
+  console.log(`[Dashboard API] status = ${status || 'ALL'}, date = ${selectedDate || 'ALL'}, state = ${state || 'ALL'}, services = ${services || 'ALL'}`);
+  console.log(`[Dashboard API] database total = ${dbTenders.length}`);
+
+  let results = [...dbTenders];
+
+  // 1. Status Filter
   if (status && status !== 'ALL') {
-    if (status === 'PUBLISHED') {
-      // PUBLISHED: show only currently-active bids
-      results = results.filter(t => t.status.toUpperCase() === 'PUBLISHED');
-    } else if (status === 'FINISHED' && !selectedDate) {
-      // FINISHED without date: show all FINISHED bids
-      results = results.filter(t => t.status.toUpperCase() === 'FINISHED');
-    }
-    // FINISHED + selectedDate: skip status pre-filter — let date filter handle it (shows all ending on that date)
+    results = results.filter(t => (t.status || 'PUBLISHED').toUpperCase() === status.toUpperCase());
   }
 
-
+  // 2. Services / Category Filter
   const activeServices = services || category;
   if (activeServices && activeServices !== 'ALL') {
     const list = activeServices.split(',').map(s => s.trim().toLowerCase());
@@ -452,20 +447,7 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
     });
   }
 
-  // Read stored tenders directly from database.json
-  if (selectedDate) {
-    results = results.filter(t => {
-      if (t.is_real_gem_bid) return true;
-      const startObj = new Date(t.startDate || Date.now());
-      startObj.setHours(0, 0, 0, 0);
-      const endObj = new Date(t.endDate || Date.now());
-      endObj.setHours(0, 0, 0, 0);
-      const selObj = new Date(selectedDate);
-      selObj.setHours(0, 0, 0, 0);
-      return selObj.getTime() >= startObj.getTime() && selObj.getTime() <= endObj.getTime();
-    });
-  }
-
+  // 3. State Filter
   if (state && state !== 'ALL') {
     results = results.filter(t => {
       if (t.is_real_gem_bid) return true;
@@ -476,6 +458,7 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
     });
   }
 
+  // 4. Search Query Filter
   if (search) {
     const q = search.toLowerCase();
     results = results.filter(
@@ -488,26 +471,13 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
     );
   }
 
-  if (selectedDate) {
-    results = results.filter(t => {
-      if (t.is_real_gem_bid) return true;
-      const startObj = new Date(t.startDate || Date.now());
-      startObj.setHours(0, 0, 0, 0);
-      const selObj = new Date(selectedDate);
-      selObj.setHours(0, 0, 0, 0);
-      return selObj.getTime() >= startObj.getTime();
-    });
-  }
-
-
-  // Section 66: Estimated Value Filtering
   if (valRange && valRange !== 'ALL') {
-    if (valRange === '0-1L') results = results.filter(t => t.estimatedValue <= 100000);
-    else if (valRange === '1L-5L') results = results.filter(t => t.estimatedValue > 100000 && t.estimatedValue <= 500000);
-    else if (valRange === '5L-10L') results = results.filter(t => t.estimatedValue > 500000 && t.estimatedValue <= 1000000);
-    else if (valRange === '10L-50L') results = results.filter(t => t.estimatedValue > 1000000 && t.estimatedValue <= 5000000);
-    else if (valRange === '50L-1Cr') results = results.filter(t => t.estimatedValue > 5000000 && t.estimatedValue <= 10000000);
-    else if (valRange === '1Cr+') results = results.filter(t => t.estimatedValue > 10000000);
+    if (valRange === '0-1L') results = results.filter(t => (t.estimatedValue || 0) <= 100000);
+    else if (valRange === '1L-5L') results = results.filter(t => (t.estimatedValue || 0) > 100000 && (t.estimatedValue || 0) <= 500000);
+    else if (valRange === '5L-10L') results = results.filter(t => (t.estimatedValue || 0) > 500000 && (t.estimatedValue || 0) <= 1000000);
+    else if (valRange === '10L-50L') results = results.filter(t => (t.estimatedValue || 0) > 1000000 && (t.estimatedValue || 0) <= 5000000);
+    else if (valRange === '50L-1Cr') results = results.filter(t => (t.estimatedValue || 0) > 5000000 && (t.estimatedValue || 0) <= 10000000);
+    else if (valRange === '1Cr+') results = results.filter(t => (t.estimatedValue || 0) > 10000000);
   }
 
   if (minVal) {
@@ -547,6 +517,42 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
   }
 
   res.json({ count: results.length, tenders: results, license: req.license });
+});
+
+// GET /api/tenders/detail/* (Single Tender Detailed Audit API supporting bid numbers with slashes)
+app.get('/api/tenders/detail/*', authenticateToken, requireActiveSubscription, (req, res) => {
+  const db = readDB();
+  const rawPath = req.params[0] || '';
+  const bidNo = decodeURIComponent(rawPath);
+  const tender = (db.tenders || []).find(t => t.id === bidNo || t.bid_number === bidNo || (t.id && t.id.includes(bidNo)));
+
+  if (!tender) {
+    return res.status(404).json({ error: "Tender not found" });
+  }
+
+  res.json({
+    bidNumber: tender.id || tender.bid_number,
+    source: {
+      name: "GeM",
+      verified: true,
+      url: tender.source_url || "https://bidplus.gem.gov.in/bidlists",
+      title: tender.title,
+      department: tender.department,
+      startDate: tender.startDateFormatted,
+      endDate: tender.endDateFormatted,
+      rawRecord: tender.raw_source_record || null
+    },
+    document: {
+      status: tender.document_processed ? "EXTRACTED" : "AVAILABLE",
+      documentCount: 1
+    },
+    extracted: tender.extracted || {
+      estimatedValue: { value: tender.estimatedValue, display: tender.estimated_value_original || "Not Specified", confidence: "NOT_FOUND" },
+      officeAddress: { value: tender.work_location ? tender.work_location.address : "Not Specified", confidence: "HIGH" },
+      workLocation: { value: tender.work_location ? tender.work_location.address : "Not Specified", confidence: "HIGH" },
+      manpower: tender.manpower || []
+    }
+  });
 });
 
 // POST /api/documents/parse (Section 55 Document Intelligence Reader API)
