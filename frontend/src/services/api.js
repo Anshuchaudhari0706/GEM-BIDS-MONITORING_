@@ -32,6 +32,11 @@ export async function fetchGeMHealth() {
   return data;
 }
 
+export async function fetchGeMDiagnostics() {
+  const { data } = await safeJsonFetch(`${API_BASE}/gem/diagnostics`);
+  return data;
+}
+
 export async function fetchGeMRawScan(token) {
   const { ok, data } = await safeJsonFetch(`${API_BASE}/admin/gem-raw-scan`, {
     headers: { Authorization: `Bearer ${token}` }

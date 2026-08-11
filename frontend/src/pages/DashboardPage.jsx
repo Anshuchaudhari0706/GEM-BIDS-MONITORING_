@@ -29,7 +29,7 @@ import {
   ExternalLink,
   ChevronRight
 } from 'lucide-react';
-import { fetchTenders, triggerGeMScan, fetchSourceHealth, fetchGeMHealth, fetchGeMRawScan } from '../services/api';
+import { fetchTenders, triggerGeMScan, fetchSourceHealth, fetchGeMHealth, fetchGeMRawScan, fetchGeMDiagnostics } from '../services/api';
 import * as XLSX from 'xlsx';
 
 export default function DashboardPage({ searchQuery, setSearchQuery }) {
@@ -94,8 +94,9 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
   const openDiagnosticInspector = async () => {
     setShowDiagnosticModal(true);
     try {
-      const data = await fetchGeMRawScan(token);
-      setDiagnosticData(data);
+      const diag = await fetchGeMDiagnostics();
+      const rawData = await fetchGeMRawScan(token);
+      setDiagnosticData({ ...rawData, gemDiagnostics: diag });
     } catch (e) {
       console.warn('Diagnostic fetch notice:', e);
     }
