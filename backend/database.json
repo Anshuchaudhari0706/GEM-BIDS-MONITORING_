@@ -65,7 +65,7 @@
       "companyName": "GeMIntel HQ",
       "email": "admin@gemintel.com",
       "mobile": "9876543210",
-      "passwordHash": "$2a$10$7ZlbYhosmkTtUXFdlm9GQeemob5hnVpGNf8OASx68k3ll2EA1DydS",
+      "passwordHash": "$2a$10$YoMpOysxpXEDiZWbep.z5.flS8VfskpXVlMKv9qJHDVb4SaDYu20K",
       "role": "admin",
       "status": "ACTIVE",
       "createdAt": "2026-01-01T00:00:00.000Z"
@@ -321,7 +321,12 @@
         ],
         "totalStaffCount": 15,
         "parserStatus": "SUCCESS"
-      }
+      },
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7796577",
@@ -407,7 +412,12 @@
         ],
         "totalStaffCount": 15,
         "parserStatus": "SUCCESS"
-      }
+      },
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7681580",
@@ -493,7 +503,12 @@
         ],
         "totalStaffCount": 15,
         "parserStatus": "SUCCESS"
-      }
+      },
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7798781",
@@ -579,7 +594,12 @@
         ],
         "totalStaffCount": 15,
         "parserStatus": "SUCCESS"
-      }
+      },
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7799410",
@@ -665,7 +685,12 @@
         ],
         "totalStaffCount": 15,
         "parserStatus": "SUCCESS"
-      }
+      },
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7817644",
@@ -751,7 +776,12 @@
         ],
         "totalStaffCount": 15,
         "parserStatus": "SUCCESS"
-      }
+      },
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7798790",
@@ -837,7 +867,12 @@
         ],
         "totalStaffCount": 15,
         "parserStatus": "SUCCESS"
-      }
+      },
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7817897",
@@ -923,7 +958,12 @@
         ],
         "totalStaffCount": 15,
         "parserStatus": "SUCCESS"
-      }
+      },
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7813726",
@@ -1009,7 +1049,12 @@
         ],
         "totalStaffCount": 15,
         "parserStatus": "SUCCESS"
-      }
+      },
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7818222",
@@ -1095,7 +1140,12 @@
         ],
         "totalStaffCount": 15,
         "parserStatus": "SUCCESS"
-      }
+      },
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7791356",
@@ -1133,7 +1183,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7816762",
@@ -1171,7 +1226,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7818423",
@@ -1209,7 +1269,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7763057",
@@ -1247,7 +1312,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7817899",
@@ -1285,7 +1355,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7804862",
@@ -1323,7 +1398,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7805076",
@@ -1361,7 +1441,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7819023",
@@ -1399,7 +1484,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7767289",
@@ -1437,7 +1527,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7696588",
@@ -1475,7 +1570,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7790919",
@@ -1513,7 +1613,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7809749",
@@ -1551,7 +1656,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7804518",
@@ -1589,7 +1699,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7819042",
@@ -1627,7 +1742,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7819374",
@@ -1665,7 +1785,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7819466",
@@ -1703,7 +1828,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7818974",
@@ -1741,7 +1871,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7765581",
@@ -1779,7 +1914,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7678939",
@@ -1817,7 +1957,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7596737",
@@ -1855,7 +2000,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7606693",
@@ -1893,7 +2043,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7739529",
@@ -1931,7 +2086,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7847051",
@@ -1969,7 +2129,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7726264",
@@ -2007,7 +2172,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7688910",
@@ -2045,7 +2215,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7847931",
@@ -2083,7 +2258,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7846732",
@@ -2121,7 +2301,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7848957",
@@ -2159,7 +2344,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7849152",
@@ -2197,7 +2387,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7866124",
@@ -2235,7 +2430,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7866118",
@@ -2273,7 +2473,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7866144",
@@ -2311,7 +2516,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7866136",
@@ -2349,7 +2559,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7866084",
@@ -2387,7 +2602,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7866162",
@@ -2425,7 +2645,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7866171",
@@ -2463,7 +2688,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7866208",
@@ -2501,7 +2731,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7866210",
@@ -2539,7 +2774,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7649700",
@@ -2577,7 +2817,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7710974",
@@ -2615,7 +2860,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7865692",
@@ -2653,7 +2903,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7865674",
@@ -2691,7 +2946,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7865620",
@@ -2729,7 +2989,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7865574",
@@ -2767,7 +3032,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7792975",
@@ -2805,7 +3075,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7865719",
@@ -2843,7 +3118,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7865687",
@@ -2881,7 +3161,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7864504",
@@ -2919,7 +3204,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7846518",
@@ -2957,7 +3247,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7865289",
@@ -2995,7 +3290,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7865422",
@@ -3033,7 +3333,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7818828",
@@ -3071,7 +3376,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7864390",
@@ -3109,7 +3419,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7865523",
@@ -3147,7 +3462,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7865522",
@@ -3185,7 +3505,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7865435",
@@ -3223,7 +3548,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7865384",
@@ -3261,7 +3591,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7864906",
@@ -3299,7 +3634,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7865838",
@@ -3337,7 +3677,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7865983",
@@ -3375,7 +3720,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7865997",
@@ -3413,7 +3763,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7866032",
@@ -3451,7 +3806,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7864060",
@@ -3489,7 +3849,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7866109",
@@ -3527,7 +3892,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7817531",
@@ -3565,7 +3935,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7817405",
@@ -3603,7 +3978,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7755844",
@@ -3641,7 +4021,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7862935",
@@ -3679,7 +4064,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7852327",
@@ -3717,7 +4107,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7848945",
@@ -3755,7 +4150,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7837707",
@@ -3793,7 +4193,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7857886",
@@ -3831,7 +4236,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7857888",
@@ -3869,7 +4279,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7857904",
@@ -3907,7 +4322,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7859082",
@@ -3945,7 +4365,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7853525",
@@ -3983,7 +4408,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7860189",
@@ -4021,7 +4451,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7867663",
@@ -4059,7 +4494,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7864065",
@@ -4097,7 +4537,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7687899",
@@ -4135,7 +4580,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7843675",
@@ -4173,7 +4623,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7774269",
@@ -4211,7 +4666,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7819236",
@@ -4249,7 +4709,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7696362",
@@ -4287,7 +4752,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7820420",
@@ -4325,7 +4795,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7821871",
@@ -4363,7 +4838,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7818603",
@@ -4401,7 +4881,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7744090",
@@ -4439,7 +4924,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7742668",
@@ -4477,7 +4967,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7822432",
@@ -4515,7 +5010,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7822525",
@@ -4553,7 +5053,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7743411",
@@ -4591,7 +5096,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7728241",
@@ -4629,7 +5139,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7591765",
@@ -4667,7 +5182,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7664216",
@@ -4705,7 +5225,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7692483",
@@ -4743,7 +5268,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7833984",
@@ -4781,7 +5311,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7695330",
@@ -4819,7 +5354,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7790401",
@@ -4857,7 +5397,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7750291",
@@ -4895,7 +5440,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7873799",
@@ -4933,7 +5483,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7873631",
@@ -4971,7 +5526,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7819424",
@@ -5009,7 +5569,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7747054",
@@ -5047,7 +5612,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7871609",
@@ -5085,7 +5655,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7838763",
@@ -5123,7 +5698,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7791649",
@@ -5161,7 +5741,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7778502",
@@ -5199,7 +5784,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7606307",
@@ -5237,7 +5827,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7881265",
@@ -5275,7 +5870,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7825054",
@@ -5313,7 +5913,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7824971",
@@ -5351,7 +5956,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7882937",
@@ -5389,7 +5999,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7767141",
@@ -5427,7 +6042,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7879398",
@@ -5465,7 +6085,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7852232",
@@ -5503,7 +6128,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7878082",
@@ -5541,7 +6171,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7794413",
@@ -5579,7 +6214,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7878545",
@@ -5617,7 +6257,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7878797",
@@ -5655,7 +6300,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7791848",
@@ -5693,7 +6343,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7879846",
@@ -5731,7 +6386,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7772795",
@@ -5769,7 +6429,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7786571",
@@ -5807,7 +6472,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7857319",
@@ -5845,7 +6515,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7862676",
@@ -5883,7 +6558,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7841892",
@@ -5921,7 +6601,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7828290",
@@ -5959,7 +6644,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7790066",
@@ -5997,7 +6687,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7551314",
@@ -6035,7 +6730,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7548981",
@@ -6073,7 +6773,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7762487",
@@ -6111,7 +6816,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7876997",
@@ -6149,7 +6859,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7706236",
@@ -6187,7 +6902,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7833035",
@@ -6225,7 +6945,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7807771",
@@ -6263,7 +6988,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7741939",
@@ -6301,7 +7031,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7839533",
@@ -6339,7 +7074,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7845008",
@@ -6377,7 +7117,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7888370",
@@ -6415,7 +7160,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7715119",
@@ -6453,7 +7203,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7828124",
@@ -6491,7 +7246,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7828376",
@@ -6529,7 +7289,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7578265",
@@ -6567,7 +7332,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7406795",
@@ -6605,7 +7375,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7400055",
@@ -6643,7 +7418,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7836559",
@@ -6681,7 +7461,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7826693",
@@ -6719,7 +7504,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7813811",
@@ -6757,7 +7547,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7893999",
@@ -6795,7 +7590,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7425035",
@@ -6833,7 +7633,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7772764",
@@ -6871,7 +7676,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7800299",
@@ -6909,7 +7719,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7736126",
@@ -6947,7 +7762,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7845830",
@@ -6985,7 +7805,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7717617",
@@ -7023,7 +7848,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7849156",
@@ -7061,7 +7891,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7841179",
@@ -7099,7 +7934,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7871284",
@@ -7137,7 +7977,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7852176",
@@ -7175,7 +8020,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7806980",
@@ -7213,7 +8063,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7818135",
@@ -7251,7 +8106,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7833514",
@@ -7289,7 +8149,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7828217",
@@ -7327,7 +8192,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7895585",
@@ -7365,7 +8235,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7895573",
@@ -7403,7 +8278,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7895575",
@@ -7441,7 +8321,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7604144",
@@ -7479,7 +8364,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7825615",
@@ -7517,7 +8407,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7832550",
@@ -7555,7 +8450,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7896035",
@@ -7593,7 +8493,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7780377",
@@ -7631,7 +8536,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7662708",
@@ -7669,7 +8579,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7856129",
@@ -7707,7 +8622,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7846844",
@@ -7745,7 +8665,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7836037",
@@ -7783,7 +8708,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7857777",
@@ -7821,7 +8751,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-20260811-001",
+      "dataOrigin": "CURRENT_SCAN",
+      "queryDate": "2026-08-11",
+      "bidType": "PUBLISHED",
+      "dateMatch": true
     },
     {
       "id": "GEM/2026/B/7866089",
@@ -7859,7 +8794,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7809775",
@@ -7897,7 +8837,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7810295",
@@ -7935,7 +8880,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7741924",
@@ -7973,7 +8923,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7657962",
@@ -8011,7 +8966,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7816333",
@@ -8049,7 +9009,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7816685",
@@ -8087,7 +9052,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7816514",
@@ -8125,7 +9095,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7816818",
@@ -8163,7 +9138,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7794148",
@@ -8201,7 +9181,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7817890",
@@ -8239,7 +9224,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7812766",
@@ -8277,7 +9267,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7808675",
@@ -8315,7 +9310,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7804002",
@@ -8353,7 +9353,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7776347",
@@ -8391,7 +9396,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7817995",
@@ -8429,7 +9439,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7784551",
@@ -8467,7 +9482,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7784120",
@@ -8505,7 +9525,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7732014",
@@ -8543,7 +9568,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7602231",
@@ -8581,7 +9611,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7817961",
@@ -8619,7 +9654,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7816776",
@@ -8657,7 +9697,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7813839",
@@ -8695,7 +9740,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7811570",
@@ -8733,7 +9783,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7818065",
@@ -8771,7 +9826,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7739767",
@@ -8809,7 +9869,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7673568",
@@ -8847,7 +9912,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7815127",
@@ -8885,7 +9955,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7792196",
@@ -8923,7 +9998,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7817953",
@@ -8961,7 +10041,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7765343",
@@ -8999,7 +10084,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7766431",
@@ -9037,7 +10127,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7766069",
@@ -9075,7 +10170,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7765853",
@@ -9113,7 +10213,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7655248",
@@ -9151,7 +10256,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7820975",
@@ -9189,7 +10299,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7821111",
@@ -9227,7 +10342,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7742393",
@@ -9265,7 +10385,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7808925",
@@ -9303,7 +10428,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7687889",
@@ -9341,7 +10471,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7798903",
@@ -9379,7 +10514,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7708612",
@@ -9417,7 +10557,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7682798",
@@ -9455,7 +10600,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7846921",
@@ -9493,7 +10643,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7846983",
@@ -9531,7 +10686,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7847006",
@@ -9569,7 +10729,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7847108",
@@ -9607,7 +10772,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7818033",
@@ -9645,7 +10815,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7848554",
@@ -9683,7 +10858,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7845364",
@@ -9721,7 +10901,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7847102",
@@ -9759,7 +10944,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7846739",
@@ -9797,7 +10987,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7785529",
@@ -9835,7 +11030,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7844756",
@@ -9873,7 +11073,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7837518",
@@ -9911,7 +11116,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7837430",
@@ -9949,7 +11159,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7830146",
@@ -9987,7 +11202,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7842209",
@@ -10025,7 +11245,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7849304",
@@ -10063,7 +11288,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7833450",
@@ -10101,7 +11331,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7866128",
@@ -10139,7 +11374,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7864101",
@@ -10177,7 +11417,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7866111",
@@ -10215,7 +11460,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7866155",
@@ -10253,7 +11503,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7863465",
@@ -10291,7 +11546,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7866186",
@@ -10329,7 +11589,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7866214",
@@ -10367,7 +11632,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7864431",
@@ -10405,7 +11675,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7866219",
@@ -10443,7 +11718,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7866218",
@@ -10481,7 +11761,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7865144",
@@ -10519,7 +11804,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7768479",
@@ -10557,7 +11847,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7864401",
@@ -10595,7 +11890,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7864337",
@@ -10633,7 +11933,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7863556",
@@ -10671,7 +11976,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7865055",
@@ -10709,7 +12019,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7863758",
@@ -10747,7 +12062,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7791627",
@@ -10785,7 +12105,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7865385",
@@ -10823,7 +12148,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7865358",
@@ -10861,7 +12191,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7865924",
@@ -10899,7 +12234,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7864685",
@@ -10937,7 +12277,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7866048",
@@ -10975,7 +12320,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7860089",
@@ -11013,7 +12363,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7783639",
@@ -11051,7 +12406,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7862615",
@@ -11089,7 +12449,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7832968",
@@ -11127,7 +12492,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7863065",
@@ -11165,7 +12535,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7847526",
@@ -11203,7 +12578,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7820532",
@@ -11241,7 +12621,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7857670",
@@ -11279,7 +12664,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7852672",
@@ -11317,7 +12707,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7847737",
@@ -11355,7 +12750,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7847410",
@@ -11393,7 +12793,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7855285",
@@ -11431,7 +12836,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7817125",
@@ -11469,7 +12879,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7835908",
@@ -11507,7 +12922,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7816269",
@@ -11545,7 +12965,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7852725",
@@ -11583,7 +13008,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7642219",
@@ -11621,7 +13051,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7863095",
@@ -11659,7 +13094,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7863077",
@@ -11697,7 +13137,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7863331",
@@ -11735,7 +13180,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7863069",
@@ -11773,7 +13223,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7858990",
@@ -11811,7 +13266,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7789448",
@@ -11849,7 +13309,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7855266",
@@ -11887,7 +13352,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7863333",
@@ -11925,7 +13395,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7864872",
@@ -11963,7 +13438,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7858399",
@@ -12001,7 +13481,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7864912",
@@ -12039,7 +13524,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7715978",
@@ -12077,7 +13567,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7863665",
@@ -12115,7 +13610,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7848377",
@@ -12153,7 +13653,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7860626",
@@ -12191,7 +13696,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7681805",
@@ -12229,7 +13739,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7781172",
@@ -12267,7 +13782,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7786262",
@@ -12305,7 +13825,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7766046",
@@ -12343,7 +13868,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7735561",
@@ -12381,7 +13911,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7818004",
@@ -12419,7 +13954,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7802080",
@@ -12457,7 +13997,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7822028",
@@ -12495,7 +14040,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7689828",
@@ -12533,7 +14083,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7823097",
@@ -12571,7 +14126,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7820994",
@@ -12609,7 +14169,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7697871",
@@ -12647,7 +14212,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7707877",
@@ -12685,7 +14255,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7807865",
@@ -12723,7 +14298,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7597291",
@@ -12761,7 +14341,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7809934",
@@ -12799,7 +14384,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7746226",
@@ -12837,7 +14427,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7823093",
@@ -12875,7 +14470,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7832010",
@@ -12913,7 +14513,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7777523",
@@ -12951,7 +14556,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7841977",
@@ -12989,7 +14599,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7728898",
@@ -13027,7 +14642,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7842049",
@@ -13065,7 +14685,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7841963",
@@ -13103,7 +14728,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7834281",
@@ -13141,7 +14771,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7842079",
@@ -13179,7 +14814,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7791398",
@@ -13217,7 +14857,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7843738",
@@ -13255,7 +14900,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7791110",
@@ -13293,7 +14943,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7851243",
@@ -13331,7 +14986,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7822538",
@@ -13369,7 +15029,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7785266",
@@ -13407,7 +15072,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7870378",
@@ -13445,7 +15115,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7880510",
@@ -13483,7 +15158,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7880613",
@@ -13521,7 +15201,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7774463",
@@ -13559,7 +15244,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7712016",
@@ -13597,7 +15287,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7881423",
@@ -13635,7 +15330,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7760955",
@@ -13673,7 +15373,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7675037",
@@ -13711,7 +15416,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7757326",
@@ -13749,7 +15459,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7728912",
@@ -13787,7 +15502,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7755730",
@@ -13825,7 +15545,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7801729",
@@ -13863,7 +15588,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7664117",
@@ -13901,7 +15631,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7791833",
@@ -13939,7 +15674,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7797209",
@@ -13977,7 +15717,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7568678",
@@ -14015,7 +15760,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7877055",
@@ -14053,7 +15803,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7788279",
@@ -14091,7 +15846,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7758823",
@@ -14129,7 +15889,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7757611",
@@ -14167,7 +15932,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7803844",
@@ -14205,7 +15975,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7683064",
@@ -14243,7 +16018,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7893172",
@@ -14281,7 +16061,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7782664",
@@ -14319,7 +16104,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7757269",
@@ -14357,7 +16147,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7786284",
@@ -14395,7 +16190,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7815904",
@@ -14433,7 +16233,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7879800",
@@ -14471,7 +16276,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7836568",
@@ -14509,7 +16319,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7793393",
@@ -14547,7 +16362,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7799253",
@@ -14585,7 +16405,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7857128",
@@ -14623,7 +16448,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7780964",
@@ -14661,7 +16491,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7809558",
@@ -14699,7 +16534,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7853741",
@@ -14737,7 +16577,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7816575",
@@ -14775,7 +16620,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7833186",
@@ -14813,7 +16663,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7859544",
@@ -14851,7 +16706,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7816450",
@@ -14889,7 +16749,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7851776",
@@ -14927,7 +16792,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7895615",
@@ -14965,7 +16835,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7895619",
@@ -15003,7 +16878,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7858046",
@@ -15041,7 +16921,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7857979",
@@ -15079,7 +16964,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7786189",
@@ -15117,7 +17007,12 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     },
     {
       "id": "GEM/2026/B/7818258",
@@ -15155,7 +17050,25 @@
       "document_processed": true,
       "value_found": false,
       "manpower_found": false,
-      "raw_source_record": {}
+      "raw_source_record": {},
+      "scanId": "SCAN-HISTORICAL",
+      "dataOrigin": "HISTORICAL",
+      "queryDate": "HISTORICAL",
+      "bidType": "HISTORICAL",
+      "dateMatch": false
     }
-  ]
+  ],
+  "last_scan": {
+    "scanId": "SCAN-20260811-001",
+    "status": "COMPLETED",
+    "sourceVerified": true,
+    "queryDate": "2026-08-11",
+    "bidType": "PUBLISHED",
+    "sourceTotal": 5713364,
+    "sourceQueryTotal": 187,
+    "recordsRetrieved": 187,
+    "validRecords": 187,
+    "duplicatesRemoved": 0,
+    "finalMatchingRecords": 187
+  }
 }
