@@ -693,7 +693,12 @@ app.get('/api/tenders/:id', authenticateToken, requireActiveSubscription, (req, 
   res.json({ tender });
 });
 
-const { fetchRealGeMBids } = require('./gemScraper');
+// GET /api/source-health (Live Source Audit Health Status)
+app.get('/api/source-health', (req, res) => {
+  res.json(getSourceHealthStatus());
+});
+
+const { fetchRealGeMBids, getSourceHealthStatus } = require('./gemScraper');
 const { generateGeMScannedTenders } = require('./tenderGenerator');
 
 // POST /api/tenders/scan (Scans live pages from official GeM portal API)

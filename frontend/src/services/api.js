@@ -22,6 +22,11 @@ export async function fetchPricingConfig() {
   return data;
 }
 
+export async function fetchSourceHealth() {
+  const { data } = await safeJsonFetch(`${API_BASE}/source-health`);
+  return data;
+}
+
 export async function loginUser(email, password) {
   const { ok, data } = await safeJsonFetch(`${API_BASE}/auth/login`, {
     method: 'POST',
