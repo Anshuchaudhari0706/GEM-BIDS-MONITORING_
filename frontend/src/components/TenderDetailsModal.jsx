@@ -277,7 +277,7 @@ export default function TenderDetailsModal({ tender, onClose }) {
           {activeTab === 'manpower' && (
             <div>
               <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#fff', marginBottom: '12px' }}>
-                👥 Manpower / Service Requirement (Total Staff: {tender.total_manpower || 20})
+                👥 Manpower / Service Requirement (Total Staff: {tender.manpower && tender.manpower.length > 0 ? tender.manpower.reduce((s, m) => s + (m.quantity || 0), 0) : (tender.total_manpower || 18)})
               </div>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.86rem', textAlign: 'left' }}>
                 <thead>

@@ -117,14 +117,15 @@ function generateGeMScannedTenders(selectedDateStr, statusFilter) {
 
       // Determine category unit type (Staff for Manpower/Security, Sq. Ft. for Cleaning/Sanitation, Units for Custom Bids)
       const catLower = dist.category.toLowerCase();
+      let effectiveQty = qty;
       let qtyDisplay = `${qty} Units`;
-      if (catLower.includes('cleaning') || catLower.includes('sanitation') || catLower.includes('housekeeping')) {
+
+      if (catLower.includes('manpower') || catLower.includes('security') || catLower.includes('staff') || catLower.includes('guard')) {
+        effectiveQty = totalManpower; // Synchronize: quantity matches breakdown table sum EXACTLY
+        qtyDisplay = `${totalManpower} Staff`;
+      } else if (catLower.includes('cleaning') || catLower.includes('sanitation') || catLower.includes('housekeeping') || catLower.includes('facility')) {
         const sqft = qty < 500 ? qty * 100 : qty;
-        qtyDisplay = `${sqft.toLocaleString('en-IN')} Sq. Ft.`;
-      } else if (catLower.includes('manpower') || catLower.includes('security') || catLower.includes('staff') || catLower.includes('guard')) {
-        qtyDisplay = `${qty} Staff`;
-      } else if (catLower.includes('facility')) {
-        const sqft = qty < 500 ? qty * 100 : qty;
+        effectiveQty = sqft;
         qtyDisplay = `${sqft.toLocaleString('en-IN')} Sq. Ft.`;
       } else {
         qtyDisplay = `${qty.toLocaleString('en-IN')} Units`;
@@ -141,9 +142,10 @@ function generateGeMScannedTenders(selectedDateStr, statusFilter) {
         buyer_name: `Executive Engineer (Procurement)`,
         state: loc.state,
         city: loc.city,
-        quantity: qty,
+        quantity: effectiveQty,
         quantity_display: qtyDisplay,
-        total_manpower: catLower.includes('manpower') || catLower.includes('security') ? qty : totalManpower,
+        total_manpower: totalManpower,
+        manpower: manpowerBreakdown,
         estimatedValue: estVal,
         estimated_value_original: estVal >= 10000000 ? `₹${(estVal / 10000000).toFixed(2)} Crore` : `₹${(estVal / 100000).toFixed(2)} Lakhs`,
         emd_amount: emdVal,

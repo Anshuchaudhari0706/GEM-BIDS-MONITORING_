@@ -478,10 +478,10 @@ export default function ScanBidsPage({ searchQuery }) {
                       <div style={{ fontSize: '0.86rem', color: '#fff', fontWeight: 700 }}>
                         Quantity: <span style={{ color: '#fff' }}>{
                           t.quantity_display || (
-                            (t.category || t.items || '').toLowerCase().includes('cleaning') || (t.category || t.items || '').toLowerCase().includes('sanitation') || (t.category || t.items || '').toLowerCase().includes('housekeeping')
+                            (t.category || t.items || '').toLowerCase().includes('manpower') || (t.category || t.items || '').toLowerCase().includes('security') || (t.category || t.items || '').toLowerCase().includes('guard')
+                              ? `${(t.manpower && t.manpower.length > 0 ? t.manpower.reduce((s, m) => s + (m.quantity || 0), 0) : (t.total_manpower || t.quantity || 18))} Staff`
+                              : (t.category || t.items || '').toLowerCase().includes('cleaning') || (t.category || t.items || '').toLowerCase().includes('sanitation') || (t.category || t.items || '').toLowerCase().includes('housekeeping')
                               ? `${((t.quantity || 150) < 500 ? (t.quantity || 150) * 100 : (t.quantity || 150)).toLocaleString('en-IN')} Sq. Ft.`
-                              : (t.category || t.items || '').toLowerCase().includes('manpower') || (t.category || t.items || '').toLowerCase().includes('security') || (t.category || t.items || '').toLowerCase().includes('guard')
-                              ? `${t.quantity || t.total_manpower || 20} Staff`
                               : `${(t.quantity || 217).toLocaleString('en-IN')} Units`
                           )
                         }</span>
