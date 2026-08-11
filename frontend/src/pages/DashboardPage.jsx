@@ -702,6 +702,15 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
                 </div>
               );
             })}
+          {tenders.length === 0 && !loading && (
+            <div style={{ textAlign: 'center', padding: '48px 24px', background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border-color)', margin: '20px 0' }}>
+              <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#fff', marginBottom: '8px' }}>📡 No Live GeM Bids in Database</div>
+              <div style={{ fontSize: '0.88rem', color: 'var(--text-muted)', marginBottom: '20px' }}>Click "Scan GeM Tenders Now" to scan 100% real live official bids directly from the GeM Portal API.</div>
+              <button onClick={handleScanAction} className="btn-cyan" style={{ padding: '10px 24px', fontSize: '0.9rem', background: '#0284c7', color: '#fff', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}>
+                ⚡ Scan GeM Tenders Now
+              </button>
+            </div>
+          )}
           </div>
         </div>
       </div>
