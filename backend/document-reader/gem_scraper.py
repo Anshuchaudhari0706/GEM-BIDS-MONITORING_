@@ -12,7 +12,7 @@ from curl_cffi import requests
 """
 GeM Authorized Public Data Connector (GeMConnector)
 Acquires real live public tender information directly from the official Government e-Marketplace listing.
-Applies normalization, service classification, and source verification metadata.
+Supports exact Solr query date parameters, page-by-page Solr pagination, date validation, and deduplication.
 Strictly zero fake/mock data generation — returns exact source values or "Not Available".
 """
 
@@ -21,10 +21,10 @@ GEM_ALL_BIDS_DATA_URL = "https://bidplus.gem.gov.in/all-bids-data"
 
 class BaseTenderConnector:
     """Base Interface for Permitted Tender Connectors"""
-    def fetch_published_bids(self, date_from=None, date_to=None, state="ALL"):
+    def fetch_published_bids(self, target_date=None, target_state="ALL", max_pages=10):
         raise NotImplementedError
     
-    def fetch_finished_bids(self, date_from=None, date_to=None, state="ALL"):
+    def fetch_finished_bids(self, target_date=None, target_state="ALL", max_pages=10):
         raise NotImplementedError
 
 class GeMConnector(BaseTenderConnector):
@@ -33,6 +33,7 @@ class GeMConnector(BaseTenderConnector):
     def __init__(self):
         self.source_name = "GeM Public Listing"
         self.source_url = GEM_BIDLISTS_URL
+        self.endpoint = GEM_ALL_BIDS_DATA_URL
 
     def _init_headless_driver(self):
         options = Options()
@@ -90,10 +91,13 @@ class GeMConnector(BaseTenderConnector):
 
         return csrf_key, csrf_val, cookies_dict
 
-    def fetch_published_bids(self, driver, csrf_key, csrf_val, target_state="ALL", max_pages=10):
-        """Fetch ongoing published bids from GeM Public Data Endpoint"""
+    def fetch_published_bids(self, driver, csrf_key, csrf_val, target_date=None, target_state="ALL", max_pages=10):
+        """Fetch ongoing published bids from GeM Public Data Endpoint page by page"""
         all_docs = []
         search_term = target_state if target_state and target_state != "ALL" else ""
+        source_total = 0
+        query_total = 0
+        pages_processed = 0
 
         js_code = """
         var done = arguments[arguments.length - 1];
@@ -101,15 +105,19 @@ class GeMConnector(BaseTenderConnector):
         var searchStr = arguments[1];
         var cKey = arguments[2];
         var cVal = arguments[3];
+        var targetDate = arguments[4];
 
-        var postdata = {
-            'param': {
-                'search': searchStr,
-                'sort': 'Bid-Start-Date-Latest',
-                'page': pageNum
-            }
+        var paramObj = {
+            'search': searchStr,
+            'sort': 'Bid-Start-Date-Latest',
+            'page': pageNum
         };
 
+        if (targetDate) {
+            paramObj['byStartDate'] = {'from': targetDate, 'to': targetDate};
+        }
+
+        var postdata = { 'param': paramObj };
         var formData = 'payload=' + encodeURIComponent(JSON.stringify(postdata)) + '&' + cKey + '=' + encodeURIComponent(cVal);
 
         fetch('https://bidplus.gem.gov.in/all-bids-data', {
@@ -127,26 +135,42 @@ class GeMConnector(BaseTenderConnector):
 
         for page in range(1, max_pages + 1):
             try:
-                res = driver.execute_async_script(js_code, page, search_term, csrf_key, csrf_val)
+                res = driver.execute_async_script(js_code, page, search_term, csrf_key, csrf_val, target_date)
+                pages_processed = page
                 if res and not res.get('error'):
-                    docs = res.get('response', {}).get('response', {}).get('docs', []) or res.get('docs', [])
+                    resp_obj = res.get('response', {}).get('response', {}) or res
+                    docs = resp_obj.get('docs', [])
+                    num_found = resp_obj.get('numFound', len(docs))
+                    
+                    if page == 1:
+                        query_total = num_found
+                        source_total = num_found
+
                     if not docs:
                         break
                     all_docs.extend(docs)
                 else:
                     break
             except Exception as e:
-                print(f"Published Bids Acquisition Notice: {e}")
+                print(f"Published Bids Acquisition Notice page {page}: {e}")
                 break
 
-        return all_docs
+        return {
+            "docs": all_docs,
+            "sourceTotal": source_total,
+            "queryTotal": query_total,
+            "pagesProcessed": pages_processed
+        }
 
     def fetch_finished_bids(self, csrf_key, csrf_val, cookies_dict, target_date=None, target_state="ALL", max_pages=10):
-        """Fetch finished/closed tenders using session query"""
+        """Fetch finished/closed tenders using session query page by page"""
         all_docs = []
         search_term = target_state if target_state and target_state != "ALL" else ""
-        s = requests.Session(impersonate="chrome110")
+        source_total = 0
+        query_total = 0
+        pages_processed = 0
 
+        s = requests.Session(impersonate="chrome110")
         for k, v in cookies_dict.items():
             s.cookies.set(k, v)
 
@@ -175,52 +199,71 @@ class GeMConnector(BaseTenderConnector):
 
             try:
                 res = s.post(GEM_ALL_BIDS_DATA_URL, data=post_data, verify=False, timeout=10)
+                pages_processed = page
                 if res.status_code == 200 and res.text:
                     data = res.json()
-                    docs = data.get('response', {}).get('response', {}).get('docs', []) or data.get('docs', [])
+                    resp_obj = data.get('response', {}).get('response', {}) or data
+                    docs = resp_obj.get('docs', [])
+                    num_found = resp_obj.get('numFound', len(docs))
+
+                    if page == 1:
+                        query_total = num_found
+                        source_total = num_found
+
                     if not docs:
                         break
                     all_docs.extend(docs)
                 else:
                     break
             except Exception as e:
-                print(f"Finished Bids Acquisition Notice: {e}")
+                print(f"Finished Bids Acquisition Notice page {page}: {e}")
                 break
 
-        return all_docs
+        return {
+            "docs": all_docs,
+            "sourceTotal": source_total,
+            "queryTotal": query_total,
+            "pagesProcessed": pages_processed
+        }
 
 def scan_real_gem_portal(target_date=None, target_state=None, limit=50, status_filter="PUBLISHED"):
     """
-    Acquires real GeM tender records directly from source, normalizes fields, and attaches verification metadata.
-    STRICT ZERO FAKE/MOCK POLICY: If 0 bids returned from source, returns empty list []. Never invents fallback records.
+    Acquires real GeM tender records directly from source, normalizes fields, applies date validation, and attaches verification metadata.
+    STRICT ZERO FAKE/MOCK POLICY: Returns exact source values or "Not Available".
     """
     connector = GeMConnector()
     bids = []
     seen_ids = set()
     driver = None
     retrieved_at_iso = datetime.now().isoformat() + "Z"
+    duplicates_count = 0
 
     try:
         driver = connector._init_headless_driver()
         csrf_key, csrf_val, cookies_dict = connector.acquire_session_context(driver)
 
-        docs = []
         status_str = (status_filter or "PUBLISHED").upper()
 
         if status_str == "PUBLISHED":
-            docs = connector.fetch_published_bids(driver, csrf_key, csrf_val, target_state or "ALL", max_pages=10)
+            res_meta = connector.fetch_published_bids(driver, csrf_key, csrf_val, target_date, target_state or "ALL", max_pages=5)
             driver.quit()
             driver = None
         else:
             driver.quit()
             driver = None
-            docs = connector.fetch_finished_bids(csrf_key, csrf_val, cookies_dict, target_date, target_state or "ALL", max_pages=10)
+            res_meta = connector.fetch_finished_bids(csrf_key, csrf_val, cookies_dict, target_date, target_state or "ALL", max_pages=5)
+
+        docs = res_meta.get("docs", [])
 
         for doc in docs:
             bid_no_list = doc.get('b_bid_number', [])
             bid_no = bid_no_list[0] if isinstance(bid_no_list, list) and len(bid_no_list) > 0 else doc.get('bidNumber') or doc.get('b_bid_number')
             
-            if not bid_no or bid_no in seen_ids:
+            if not bid_no:
+                continue
+
+            if bid_no in seen_ids:
+                duplicates_count += 1
                 continue
             seen_ids.add(bid_no)
 
@@ -248,6 +291,9 @@ def scan_real_gem_portal(target_date=None, target_state=None, limit=50, status_f
 
             start_date_raw = (doc.get('final_start_date_sort') or [""])[0] if isinstance(doc.get('final_start_date_sort'), list) else str(doc.get('final_start_date_sort') or "")
             end_date_raw = (doc.get('final_end_date_sort') or [""])[0] if isinstance(doc.get('final_end_date_sort'), list) else str(doc.get('final_end_date_sort') or "")
+
+            start_iso_date = start_date_raw[:10] if len(start_date_raw) >= 10 else target_dt_str
+            end_iso_date = end_date_raw[:10] if len(end_date_raw) >= 10 else target_dt_str
 
             try:
                 s_dt = datetime.strptime(start_date_raw.replace('Z', ''), "%Y-%m-%dT%H:%M:%S")
@@ -331,7 +377,6 @@ def scan_real_gem_portal(target_date=None, target_state=None, limit=50, status_f
                 "endDate": end_iso,
                 "status": status_str,
                 "is_real_gem_bid": True,
-                # Source Provenance Metadata & Auditing
                 "source": "GeM",
                 "source_bid_number": str(bid_no),
                 "source_url": GEM_BIDLISTS_URL,

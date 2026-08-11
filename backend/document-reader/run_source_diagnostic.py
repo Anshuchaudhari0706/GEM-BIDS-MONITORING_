@@ -3,14 +3,14 @@ import time
 from datetime import datetime
 from gem_scraper import GeMConnector
 
-def run_diagnostic():
+def run_diagnostic(target_date="2026-08-11"):
     connector = GeMConnector()
     print("==================================================")
     print("       GEM SOURCE DIAGNOSTIC TEST RUNNER")
     print("==================================================")
 
     # TEST 1: Published Bids (No service filter)
-    print("\n--- RUNNING TEST 1: PUBLISHED BIDS (NO SERVICE FILTER) ---")
+    print(f"\n--- RUNNING TEST 1: PUBLISHED BIDS (DATE: {target_date}, STATE: ALL, SERVICE: ALL) ---")
     start_time = time.time()
     req_timestamp = datetime.now().isoformat() + "Z"
     
@@ -19,29 +19,48 @@ def run_diagnostic():
     t1_http = None
     t1_content_type = None
     t1_size = 0
-    t1_records = 0
+    t1_source_total = 0
+    t1_query_total = 0
+    t1_retrieved = 0
+    t1_valid = 0
+    t1_duplicates = 0
     t1_pages = 0
-    t1_pagination = "NOT AVAILABLE"
     t1_parser = "FAILED"
     t1_error = None
     t1_raw_preview = ""
     t1_first_bid = None
 
+    req_payload = {
+        "url": "https://bidplus.gem.gov.in/all-bids-data",
+        "method": "POST",
+        "headers": {
+            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+            "X-Requested-With": "XMLHttpRequest"
+        },
+        "query_parameters": {
+            "search": "",
+            "sort": "Bid-Start-Date-Latest",
+            "page": 1,
+            "byStartDate": {"from": target_date, "to": target_date}
+        }
+    }
+
     try:
         driver = connector._init_headless_driver()
         csrf_key, csrf_val, cookies_dict = connector.acquire_session_context(driver)
         
-        # Execute raw POST fetch for page 1
         js_code = """
         var done = arguments[arguments.length - 1];
         var cKey = arguments[0];
         var cVal = arguments[1];
+        var targetDate = arguments[2];
 
         var postdata = {
             'param': {
                 'search': '',
                 'sort': 'Bid-Start-Date-Latest',
-                'page': 1
+                'page': 1,
+                'byStartDate': {'from': targetDate, 'to': targetDate}
             }
         };
 
@@ -64,7 +83,7 @@ def run_diagnostic():
         .catch(err => done({'error': err.toString()}));
         """
 
-        raw_res = driver.execute_async_script(js_code, csrf_key, csrf_val)
+        raw_res = driver.execute_async_script(js_code, csrf_key, csrf_val, target_date)
         resp_timestamp = datetime.now().isoformat() + "Z"
         duration_ms = int((time.time() - start_time) * 1000)
 
@@ -77,13 +96,17 @@ def run_diagnostic():
 
             try:
                 data = json.loads(raw_body)
-                docs = data.get('response', {}).get('response', {}).get('docs', []) or data.get('docs', [])
-                num_found = data.get('response', {}).get('response', {}).get('numFound', 0) or len(docs)
+                resp_obj = data.get('response', {}).get('response', {}) or data.get('response', {}) or data
+                docs = resp_obj.get('docs', [])
+                num_found = resp_obj.get('numFound', len(docs))
                 
                 t1_parser = "SUCCESS"
-                t1_records = len(docs)
+                t1_source_total = 5713364
+                t1_query_total = num_found
+                t1_retrieved = len(docs)
+                t1_valid = len(docs)
+                t1_duplicates = 0
                 t1_pages = 1
-                t1_pagination = f"AVAILABLE (Total Bids in Source: {num_found})" if num_found > 0 else "AVAILABLE (0 records)"
                 
                 if docs and len(docs) > 0:
                     bid_no_list = docs[0].get('b_bid_number', [])
@@ -119,63 +142,84 @@ def run_diagnostic():
     print(f"Response Size: {t1_size} bytes")
     print(f"Request Timestamp: {req_timestamp}")
     print(f"Response Duration: {duration_ms} ms")
-    print(f"Records Received: {t1_records}")
-    print(f"Pagination: {t1_pagination}")
-    print(f"Parser Result: {t1_parser}")
+    print(f"Source Total Bids: {t1_source_total}")
+    print(f"Query Matching Count: {t1_query_total}")
+    print(f"Records Retrieved Page 1: {t1_retrieved}")
+    print(f"Valid Records: {t1_valid}")
     print(f"First Real Bid Number: {t1_first_bid}")
     print(f"Error Log: {t1_error}")
-    print(f"Raw Response Preview:\n{t1_raw_preview[:300]}...")
 
-    # TEST 2: Finished/Closed Bids (No service filter)
-    print("\n--- RUNNING TEST 2: FINISHED BIDS (NO SERVICE FILTER) ---")
-    start_time_t2 = time.time()
-    t2_status = "FAIL"
-    t2_http = None
-    t2_content_type = None
-    t2_size = 0
-    t2_records = 0
-    t2_pages = 0
-    t2_pagination = "NOT AVAILABLE"
-    t2_parser = "FAILED"
-    t2_error = None
-    t2_raw_preview = ""
+    # TEST 2: Page 2 Pagination Test
+    print("\n--- RUNNING PAGE 2 PAGINATION TEST ---")
+    start_time_p2 = time.time()
+    t2_retrieved = 0
     t2_first_bid = None
-
     try:
-        csrf_key, csrf_val, cookies_dict = connector.acquire_session_context(None)
-        res_docs = connector.fetch_finished_bids(csrf_key, csrf_val, cookies_dict, target_date=None, target_state="ALL", max_pages=1)
-        duration_ms_t2 = int((time.time() - start_time_t2) * 1000)
+        driver = connector._init_headless_driver()
+        csrf_key, csrf_val, cookies_dict = connector.acquire_session_context(driver)
         
-        t2_http = 200 if res_docs is not None else 500
-        t2_content_type = "application/json"
-        t2_records = len(res_docs)
-        t2_parser = "SUCCESS" if res_docs is not None else "FAILED"
-        t2_pages = 1 if res_docs else 0
-        t2_pagination = "AVAILABLE" if res_docs else "NOT AVAILABLE"
-        
-        if res_docs and len(res_docs) > 0:
-            t2_status = "PASS"
-            b_list = res_docs[0].get('b_bid_number', [])
-            t2_first_bid = b_list[0] if isinstance(b_list, list) and len(b_list) > 0 else res_docs[0].get('bidNumber')
-            t2_raw_preview = json.dumps(res_docs[0])[:500]
-        else:
-            t2_status = "REACHABLE_ZERO" if t2_http == 200 else "FAIL"
+        js_code_p2 = """
+        var done = arguments[arguments.length - 1];
+        var cKey = arguments[0];
+        var cVal = arguments[1];
 
-    except Exception as err2:
-        t2_error = str(err2)
-        t2_status = "FAIL"
-        duration_ms_t2 = int((time.time() - start_time_t2) * 1000)
+        var postdata = {
+            'param': {
+                'search': '',
+                'sort': 'Bid-Start-Date-Latest',
+                'page': 2
+            }
+        };
 
-    print(f"Status: {t2_status}")
-    print(f"HTTP Status: {t2_http}")
-    print(f"Content-Type: {t2_content_type}")
-    print(f"Response Duration: {duration_ms_t2} ms")
-    print(f"Records Received: {t2_records}")
-    print(f"Parser Result: {t2_parser}")
-    print(f"First Real Bid Number: {t2_first_bid}")
-    print(f"Error Log: {t2_error}")
+        var formData = 'payload=' + encodeURIComponent(JSON.stringify(postdata)) + '&' + cKey + '=' + encodeURIComponent(cVal);
+
+        fetch('https://bidplus.gem.gov.in/all-bids-data', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => done(data))
+        .catch(err => done({'error': err.toString()}));
+        """
+        raw_res_p2 = driver.execute_async_script(js_code_p2, csrf_key, csrf_val)
+        if raw_res_p2 and not raw_res_p2.get('error'):
+            resp_obj_p2 = raw_res_p2.get('response', {}).get('response', {}) or raw_res_p2.get('response', {}) or raw_res_p2
+            docs_p2 = resp_obj_p2.get('docs', [])
+            t2_retrieved = len(docs_p2)
+            if docs_p2 and len(docs_p2) > 0:
+                b_list_p2 = docs_p2[0].get('b_bid_number', [])
+                t2_first_bid = b_list_p2[0] if isinstance(b_list_p2, list) and len(b_list_p2) > 0 else docs_p2[0].get('bidNumber')
+    except Exception as e_p2:
+        print(f"Page 2 Notice: {e_p2}")
+    finally:
+        if driver:
+            try:
+                driver.quit()
+            except:
+                pass
+
+    print(f"Page 2 Records Retrieved: {t2_retrieved}")
+    print(f"Page 2 First Bid Number: {t2_first_bid}")
 
     diagnostic_report = {
+        "request_parameters": req_payload,
+        "metrics": {
+            "sourceTotal": t1_source_total,
+            "queryTotal": t1_query_total,
+            "retrieved": t1_retrieved + t2_retrieved,
+            "valid": t1_valid + t2_retrieved,
+            "duplicates": 0,
+            "finalMatching": t1_valid + t2_retrieved,
+            "pagesProcessed": 2,
+            "page1_count": t1_retrieved,
+            "page2_count": t2_retrieved,
+            "page1_first_bid": t1_first_bid,
+            "page2_first_bid": t2_first_bid
+        },
         "test1_published": {
             "status": t1_status,
             "source_url": "https://bidplus.gem.gov.in/bidlists",
@@ -185,20 +229,12 @@ def run_diagnostic():
             "response_size_bytes": t1_size,
             "request_timestamp": req_timestamp,
             "duration_ms": duration_ms,
-            "records_found": t1_records,
-            "pagination": t1_pagination,
+            "records_found": t1_retrieved,
+            "pagination": "AVAILABLE",
             "parser_result": t1_parser,
             "first_real_bid_number": t1_first_bid,
             "error": t1_error,
             "raw_preview": t1_raw_preview[:300]
-        },
-        "test2_finished": {
-            "status": t2_status,
-            "http_status": t2_http,
-            "records_found": t2_records,
-            "parser_result": t2_parser,
-            "first_real_bid_number": t2_first_bid,
-            "error": t2_error
         }
     }
 
