@@ -735,6 +735,16 @@ app.get('/api/scans/:scanId', authenticateToken, (req, res) => {
   res.json(job);
 });
 
+// GET /api/gem/diagnostic (Executes Real Source Diagnostic Suite)
+app.get('/api/gem/diagnostic', async (req, res) => {
+  try {
+    const pyRes = await axios.get('http://localhost:8000/api/diagnostic', { timeout: 30000 });
+    res.json(pyRes.data);
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // GET /api/admin/gem-raw-scan (Raw Source Diagnostic Data with Multi-Tab Inspection)
 app.get('/api/admin/gem-raw-scan', authenticateToken, (req, res) => {
   const db = readDB();

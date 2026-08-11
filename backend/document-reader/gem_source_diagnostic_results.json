@@ -1,0 +1,26 @@
+{
+  "test1_published": {
+    "status": "PASS",
+    "source_url": "https://bidplus.gem.gov.in/bidlists",
+    "endpoint": "https://bidplus.gem.gov.in/all-bids-data",
+    "http_status": 200,
+    "content_type": "text/html; charset=UTF-8",
+    "response_size_bytes": 9681,
+    "request_timestamp": "2026-08-11T23:06:31.082382Z",
+    "duration_ms": 7262,
+    "records_found": 10,
+    "pagination": "AVAILABLE (Total Bids in Source: 5713364)",
+    "parser_result": "SUCCESS",
+    "first_real_bid_number": "GEM/2025/B/6354977",
+    "error": null,
+    "raw_preview": "{\"status\":1,\"code\":200,\"message\":\"Bid result\",\"response\":{\"response\":{\"numFound\":5713364,\"start\":0,\"numFoundExact\":true,\"docs\":[{\"id\":\"7978681\",\"b_id\":[7978681],\"b_bid_number\":[\"GEM\\/2025\\/B\\/6354977\"],\"b_category_name\":[\"Custom Bid for Services - 200143806 - Laying of 11\\/11 KV 1Cx240 Sq mm Aluminu"
+  },
+  "test2_finished": {
+    "status": "PASS",
+    "http_status": 200,
+    "records_found": 10,
+    "parser_result": "SUCCESS",
+    "first_real_bid_number": "GEM/2025/B/6354977",
+    "error": null
+  }
+}

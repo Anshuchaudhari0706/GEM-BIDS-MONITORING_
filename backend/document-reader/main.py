@@ -29,6 +29,19 @@ class ScanRequest(BaseModel):
 def read_root():
     return {"status": "ACTIVE", "service": "GeMIntel Python Document Reader & Live Scraper Microservice"}
 
+@app.get("/api/diagnostic")
+@app.post("/api/diagnostic")
+def run_diagnostic_endpoint():
+    try:
+        import json
+        from run_source_diagnostic import run_diagnostic
+        run_diagnostic()
+        with open("gem_source_diagnostic_results.json", "r") as f:
+            data = json.load(f)
+        return {"success": True, "diagnostic": data}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
 @app.post("/scan")
 @app.post("/api/scan")
 def scan_tenders_endpoint(req: ScanRequest):
