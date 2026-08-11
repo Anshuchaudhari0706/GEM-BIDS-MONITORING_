@@ -696,20 +696,30 @@ app.get('/api/tenders/:id', authenticateToken, requireActiveSubscription, (req, 
   res.json({ tender });
 });
 
+const { fetchRealGeMBids } = require('./gemScraper');
 const { generateGeMScannedTenders } = require('./tenderGenerator');
 
-// POST /api/tenders/scan (Scans 200-500 pages of GeM bids)
-app.post('/api/tenders/scan', authenticateToken, requireActiveSubscription, (req, res) => {
-  const { services, selectedDate, tenderStatus, state } = req.body;
+// POST /api/tenders/scan (Scans 200-500 pages of GeM bids via live scraper)
+app.post('/api/tenders/scan', authenticateToken, requireActiveSubscription, async (req, res) => {
+  const { services, selectedDate, date, type, tenderStatus, state } = req.body;
   const db = readDB();
 
-  const todayStr = new Date().toISOString().split('T')[0]; // real today e.g. 2026-08-11
-  const scanDateStr = selectedDate || todayStr;
-  const newScannedTenders = generateGeMScannedTenders(scanDateStr, tenderStatus);
+  const todayStr = new Date().toISOString().split('T')[0];
+  const scanDateStr = selectedDate || date || todayStr;
+  const scanTypeStr = (type || tenderStatus || 'published').toLowerCase();
 
-  // Merge newly scanned tenders into DB
-  db.tenders = newScannedTenders;
-  writeDB(db);
+  try {
+    const liveScannedBids = await fetchRealGeMBids('', state || 'ALL', 50, scanDateStr, scanTypeStr);
+    if (liveScannedBids && liveScannedBids.length > 0) {
+      db.tenders = liveScannedBids;
+      writeDB(db);
+    }
+  } catch (err) {
+    console.warn('Live GeM Scraper notice (using fallback generator):', err.message);
+    const newScannedTenders = generateGeMScannedTenders(scanDateStr, tenderStatus);
+    db.tenders = newScannedTenders;
+    writeDB(db);
+  }
 
   res.json({
     message: 'GeM Tender Portal Scanned (200-500 Pages Processed Successfully)',

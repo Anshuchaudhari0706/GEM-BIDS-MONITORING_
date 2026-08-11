@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
 from tender_parser import parse_tender_document
+from gem_scraper import scan_published_tenders, scan_finished_tenders
 
 app = FastAPI(title="GeM Intel Document Intelligence Service")
 
@@ -19,15 +20,38 @@ class ParseRequest(BaseModel):
     tender_id: Optional[str] = None
     sample_text: Optional[str] = None
 
+class ScanRequest(BaseModel):
+    date: Optional[str] = None
+    type: Optional[str] = "published" # 'published' | 'finished'
+    state: Optional[str] = "ALL"
+
 @app.get("/")
 def read_root():
-    return {"status": "ACTIVE", "service": "GeMIntel Python Document Reader Microservice"}
+    return {"status": "ACTIVE", "service": "GeMIntel Python Document Reader & Live Scraper Microservice"}
+
+@app.post("/scan")
+@app.post("/api/scan")
+def scan_tenders_endpoint(req: ScanRequest):
+    scan_type = (req.type or "published").lower()
+    if scan_type == "finished":
+        bids = scan_finished_tenders(req.date, req.state)
+    else:
+        bids = scan_published_tenders(req.date, req.state)
+
+    return {
+        "success": True,
+        "type": scan_type,
+        "date": req.date,
+        "state": req.state,
+        "count": len(bids),
+        "bids": bids
+    }
 
 @app.post("/parse")
 @app.post("/api/documents/parse")
 def parse_document(req: ParseRequest):
     raw_text = req.sample_text or f"""
-    Bid Number: {req.tender_id or 'GEM/2026/B/5936495'}
+    Bid Number: {req.tender_id or 'GEM/2026/B/7821202'}
     Estimated Bid Value: ₹25,00,000 (₹25 Lakhs)
     EMD Amount: ₹50,000
     Tender Fee: ₹5,000
