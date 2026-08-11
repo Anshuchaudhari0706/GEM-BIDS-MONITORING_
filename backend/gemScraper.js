@@ -102,12 +102,8 @@ async function scrapeLiveGeMPortal(opts = {}) {
  * Continuous Background Real Scraper
  */
 function startRealGeMBackgroundScraper() {
-  console.log('🚀 Real GeM Authorized Public Connector Engine Running (Port 8000)...');
-  scrapeLiveGeMPortal().catch(err => console.error('Background Scraper notice:', err));
-
-  setInterval(() => {
-    scrapeLiveGeMPortal().catch(err => console.error('Background Scraper notice:', err));
-  }, 120000);
+  console.log('🚀 Real GeM Authorized Public Connector Engine Ready (Port 8000)...');
+  // Background scraper initialized in ready state — populates only upon user scan request
 }
 
 module.exports = {

@@ -122,26 +122,8 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
       if (selectedDate) baseParams.selectedDate = selectedDate;
       if (searchQuery) baseParams.search = searchQuery;
 
-      let res = await fetchTenders(token, baseParams);
-      let fetched = res.tenders || [];
-
-      // If database has 0 tenders, auto-trigger a real GeM portal scan to populate live bids
-      if (fetched.length === 0) {
-        try {
-          await triggerGeMScan(token, {
-            services: selectedServiceCategory !== 'ALL' ? [selectedServiceCategory] : ['Security Guards', 'Housekeeping', 'Manpower Fixed'],
-            selectedDate,
-            tenderStatus,
-            state: targetState,
-            type: tenderStatus
-          });
-          res = await fetchTenders(token, baseParams);
-          fetched = res.tenders || [];
-        } catch (scanErr) {
-          console.warn('Auto-scan notice:', scanErr);
-        }
-      }
-
+      const res = await fetchTenders(token, baseParams);
+      const fetched = res.tenders || [];
       setAllScannedTenders(fetched);
       setLastScanTimestamp(getNowString());
 
