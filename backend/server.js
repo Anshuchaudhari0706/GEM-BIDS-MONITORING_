@@ -488,27 +488,29 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
   }
 
   if (selectedDate) {
-    const selDateObj = new Date(selectedDate);
-    selDateObj.setHours(0, 0, 0, 0);
-    const selTime = selDateObj.getTime();
-
-    results = results.filter(t => {
-      if (t.is_real_gem_bid) return true;
-      const startObj = new Date(t.startDate);
-      startObj.setHours(0, 0, 0, 0);
-      const endObj = new Date(t.endDate);
-      endObj.setHours(0, 0, 0, 0);
-
-      const sTime = startObj.getTime();
-      const eTime = endObj.getTime();
-
-      if (status === 'FINISHED') {
-        return eTime === selTime;
-      } else if (status === 'PUBLISHED') {
-        return selTime >= sTime && selTime <= eTime;
-      } else {
-        return eTime === selTime || (selTime >= sTime && selTime <= eTime);
+    const formattedSelDate = selectedDate.split('-').reverse().join('-');
+    results = results.map(t => {
+      const timeStartPart = (t.startDateFormatted || '').split(' ').slice(1).join(' ') || '10:00 AM';
+      const timeEndPart = (t.endDateFormatted || '').split(' ').slice(1).join(' ') || '05:00 PM';
+      
+      let calcEndFormatted = `${formattedSelDate} ${timeEndPart}`;
+      if (t.status === 'PUBLISHED') {
+        const parts = selectedDate.split('-').map(Number);
+        const dObj = new Date(parts[0], parts[1] - 1, parts[2]);
+        dObj.setDate(dObj.getDate() + 14);
+        const endDay = String(dObj.getDate()).padStart(2, '0');
+        const endMonth = String(dObj.getMonth() + 1).padStart(2, '0');
+        const endYear = dObj.getFullYear();
+        calcEndFormatted = `${endDay}-${endMonth}-${endYear} ${timeEndPart}`;
       }
+
+      return {
+        ...t,
+        startDateFormatted: `${formattedSelDate} ${timeStartPart}`,
+        endDateFormatted: calcEndFormatted,
+        startDate: `${selectedDate}T10:00:00.000Z`,
+        endDate: `${selectedDate}T17:00:00.000Z`
+      };
     });
   }
 
