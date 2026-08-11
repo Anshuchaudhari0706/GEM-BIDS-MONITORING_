@@ -493,6 +493,7 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
     const selTime = selDateObj.getTime();
 
     results = results.filter(t => {
+      if (t.is_real_gem_bid) return true;
       const startObj = new Date(t.startDate);
       startObj.setHours(0, 0, 0, 0);
       const endObj = new Date(t.endDate);

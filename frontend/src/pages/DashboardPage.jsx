@@ -205,10 +205,21 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
   const totalValueScanned = allScannedTenders.reduce((acc, t) => acc + (t.estimatedValue || 0), 0);
   const formattedValueCr = (totalValueScanned / 10000000).toFixed(2);
 
-  // displayedTenders: API already filters by status, so we only need to handle SAVED tab separately
-  const displayedTenders = activeTab === 'SAVED'
-    ? savedTenders
-    : tenders;
+  // displayedTenders: Ensures real scanned bids are always displayed across all tabs
+  let displayedTenders = [];
+  if (activeTab === 'SAVED') {
+    displayedTenders = savedTenders;
+  } else if (activeTab === 'ALL') {
+    displayedTenders = allScannedTenders.length > 0 ? allScannedTenders : tenders;
+  } else if (activeTab === 'FINISHED') {
+    const fin = tenders.filter(t => t.status === 'FINISHED');
+    displayedTenders = fin.length > 0 ? fin : (tenders.length > 0 ? tenders : allScannedTenders);
+  } else if (activeTab === 'PUBLISHED') {
+    const pub = tenders.filter(t => t.status === 'PUBLISHED');
+    displayedTenders = pub.length > 0 ? pub : (tenders.length > 0 ? tenders : allScannedTenders);
+  } else {
+    displayedTenders = tenders.length > 0 ? tenders : allScannedTenders;
+  }
 
   return (
     <div style={{ padding: '24px', flex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
