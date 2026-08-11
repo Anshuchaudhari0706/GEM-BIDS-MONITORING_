@@ -238,20 +238,21 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
     showToast('Excel report downloaded successfully!', 'success');
   };
 
-  // Synchronized Counts
+  // Synchronized Counts calculated dynamically from the current dataset
+  const activeDataset = tenders.length > 0 ? tenders : allScannedTenders;
   const availableServicesList = [
-    { name: 'All Services', count: allScannedTenders.length, key: 'ALL' },
-    { name: 'Custom Bid', count: allScannedTenders.filter(t => (t.category || '').toLowerCase().includes('custom')).length, key: 'Custom Bid' },
-    { name: 'Manpower Minimum Wage', count: allScannedTenders.filter(t => (t.category || '').toLowerCase().includes('minimum wage')).length, key: 'Manpower Minimum Wage' },
-    { name: 'Cleaning Services', count: allScannedTenders.filter(t => (t.category || '').toLowerCase().includes('cleaning')).length, key: 'Cleaning Services' },
-    { name: 'Security Guards', count: allScannedTenders.filter(t => (t.category || '').toLowerCase().includes('security')).length, key: 'Security Guards' },
-    { name: 'Manpower Fixed', count: allScannedTenders.filter(t => (t.category || '').toLowerCase().includes('manpower fixed')).length, key: 'Manpower Fixed' },
-    { name: 'Facility Management', count: allScannedTenders.filter(t => (t.category || '').toLowerCase().includes('facility')).length, key: 'Facility Management' },
-    { name: 'Sanitation Staff', count: allScannedTenders.filter(t => (t.category || '').toLowerCase().includes('sanitation')).length, key: 'Sanitation Staff' },
-    { name: 'BOP', count: allScannedTenders.filter(t => (t.category || '').toLowerCase().includes('bop')).length, key: 'BOP' },
-    { name: 'Global Tender', count: allScannedTenders.filter(t => (t.category || '').toLowerCase().includes('global')).length, key: 'Global Tender' },
-    { name: 'Healthcare Staff', count: allScannedTenders.filter(t => (t.category || '').toLowerCase().includes('healthcare')).length, key: 'Healthcare Staff' },
-    { name: 'Horticulture', count: allScannedTenders.filter(t => (t.category || '').toLowerCase().includes('horticulture')).length, key: 'Horticulture' }
+    { name: 'All Services', count: activeDataset.length, key: 'ALL' },
+    { name: 'Custom Bid', count: activeDataset.filter(t => (t.category || t.title || '').toLowerCase().includes('custom')).length, key: 'Custom Bid' },
+    { name: 'Manpower Minimum Wage', count: activeDataset.filter(t => (t.category || t.title || '').toLowerCase().includes('minimum wage')).length, key: 'Manpower Minimum Wage' },
+    { name: 'Cleaning Services', count: activeDataset.filter(t => (t.category || t.title || '').toLowerCase().includes('cleaning')).length, key: 'Cleaning Services' },
+    { name: 'Security Guards', count: activeDataset.filter(t => (t.category || t.title || '').toLowerCase().includes('security')).length, key: 'Security Guards' },
+    { name: 'Manpower Fixed', count: activeDataset.filter(t => (t.category || t.title || '').toLowerCase().includes('manpower fixed')).length, key: 'Manpower Fixed' },
+    { name: 'Facility Management', count: activeDataset.filter(t => (t.category || t.title || '').toLowerCase().includes('facility')).length, key: 'Facility Management' },
+    { name: 'Sanitation Staff', count: activeDataset.filter(t => (t.category || t.title || '').toLowerCase().includes('sanitation')).length, key: 'Sanitation Staff' },
+    { name: 'BOP', count: activeDataset.filter(t => (t.category || t.title || '').toLowerCase().includes('bop')).length, key: 'BOP' },
+    { name: 'Global Tender', count: activeDataset.filter(t => (t.category || t.title || '').toLowerCase().includes('global')).length, key: 'Global Tender' },
+    { name: 'Healthcare Staff', count: activeDataset.filter(t => (t.category || t.title || '').toLowerCase().includes('healthcare')).length, key: 'Healthcare Staff' },
+    { name: 'Horticulture', count: activeDataset.filter(t => (t.category || t.title || '').toLowerCase().includes('horticulture')).length, key: 'Horticulture' }
   ];
 
   const activeCount = allScannedTenders.filter(t => t.status === 'PUBLISHED').length;

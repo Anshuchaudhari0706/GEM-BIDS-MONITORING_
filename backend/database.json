@@ -65,7 +65,7 @@
       "companyName": "GeMIntel HQ",
       "email": "admin@gemintel.com",
       "mobile": "9876543210",
-      "passwordHash": "$2a$10$Z6N8CVIkRlRDCkJTizacmu4Nk1m1DhqoOMr3SQFtGDBK8UZn3SuCy",
+      "passwordHash": "$2a$10$RFSHFQd3lNiNzBctu08Cl.u9w/OOJVC0IDZmSDy.E1g19phqJkVTe",
       "role": "admin",
       "status": "ACTIVE",
       "createdAt": "2026-01-01T00:00:00.000Z"

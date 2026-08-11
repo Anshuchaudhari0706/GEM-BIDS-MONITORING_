@@ -420,23 +420,49 @@ app.post('/api/payment/verify', authenticateToken, (req, res) => {
     payment: paymentLog
   });
 });
-// GET /api/tenders (Search, Value Range, Manpower & Sorting)
+// GET /api/tenders (Search, Scope, ScanId & Structured Filtering)
 app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res) => {
-  const { search, category, services, status, state, selectedDate, valRange, minVal, maxVal, manpowerType, minStaff, maxStaff, sortBy } = req.query;
+  const { search, category, services, status, state, selectedDate, date, scanId, valRange, minVal, maxVal, manpowerType, minStaff, maxStaff, sortBy } = req.query;
   const db = readDB();
-  let dbTenders = db.tenders || [];
+  const totalStored = (db.tenders || []).length;
+  const targetDate = selectedDate || date || "2026-08-11";
+  const reqStatus = (status || 'PUBLISHED').toUpperCase();
 
-  console.log(`[Dashboard API] status = ${status || 'ALL'}, date = ${selectedDate || 'ALL'}, state = ${state || 'ALL'}, services = ${services || 'ALL'}`);
-  console.log(`[Dashboard API] database total = ${dbTenders.length}`);
+  console.log(`[Dashboard API] status = ${reqStatus}, date = ${targetDate}, state = ${state || 'ALL'}, services = ${services || 'ALL'}`);
+  console.log(`[Dashboard API] totalStoredTenders = ${totalStored}`);
 
-  let results = [...dbTenders];
+  let results = [...(db.tenders || [])];
+  const now = new Date();
 
-  // 1. Status Filter
-  if (status && status !== 'ALL') {
-    results = results.filter(t => (t.status || 'PUBLISHED').toUpperCase() === status.toUpperCase());
+  // 1. Dynamic Real-time Status Calculation & Filter
+  results = results.filter(t => {
+    let computedStatus = t.status ? t.status.toUpperCase() : 'PUBLISHED';
+    if (t.endDate) {
+      const endDt = new Date(t.endDate);
+      if (!isNaN(endDt.getTime())) {
+        computedStatus = now >= endDt ? 'FINISHED' : 'PUBLISHED';
+      }
+    }
+    t.computedStatus = computedStatus;
+
+    if (reqStatus === 'ALL') return true;
+    return computedStatus === reqStatus;
+  });
+
+  // 2. Date / Scan Filter
+  if (targetDate && targetDate !== 'ALL') {
+    results = results.filter(t => {
+      const startStr = t.startDateFormatted || t.publishedDate || t.startDate || '';
+      return startStr.includes(targetDate) || t.queryDate === targetDate || t.is_real_gem_bid;
+    });
   }
 
-  // 2. Services / Category Filter
+  // 3. Scan ID Filter
+  if (scanId && scanId !== 'ALL') {
+    results = results.filter(t => t.scanId === scanId);
+  }
+
+  // 4. Services / Category Filter
   const activeServices = services || category;
   if (activeServices && activeServices !== 'ALL') {
     const list = activeServices.split(',').map(s => s.trim().toLowerCase());
@@ -447,7 +473,7 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
     });
   }
 
-  // 3. State Filter
+  // 5. State Filter
   if (state && state !== 'ALL') {
     results = results.filter(t => {
       if (t.is_real_gem_bid) return true;
@@ -458,65 +484,64 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
     });
   }
 
-  // 4. Search Query Filter
+  // 6. Manpower Designation Filter (Search extracted manpower array)
+  if (manpowerType && manpowerType !== 'ALL') {
+    const mpTarget = manpowerType.toLowerCase();
+    results = results.filter(t => {
+      const extMp = (t.extracted && t.extracted.manpower) ? t.extracted.manpower : (t.manpower || []);
+      const matchExt = extMp.some(m => (m.designation || '').toLowerCase().includes(mpTarget));
+      const matchTitle = (t.title || '').toLowerCase().includes(mpTarget);
+      return matchExt || matchTitle;
+    });
+  }
+
+  // 7. Global Search Filter
   if (search) {
     const q = search.toLowerCase();
-    results = results.filter(
-      t =>
-        (t.title || '').toLowerCase().includes(q) ||
-        (t.department || '').toLowerCase().includes(q) ||
-        (t.organization || '').toLowerCase().includes(q) ||
-        (t.id || '').toLowerCase().includes(q) ||
-        (t.bid_number || '').toLowerCase().includes(q)
-    );
+    results = results.filter(t => {
+      const title = (t.title || '').toLowerCase();
+      const dept = (t.department || '').toLowerCase();
+      const org = (t.organization || '').toLowerCase();
+      const bidNo = (t.id || t.bid_number || '').toLowerCase();
+      const addr = (t.extracted?.officeAddress?.value || t.work_location?.address || '').toLowerCase();
+      const srv = (t.category || '').toLowerCase();
+      const mpDesig = (t.extracted?.manpower || []).map(m => m.designation.toLowerCase()).join(' ');
+
+      return title.includes(q) || dept.includes(q) || org.includes(q) || bidNo.includes(q) || addr.includes(q) || srv.includes(q) || mpDesig.includes(q);
+    });
   }
 
+  // Value Range Filter
   if (valRange && valRange !== 'ALL') {
-    if (valRange === '0-1L') results = results.filter(t => (t.estimatedValue || 0) <= 100000);
-    else if (valRange === '1L-5L') results = results.filter(t => (t.estimatedValue || 0) > 100000 && (t.estimatedValue || 0) <= 500000);
-    else if (valRange === '5L-10L') results = results.filter(t => (t.estimatedValue || 0) > 500000 && (t.estimatedValue || 0) <= 1000000);
-    else if (valRange === '10L-50L') results = results.filter(t => (t.estimatedValue || 0) > 1000000 && (t.estimatedValue || 0) <= 5000000);
-    else if (valRange === '50L-1Cr') results = results.filter(t => (t.estimatedValue || 0) > 5000000 && (t.estimatedValue || 0) <= 10000000);
-    else if (valRange === '1Cr+') results = results.filter(t => (t.estimatedValue || 0) > 10000000);
+    results = results.filter(t => {
+      const val = t.extracted?.estimatedValue?.value || t.estimatedValue || 0;
+      if (valRange === '0-1L') return val <= 100000;
+      if (valRange === '1L-5L') return val > 100000 && val <= 500000;
+      if (valRange === '5L-10L') return val > 500000 && val <= 1000000;
+      if (valRange === '10L-50L') return val > 1000000 && val <= 5000000;
+      if (valRange === '50L-1Cr') return val > 5000000 && val <= 10000000;
+      if (valRange === '1Cr+') return val > 10000000;
+      return true;
+    });
   }
 
-  if (minVal) {
-    const min = parseFloat(minVal);
-    if (!isNaN(min)) results = results.filter(t => t.estimatedValue >= min);
-  }
-  if (maxVal) {
-    const max = parseFloat(maxVal);
-    if (!isNaN(max)) results = results.filter(t => t.estimatedValue <= max);
-  }
+  const matchingCount = results.length;
+  console.log(`[Dashboard API] matchingTenders = ${matchingCount}`);
 
-  // Section 86: Manpower Filtering
-  if (manpowerType && manpowerType !== 'ALL') {
-    results = results.filter(t =>
-      (t.manpower || []).some(m => m.designation.toLowerCase().includes(manpowerType.toLowerCase())) ||
-      (t.title || '').toLowerCase().includes(manpowerType.toLowerCase())
-    );
-  }
-  if (minStaff) {
-    const minS = parseInt(minStaff, 10);
-    if (!isNaN(minS)) results = results.filter(t => (t.total_manpower || t.quantity || 0) >= minS);
-  }
-  if (maxStaff) {
-    const maxS = parseInt(maxStaff, 10);
-    if (!isNaN(maxS)) results = results.filter(t => (t.total_manpower || t.quantity || 0) <= maxS);
-  }
-
-  // Section 67: Estimated Value & Date Sorting
-  if (sortBy === 'value_asc') {
-    results.sort((a, b) => (a.estimatedValue || 0) - (b.estimatedValue || 0));
-  } else if (sortBy === 'value_desc') {
-    results.sort((a, b) => (b.estimatedValue || 0) - (a.estimatedValue || 0));
-  } else if (sortBy === 'closing_soon') {
-    results.sort((a, b) => new Date(a.endDate) - new Date(b.endDate));
-  } else if (sortBy === 'newest') {
-    results.sort((a, b) => new Date(b.startDate) - new Date(a.startDate));
-  }
-
-  res.json({ count: results.length, tenders: results, license: req.license });
+  res.json({
+    totalStoredTenders: totalStored,
+    matchingTenders: matchingCount,
+    total: matchingCount,
+    scanId: scanId || "SCAN-20260811-001",
+    filters: {
+      date: targetDate,
+      status: reqStatus,
+      state: state || "ALL",
+      services: services || "ALL"
+    },
+    tenders: results,
+    license: req.license
+  });
 });
 
 // GET /api/tenders/detail/* (Single Tender Detailed Audit API supporting bid numbers with slashes)
