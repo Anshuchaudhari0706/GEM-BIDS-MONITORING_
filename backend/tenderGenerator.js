@@ -35,7 +35,7 @@ function generateGeMScannedTenders(selectedDateStr, statusFilter) {
 
   const tenders = [];
   const baseDate = selectedDateStr ? new Date(selectedDateStr) : new Date(2026, 7, 10);
-  const currentTime = new Date(2026, 7, 11, 13, 0); // 11-Aug-2026 1:00 PM
+  const currentTime = new Date(); // Real system time for accurate PUBLISHED/FINISHED evaluation
   let idCounter = 7845300;
 
   categoryDistribution.forEach(dist => {
@@ -46,24 +46,38 @@ function generateGeMScannedTenders(selectedDateStr, statusFilter) {
       // Calculate exact start & end times matching GeM Portal screenshot (e.g. 28-07-2026 4:42 PM / 12-08-2026 5:00 PM)
       const pubDate = new Date(baseDate);
       pubDate.setDate(pubDate.getDate() - (10 + (i % 5)));
-      pubDate.setHours(16, 42, 0, 0); // 4:42 PM
+      pubDate.setHours(16, 42, 0, 0); // 4:42 PM (start time)
 
       const closingDate = new Date(baseDate);
-      
-      // 1/3 ended/finished bids, 2/3 active published bids
+
+      // 1/3 ended/finished bids (end on selected date), 2/3 active published bids (end in future)
       const forceFinished = statusFilter === 'FINISHED' || (i % 3 === 0 && statusFilter !== 'PUBLISHED');
-      
+
       if (forceFinished) {
-        // Ended today (10/08/2026) at 5:00 PM (17:00)
-        closingDate.setDate(baseDate.getDate() - 1);
-        closingDate.setHours(17, 0, 0, 0); // 5:00 PM
+        // FINISHED bids: all end exactly ON the selected/base date, but at VARIED times throughout the day
+        // This way: selecting 11/08 shows ALL bids ending on 11/08 with live status badges
+        const endTimes = [
+          [9, 14],    // 9:14 AM  — already CLOSED by now
+          [11, 0],    // 11:00 AM — already CLOSED
+          [13, 0],    // 1:00 PM  — already CLOSED
+          [15, 0],    // 3:00 PM  — already CLOSED
+          [17, 0],    // 5:00 PM  — may be CLOSED
+          [18, 30],   // 6:30 PM  — may be ACTIVE
+          [20, 0],    // 8:00 PM  — ACTIVE (future)
+          [21, 0],    // 9:00 PM  — ACTIVE
+          [22, 0],    // 10:00 PM — ACTIVE
+          [23, 0],    // 11:00 PM — ACTIVE
+          [23, 59],   // 11:59 PM — ACTIVE until midnight
+        ];
+        const [h, m] = endTimes[i % endTimes.length];
+        closingDate.setHours(h, m, 0, 0);
       } else {
-        // Active published bids ending on 12-08-2026 or future dates at 5:00 PM
+        // PUBLISHED: end 2-10 days AFTER the selected date at 5:00 PM
         closingDate.setDate(baseDate.getDate() + 2 + (i % 8));
         closingDate.setHours(17, 0, 0, 0); // 5:00 PM
       }
 
-      // Check if end time has passed
+      // Live badge: compare end time against REAL current time
       const isFinished = closingDate < currentTime;
       const status = isFinished ? 'FINISHED' : 'PUBLISHED';
       const statusBadge = isFinished ? '🔴 CLOSED / ENDED' : '🟢 OPEN FOR SUBMISSION';

@@ -424,9 +424,20 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
   const db = readDB();
   let results = [...(db.tenders || [])];
 
+  // Status filter: when selectedDate is also set and status=FINISHED, we show ALL bids ending
+  // on that date (even if still active at 8 PM / 11 PM). The live badge on each card shows real status.
+  // So only pre-filter by status when there's NO selectedDate, or when status=PUBLISHED
   if (status && status !== 'ALL') {
-    results = results.filter(t => t.status.toUpperCase() === status.toUpperCase());
+    if (status === 'PUBLISHED') {
+      // PUBLISHED: show only currently-active bids
+      results = results.filter(t => t.status.toUpperCase() === 'PUBLISHED');
+    } else if (status === 'FINISHED' && !selectedDate) {
+      // FINISHED without date: show all FINISHED bids
+      results = results.filter(t => t.status.toUpperCase() === 'FINISHED');
+    }
+    // FINISHED + selectedDate: skip status pre-filter — let date filter handle it (shows all ending on that date)
   }
+
 
   const activeServices = services || category;
   if (activeServices && activeServices !== 'ALL') {
@@ -468,14 +479,18 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
       const eTime = endObj.getTime();
 
       if (status === 'FINISHED') {
-        return eTime === selTime || (eTime <= selTime && t.status === 'FINISHED');
+        // FINISHED: show bids whose end date EXACTLY matches the selected date
+        return eTime === selTime;
       } else if (status === 'PUBLISHED') {
-        return (selTime >= sTime && selTime <= eTime) || (sTime === selTime) || t.status === 'PUBLISHED';
+        // PUBLISHED: show bids that are ACTIVE on the selected date (start <= selected <= end)
+        return selTime >= sTime && selTime <= eTime;
       } else {
-        return (selTime >= sTime && selTime <= eTime) || (eTime === selTime) || (sTime === selTime);
+        // ALL: end date matches selected date OR selected date falls in active window
+        return eTime === selTime || (selTime >= sTime && selTime <= eTime);
       }
     });
   }
+
 
   // Section 66: Estimated Value Filtering
   if (valRange && valRange !== 'ALL') {
@@ -621,7 +636,35 @@ app.post('/api/admin/regex-rules', authenticateToken, requireAdmin, (req, res) =
   res.json({ success: true, message: 'Regex Rule created successfully!' });
 });
 
+// GET /api/services (Public - Returns all service categories for multi-select)
+app.get('/api/services', (req, res) => {
+  const db = readDB();
+  // Return admin-configured services, or defaults if none set
+  const defaultServices = [
+    'Security Guards',
+    'Cleaning Services',
+    'Sanitation Staff',
+    'BOP',
+    'Global Tender',
+    'Custom Bid',
+    'Manpower Fixed',
+    'Manpower Minimum Wage',
+    'Healthcare Services',
+    'Horticulture',
+    'Housekeeping',
+    'Facility Management',
+    'Data Entry',
+    'IT Services',
+    'Other Services'
+  ];
+  const services = (db.services && db.services.length > 0)
+    ? db.services.map(s => s.name || s)
+    : defaultServices;
+  res.json({ services });
+});
+
 // GET /api/tenders/published
+
 app.get('/api/tenders/published', authenticateToken, requireActiveSubscription, (req, res) => {
   const db = readDB();
   const published = (db.tenders || []).filter(t => t.status === 'PUBLISHED');
@@ -650,7 +693,8 @@ app.post('/api/tenders/scan', authenticateToken, requireActiveSubscription, (req
   const { services, selectedDate, tenderStatus, state } = req.body;
   const db = readDB();
 
-  const scanDateStr = selectedDate || '2026-08-10';
+  const todayStr = new Date().toISOString().split('T')[0]; // real today e.g. 2026-08-11
+  const scanDateStr = selectedDate || todayStr;
   const newScannedTenders = generateGeMScannedTenders(scanDateStr, tenderStatus);
 
   // Merge newly scanned tenders into DB
