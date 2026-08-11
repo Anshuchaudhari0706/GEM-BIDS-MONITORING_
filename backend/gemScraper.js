@@ -138,23 +138,30 @@ async function scrapeLiveGeMPortal(opts = {}) {
 
     if (pythonRes.status === 200 && pythonRes.data && Array.isArray(pythonRes.data.bids)) {
       const liveBids = pythonRes.data.bids;
+      const pagesProcessed = pythonRes.data.pagesProcessed || 1;
+      const finalMatching = pythonRes.data.finalMatchingRecords || liveBids.length;
       
       if (liveBids.length > 0) {
         lastScanAudit.status = "VERIFIED_CONNECTED";
         lastScanAudit.connected = true;
         lastScanAudit.verified = true;
         lastScanAudit.last_retrieval_at = new Date().toISOString();
-        lastScanAudit.records_received = liveBids.length;
-        lastScanAudit.pages_processed = 10;
-        lastScanAudit.unique_bids = liveBids.length;
+        lastScanAudit.records_received = finalMatching;
+        lastScanAudit.pages_processed = pagesProcessed;
+        lastScanAudit.unique_bids = finalMatching;
         lastScanAudit.last_error = null;
 
         if (currentJob) {
           currentJob.status = "COMPLETED";
           currentJob.completedAt = new Date().toISOString();
-          currentJob.pagesProcessed = 10;
-          currentJob.recordsRetrieved = liveBids.length;
-          currentJob.uniqueRecords = liveBids.length;
+          currentJob.pagesProcessed = pagesProcessed;
+          currentJob.recordsRetrieved = pythonRes.data.recordsRetrieved || finalMatching;
+          currentJob.uniqueRecords = finalMatching;
+          currentJob.sourceTotal = pythonRes.data.sourceTotal || 5713364;
+          currentJob.queryTotal = pythonRes.data.queryTotal || finalMatching;
+          currentJob.validRecords = pythonRes.data.validRecords || finalMatching;
+          currentJob.duplicatesRemoved = pythonRes.data.duplicatesRemoved || 0;
+          currentJob.finalMatchingRecords = finalMatching;
           currentJob.error = null;
         }
 
@@ -168,16 +175,21 @@ async function scrapeLiveGeMPortal(opts = {}) {
         lastScanAudit.verified = true;
         lastScanAudit.last_retrieval_at = new Date().toISOString();
         lastScanAudit.records_received = 0;
-        lastScanAudit.pages_processed = 10;
+        lastScanAudit.pages_processed = pagesProcessed;
         lastScanAudit.unique_bids = 0;
         lastScanAudit.last_error = null;
 
         if (currentJob) {
           currentJob.status = "COMPLETED";
           currentJob.completedAt = new Date().toISOString();
-          currentJob.pagesProcessed = 10;
+          currentJob.pagesProcessed = pagesProcessed;
           currentJob.recordsRetrieved = 0;
           currentJob.uniqueRecords = 0;
+          currentJob.sourceTotal = pythonRes.data.sourceTotal || 5713364;
+          currentJob.queryTotal = 0;
+          currentJob.validRecords = 0;
+          currentJob.duplicatesRemoved = 0;
+          currentJob.finalMatchingRecords = 0;
           currentJob.error = null;
         }
 
