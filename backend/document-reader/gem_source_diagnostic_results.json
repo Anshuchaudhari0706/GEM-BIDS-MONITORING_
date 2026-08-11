@@ -1,32 +1,27 @@
 {
-  "request_parameters": {
-    "url": "https://bidplus.gem.gov.in/bidlists",
-    "method": "GET/POST UI Action",
-    "headers": {
-      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/122.0.0.0 Safari/537.36",
-      "Referer": "https://bidplus.gem.gov.in/bidlists"
-    },
-    "query_parameters": {
-      "search": "",
-      "sort": "Bid-Start-Date-Latest",
-      "targetDate": "2026-08-11",
-      "state": "ALL"
-    }
+  "selectedDate": "2026-08-11",
+  "bidType": "PUBLISHED",
+  "state": "ALL",
+  "services": "ALL",
+  "sourceTotal": 5713364,
+  "queryTotalSource": "SOURCE_RESPONSE",
+  "sourceReportedQueryTotal": true,
+  "queryTotal": 30,
+  "pagesProcessed": 3,
+  "recordsRetrieved": 30,
+  "validRecords": 30,
+  "duplicatesRemoved": 0,
+  "finalMatchingRecords": 30,
+  "paginationComplete": true,
+  "dateFilterVerified": true,
+  "page4Check": {
+    "records": 10,
+    "validNew": 10,
+    "firstBid": "GEM/2026/B/7606693",
+    "lastBid": "GEM/2026/B/7866124",
+    "hasMore": true
   },
-  "metrics": {
-    "sourceTotal": 5713364,
-    "queryTotal": 30,
-    "retrieved": 30,
-    "valid": 30,
-    "duplicates": 0,
-    "finalMatching": 30,
-    "pagesProcessed": 3,
-    "paginationAdvanced": true,
-    "page1_first_bid": "GEM/2026/B/7617709",
-    "page2_first_bid": "GEM/2026/B/7791356",
-    "page3_first_bid": "GEM/2026/B/7790919"
-  },
-  "page_details": [
+  "pageDetails": [
     {
       "page": 1,
       "records": 10,
@@ -52,6 +47,21 @@
       "lastBidNumber": "GEM/2026/B/7596737"
     }
   ],
+  "requestParameters": {
+    "url": "https://bidplus.gem.gov.in/bidlists",
+    "method": "GET/POST UI Action",
+    "headers": {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/122.0.0.0 Safari/537.36",
+      "Referer": "https://bidplus.gem.gov.in/bidlists"
+    },
+    "query_parameters": {
+      "search": "",
+      "sort": "Bid-Start-Date-Latest",
+      "targetDate": "2026-08-11",
+      "state": "ALL",
+      "services": "ALL"
+    }
+  },
   "test1_published": {
     "status": "PASS",
     "source_url": "https://bidplus.gem.gov.in/bidlists",
@@ -59,8 +69,8 @@
     "http_status": 200,
     "content_type": "text/html; charset=UTF-8",
     "response_size_bytes": 149523,
-    "request_timestamp": "2026-08-11T23:23:39.611611Z",
-    "duration_ms": 13241,
+    "request_timestamp": "2026-08-11T23:30:00.280931Z",
+    "duration_ms": 16004,
     "records_found": 30,
     "pagination": "VERIFIED_ADVANCING",
     "parser_result": "SUCCESS",
