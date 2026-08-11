@@ -953,8 +953,11 @@ app.get('/api/admin/logs', authenticateToken, requireAdmin, (req, res) => {
   res.json({ logs: db.admin_logs || [] });
 });
 
+const { startRealGeMBackgroundScraper } = require('./gemScraper');
+
 // Start Server
 app.listen(PORT, () => {
   seedAdminFromEnv();
+  startRealGeMBackgroundScraper();
   console.log(`GeMIntel Production API running at http://localhost:${PORT}`);
 });
