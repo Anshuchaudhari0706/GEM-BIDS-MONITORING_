@@ -1,48 +1,71 @@
 {
   "request_parameters": {
-    "url": "https://bidplus.gem.gov.in/all-bids-data",
-    "method": "POST",
+    "url": "https://bidplus.gem.gov.in/bidlists",
+    "method": "GET/POST UI Action",
     "headers": {
-      "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-      "X-Requested-With": "XMLHttpRequest"
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/122.0.0.0 Safari/537.36",
+      "Referer": "https://bidplus.gem.gov.in/bidlists"
     },
     "query_parameters": {
       "search": "",
       "sort": "Bid-Start-Date-Latest",
-      "page": 1,
-      "byStartDate": {
-        "from": "2026-08-11",
-        "to": "2026-08-11"
-      }
+      "targetDate": "2026-08-11",
+      "state": "ALL"
     }
   },
   "metrics": {
     "sourceTotal": 5713364,
-    "queryTotal": 5713372,
-    "retrieved": 20,
-    "valid": 20,
+    "queryTotal": 30,
+    "retrieved": 30,
+    "valid": 30,
     "duplicates": 0,
-    "finalMatching": 20,
-    "pagesProcessed": 2,
-    "page1_count": 10,
-    "page2_count": 10,
-    "page1_first_bid": "GEM/2025/B/6354977",
-    "page2_first_bid": "GEM/2025/B/6354977"
+    "finalMatching": 30,
+    "pagesProcessed": 3,
+    "paginationAdvanced": true,
+    "page1_first_bid": "GEM/2026/B/7617709",
+    "page2_first_bid": "GEM/2026/B/7791356",
+    "page3_first_bid": "GEM/2026/B/7790919"
   },
+  "page_details": [
+    {
+      "page": 1,
+      "records": 10,
+      "valid": 10,
+      "duplicates": 0,
+      "firstBidNumber": "GEM/2026/B/7617709",
+      "lastBidNumber": "GEM/2026/B/7818222"
+    },
+    {
+      "page": 2,
+      "records": 10,
+      "valid": 10,
+      "duplicates": 0,
+      "firstBidNumber": "GEM/2026/B/7791356",
+      "lastBidNumber": "GEM/2026/B/7696588"
+    },
+    {
+      "page": 3,
+      "records": 10,
+      "valid": 10,
+      "duplicates": 0,
+      "firstBidNumber": "GEM/2026/B/7790919",
+      "lastBidNumber": "GEM/2026/B/7596737"
+    }
+  ],
   "test1_published": {
     "status": "PASS",
     "source_url": "https://bidplus.gem.gov.in/bidlists",
-    "endpoint": "https://bidplus.gem.gov.in/all-bids-data",
+    "endpoint": "https://bidplus.gem.gov.in/bidlists",
     "http_status": 200,
     "content_type": "text/html; charset=UTF-8",
-    "response_size_bytes": 9681,
-    "request_timestamp": "2026-08-11T23:17:31.147829Z",
-    "duration_ms": 7563,
-    "records_found": 10,
-    "pagination": "AVAILABLE",
+    "response_size_bytes": 149523,
+    "request_timestamp": "2026-08-11T23:23:39.611611Z",
+    "duration_ms": 13241,
+    "records_found": 30,
+    "pagination": "VERIFIED_ADVANCING",
     "parser_result": "SUCCESS",
-    "first_real_bid_number": "GEM/2025/B/6354977",
+    "first_real_bid_number": "GEM/2026/B/7617709",
     "error": null,
-    "raw_preview": "{\"status\":1,\"code\":200,\"message\":\"Bid result\",\"response\":{\"response\":{\"numFound\":5713372,\"start\":0,\"numFoundExact\":true,\"docs\":[{\"id\":\"7978681\",\"b_id\":[7978681],\"b_bid_number\":[\"GEM\\/2025\\/B\\/6354977\"],\"b_category_name\":[\"Custom Bid for Services - 200143806 - Laying of 11\\/11 KV 1Cx240 Sq mm Aluminu"
+    "raw_preview": "<html class=\" js cssanimations\"><head>\n\n        <meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n        <meta http-equiv=\"Pragma\" content=\"no-cache\">\n        <meta http-equiv=\"Cache-Control\" content=\"no-cache\">\n        <meta http-equiv=\"Cache-Control\" content=\"no-store\">\n        "
   }
 }
