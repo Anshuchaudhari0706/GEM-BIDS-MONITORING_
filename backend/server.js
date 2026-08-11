@@ -488,29 +488,13 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
   }
 
   if (selectedDate) {
-    const formattedSelDate = selectedDate.split('-').reverse().join('-');
-    results = results.map(t => {
-      const timeStartPart = (t.startDateFormatted || '').split(' ').slice(1).join(' ') || '10:00 AM';
-      const timeEndPart = (t.endDateFormatted || '').split(' ').slice(1).join(' ') || '05:00 PM';
-      
-      let calcEndFormatted = `${formattedSelDate} ${timeEndPart}`;
-      if (t.status === 'PUBLISHED') {
-        const parts = selectedDate.split('-').map(Number);
-        const dObj = new Date(parts[0], parts[1] - 1, parts[2]);
-        dObj.setDate(dObj.getDate() + 14);
-        const endDay = String(dObj.getDate()).padStart(2, '0');
-        const endMonth = String(dObj.getMonth() + 1).padStart(2, '0');
-        const endYear = dObj.getFullYear();
-        calcEndFormatted = `${endDay}-${endMonth}-${endYear} ${timeEndPart}`;
-      }
-
-      return {
-        ...t,
-        startDateFormatted: `${formattedSelDate} ${timeStartPart}`,
-        endDateFormatted: calcEndFormatted,
-        startDate: `${selectedDate}T10:00:00.000Z`,
-        endDate: `${selectedDate}T17:00:00.000Z`
-      };
+    results = results.filter(t => {
+      if (t.is_real_gem_bid) return true;
+      const startObj = new Date(t.startDate || Date.now());
+      startObj.setHours(0, 0, 0, 0);
+      const selObj = new Date(selectedDate);
+      selObj.setHours(0, 0, 0, 0);
+      return selObj.getTime() >= startObj.getTime();
     });
   }
 
@@ -722,7 +706,13 @@ app.post('/api/tenders/scan', authenticateToken, requireActiveSubscription, asyn
   const scanTypeStr = (type || tenderStatus || 'published').toLowerCase();
 
   try {
-    const liveScannedBids = await fetchRealGeMBids('', state || 'ALL', 50, scanDateStr, scanTypeStr);
+    const liveScannedBids = await fetchRealGeMBids({
+      searchQuery: '',
+      state: state || 'ALL',
+      limit: 500,
+      status: scanTypeStr,
+      targetDate: scanDateStr
+    });
     if (liveScannedBids && liveScannedBids.length > 0) {
       db.tenders = liveScannedBids;
       writeDB(db);

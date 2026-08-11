@@ -1,8 +1,6 @@
 const axios = require('axios');
-const cheerio = require('cheerio');
 const fs = require('fs');
 const path = require('path');
-const { exec } = require('child_process');
 
 const DB_FILE = path.join(__dirname, 'database.json');
 
@@ -25,16 +23,35 @@ function writeDB(data) {
 
 /**
  * Real Official GeM Portal Live Scraper Engine
- * Connects to Python Live Scraper Microservice (Port 8000) using curl_cffi Chrome TLS impersonation
- * Returns ONLY 100% REAL LIVE BIDS directly from official GeM portal. NO MOCK BIDS!
+ * Supports options object or positional parameters seamlessly
  */
-async function scrapeLiveGeMPortal(searchQuery = '', state = 'ALL', limit = 50, status = 'PUBLISHED', targetDate = null) {
+async function scrapeLiveGeMPortal(opts = {}) {
+  let searchQuery = '';
+  let state = 'ALL';
+  let limit = 500;
+  let status = 'PUBLISHED';
+  let targetDate = null;
+
+  if (typeof opts === 'object' && opts !== null && !Array.isArray(opts)) {
+    searchQuery = opts.searchQuery || '';
+    state = opts.state || 'ALL';
+    limit = opts.limit || 500;
+    status = opts.status || opts.type || 'PUBLISHED';
+    targetDate = opts.targetDate || opts.date || null;
+  } else {
+    searchQuery = arguments[0] || '';
+    state = arguments[1] || 'ALL';
+    limit = arguments[2] || 500;
+    status = arguments[3] || 'PUBLISHED';
+    targetDate = arguments[4] || null;
+  }
+
   try {
     const pythonRes = await axios.post('http://localhost:8000/api/scan', {
-      date: targetDate || new Date().toISOString().split('T')[0],
+      date: targetDate,
       type: (status || 'published').toLowerCase(),
       state: state || 'ALL'
-    }, { timeout: 15000 });
+    }, { timeout: 30000 });
 
     if (pythonRes.data && pythonRes.data.bids && Array.isArray(pythonRes.data.bids) && pythonRes.data.bids.length > 0) {
       const liveBids = pythonRes.data.bids;
@@ -48,13 +65,11 @@ async function scrapeLiveGeMPortal(searchQuery = '', state = 'ALL', limit = 50, 
     console.warn('Real GeM Scraper API notice:', err.message);
   }
 
-  // Strictly return empty array if no live bids are fetched from official GeM portal
   return [];
 }
 
 /**
  * Continuous Background Real Scraper
- * Periodically scans official GeM portal and updates database.json with 100% real live data
  */
 function startRealGeMBackgroundScraper() {
   console.log('🚀 Real GeM Live API Scraper Engine Running (Port 8000)...');
