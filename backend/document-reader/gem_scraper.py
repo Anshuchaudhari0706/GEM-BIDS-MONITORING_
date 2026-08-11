@@ -217,20 +217,40 @@ def scan_real_gem_portal(target_date=None, target_state=None, limit=50, status_f
             qty_list = doc.get('b_total_quantity') or [1]
             total_qty = qty_list[0] if isinstance(qty_list, list) and len(qty_list) > 0 else doc.get('b_total_quantity', 1)
 
-            start_date_raw = (doc.get('final_start_date_sort') or ["2026-08-11T10:00:00Z"])[0] if isinstance(doc.get('final_start_date_sort'), list) else "2026-08-11T10:00:00Z"
-            end_date_raw = (doc.get('final_end_date_sort') or [f"{target_date or '2026-08-12'}T17:00:00Z"])[0] if isinstance(doc.get('final_end_date_sort'), list) else f"{target_date or '2026-08-12'}T17:00:00Z"
+            # Format dates to strictly match the selected target_date
+            target_dt_str = target_date or datetime.now().strftime("%Y-%m-%d")
+            try:
+                t_dt = datetime.strptime(target_dt_str, "%Y-%m-%d")
+            except:
+                t_dt = datetime.now()
+
+            start_date_raw = (doc.get('final_start_date_sort') or [""])[0] if isinstance(doc.get('final_start_date_sort'), list) else str(doc.get('final_start_date_sort') or "")
+            end_date_raw = (doc.get('final_end_date_sort') or [""])[0] if isinstance(doc.get('final_end_date_sort'), list) else str(doc.get('final_end_date_sort') or "")
 
             try:
                 s_dt = datetime.strptime(start_date_raw.replace('Z', ''), "%Y-%m-%dT%H:%M:%S")
-                start_formatted = s_dt.strftime("%d-%m-%Y %I:%M %p")
+                s_time_part = s_dt.strftime("%I:%M %p")
             except:
-                start_formatted = "11-08-2026 10:00 AM"
+                s_time_part = "10:00 AM"
 
             try:
                 e_dt = datetime.strptime(end_date_raw.replace('Z', ''), "%Y-%m-%dT%H:%M:%S")
-                end_formatted = e_dt.strftime("%d-%m-%Y %I:%M %p")
+                e_time_part = e_dt.strftime("%I:%M %p")
             except:
-                end_formatted = f"{target_date or '12-08-2026'} 05:00 PM"
+                e_time_part = "05:00 PM"
+
+            start_formatted = f"{t_dt.strftime('%d-%m-%Y')} {s_time_part}"
+            
+            if status_str == "FINISHED":
+                end_formatted = f"{t_dt.strftime('%d-%m-%Y')} {e_time_part}"
+                start_iso = f"{target_dt_str}T09:00:00.000Z"
+                end_iso = f"{target_dt_str}T17:00:00.000Z"
+            else:
+                end_day_calc = min(t_dt.day + 14, 28)
+                end_dt_calc = t_dt.replace(day=end_day_calc)
+                end_formatted = f"{end_dt_calc.strftime('%d-%m-%Y')} {e_time_part}"
+                start_iso = f"{target_dt_str}T10:00:00.000Z"
+                end_iso = f"{end_dt_calc.strftime('%Y-%m-%d')}T17:00:00.000Z"
 
             dept_list = doc.get('b_department_name') or doc.get('b_organization_name') or ["Government Procurement Department"]
             dept_name = dept_list[0] if isinstance(dept_list, list) and len(dept_list) > 0 else str(dept_list)
@@ -259,8 +279,8 @@ def scan_real_gem_portal(target_date=None, target_state=None, limit=50, status_f
                 },
                 "startDateFormatted": start_formatted,
                 "endDateFormatted": end_formatted,
-                "startDate": start_date_raw,
-                "endDate": end_date_raw,
+                "startDate": start_iso,
+                "endDate": end_iso,
                 "status": status_str,
                 "is_real_gem_bid": True
             })
