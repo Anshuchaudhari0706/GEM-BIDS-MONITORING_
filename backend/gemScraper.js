@@ -36,7 +36,7 @@ async function scrapeLiveGeMPortal(searchQuery = '', state = 'ALL', limit = 50, 
       state: state || 'ALL'
     }, { timeout: 15000 });
 
-    if (pythonRes.data && pythonRes.data.bids && Array.isArray(pythonRes.data.bids)) {
+    if (pythonRes.data && pythonRes.data.bids && Array.isArray(pythonRes.data.bids) && pythonRes.data.bids.length > 0) {
       const liveBids = pythonRes.data.bids;
       // Persist real scanned bids to database.json
       const db = readDB();
