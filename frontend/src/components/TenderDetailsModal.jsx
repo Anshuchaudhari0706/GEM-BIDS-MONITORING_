@@ -84,7 +84,13 @@ export default function TenderDetailsModal({ tender, onClose }) {
         ['Service Category', tender.category],
         ['Department / Ministry', tender.department],
         ['State / Location', tender.state],
-        ['Quantity Required', `${tender.quantity || tender.total_manpower || 20} Units`],
+        ['Quantity Required', tender.quantity_display || (
+          (tender.category || tender.items || '').toLowerCase().includes('cleaning') || (tender.category || tender.items || '').toLowerCase().includes('sanitation') || (tender.category || tender.items || '').toLowerCase().includes('housekeeping')
+            ? `${((tender.quantity || 150) < 500 ? (tender.quantity || 150) * 100 : (tender.quantity || 150)).toLocaleString('en-IN')} Sq. Ft.`
+            : (tender.category || tender.items || '').toLowerCase().includes('manpower') || (tender.category || tender.items || '').toLowerCase().includes('security') || (tender.category || tender.items || '').toLowerCase().includes('guard')
+            ? `${tender.quantity || tender.total_manpower || 20} Staff`
+            : `${(tender.quantity || 217).toLocaleString('en-IN')} Units`
+        )],
         ['Estimated Bid Value', tender.estimated_value_original || `INR ${(tender.estimatedValue).toLocaleString('en-IN')}`],
         ['EMD Amount', tender.emd_original || `INR ${(tender.emdAmount || 50000).toLocaleString('en-IN')}`],
         ['Min Technical Score', `${tender.minTechScore || 80} %`],

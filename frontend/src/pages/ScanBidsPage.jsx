@@ -476,7 +476,15 @@ export default function ScanBidsPage({ searchQuery }) {
                         <strong>Items:</strong> <span style={{ color: '#38bdf8', fontWeight: 600 }}>{t.items || t.title}</span>
                       </div>
                       <div style={{ fontSize: '0.86rem', color: '#fff', fontWeight: 700 }}>
-                        Quantity: <span style={{ color: '#fff' }}>{t.quantity || 217} Units</span>
+                        Quantity: <span style={{ color: '#fff' }}>{
+                          t.quantity_display || (
+                            (t.category || t.items || '').toLowerCase().includes('cleaning') || (t.category || t.items || '').toLowerCase().includes('sanitation') || (t.category || t.items || '').toLowerCase().includes('housekeeping')
+                              ? `${((t.quantity || 150) < 500 ? (t.quantity || 150) * 100 : (t.quantity || 150)).toLocaleString('en-IN')} Sq. Ft.`
+                              : (t.category || t.items || '').toLowerCase().includes('manpower') || (t.category || t.items || '').toLowerCase().includes('security') || (t.category || t.items || '').toLowerCase().includes('guard')
+                              ? `${t.quantity || t.total_manpower || 20} Staff`
+                              : `${(t.quantity || 217).toLocaleString('en-IN')} Units`
+                          )
+                        }</span>
                       </div>
                       <div style={{ fontSize: '0.78rem', color: 'var(--accent-green)', fontWeight: 700, marginTop: '6px' }}>
                         💰 Est. Value: {t.estimated_value_original || `₹${(t.estimatedValue / 100000).toFixed(2)} Lakhs`}
