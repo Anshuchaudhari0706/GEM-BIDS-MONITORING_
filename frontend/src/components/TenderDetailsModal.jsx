@@ -84,15 +84,9 @@ export default function TenderDetailsModal({ tender, onClose }) {
         ['Service Category', tender.category],
         ['Department / Ministry', tender.department],
         ['State / Location', tender.state],
-        ['Quantity Required', tender.quantity_display || (
-          (tender.category || tender.items || '').toLowerCase().includes('cleaning') || (tender.category || tender.items || '').toLowerCase().includes('sanitation') || (tender.category || tender.items || '').toLowerCase().includes('housekeeping')
-            ? `${((tender.quantity || 150) < 500 ? (tender.quantity || 150) * 100 : (tender.quantity || 150)).toLocaleString('en-IN')} Sq. Ft.`
-            : (tender.category || tender.items || '').toLowerCase().includes('manpower') || (tender.category || tender.items || '').toLowerCase().includes('security') || (tender.category || tender.items || '').toLowerCase().includes('guard')
-            ? `${tender.quantity || tender.total_manpower || 20} Staff`
-            : `${(tender.quantity || 217).toLocaleString('en-IN')} Units`
-        )],
-        ['Estimated Bid Value', tender.estimated_value_original || `INR ${(tender.estimatedValue).toLocaleString('en-IN')}`],
-        ['EMD Amount', tender.emd_original || `INR ${(tender.emdAmount || 50000).toLocaleString('en-IN')}`],
+        ['Quantity Required', tender.quantity_display || (tender.quantity ? `${tender.quantity} Units` : 'Not Specified')],
+        ['Estimated Bid Value', tender.estimated_value_original || (tender.estimatedValue ? `INR ${tender.estimatedValue.toLocaleString('en-IN')}` : 'Not Available')],
+        ['EMD Amount', tender.emd_original || (tender.emdAmount ? `INR ${tender.emdAmount.toLocaleString('en-IN')}` : 'Not Available')],
         ['Min Technical Score', `${tender.minTechScore || 80} %`],
         ['Publish Date', new Date(tender.startDate).toLocaleDateString()],
         ['Closing Date & Time', tender.closingDateFormatted || new Date(tender.endDate).toLocaleDateString()],

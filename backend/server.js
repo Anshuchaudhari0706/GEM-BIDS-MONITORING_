@@ -599,25 +599,18 @@ app.post('/api/documents/parse', authenticateToken, requireActiveSubscription, (
         confidence: 0.96
       },
       work_location: targetTender ? targetTender.work_location : {
-        office_name: 'District Collector Office',
-        address: 'Station Road, Palanpur, Banaskantha, Gujarat - 385001',
-        city: 'Palanpur',
-        district: 'Banaskantha',
-        state: 'Gujarat',
-        pincode: '385001'
+        office_name: 'Not Specified',
+        address: 'Not Available',
+        city: 'Not Specified',
+        district: 'Not Specified',
+        state: 'Not Specified',
+        pincode: 'Not Available'
       },
-      manpower: targetTender && targetTender.manpower ? targetTender.manpower : [
-        { designation: 'Security Guard', quantity: 10, shift: '3 Shift', working_hours: 8 },
-        { designation: 'Security Supervisor', quantity: 2, shift: 'General', working_hours: 8 },
-        { designation: 'Peon', quantity: 3, shift: 'General', working_hours: 8 },
-        { designation: 'Housekeeping Staff', quantity: 5, shift: '2 Shift', working_hours: 8 }
-      ],
-      total_manpower: targetTender ? (targetTender.total_manpower || 20) : 20,
+      manpower: targetTender && targetTender.manpower ? targetTender.manpower : [],
+      total_manpower: targetTender ? (targetTender.quantity || null) : null,
       eligibility_criteria: [
-        'Minimum 3 years experience in government manpower contracts',
-        'Annual turnover of at least ₹50 Lakhs in last 3 financial years',
         'Valid GST registration and PAN card',
-        'Labor license and EPF/ESIC registration certificate'
+        'Compliance with government procurement guidelines'
       ]
     }
   };
@@ -819,20 +812,43 @@ app.post('/api/tenders/scan', authenticateToken, requireActiveSubscription, asyn
       status: scanTypeStr,
       targetDate: scanDateStr
     });
-    if (liveScannedBids && liveScannedBids.length > 0) {
-      db.tenders = liveScannedBids;
-      writeDB(db);
-    }
-  } catch (err) {
-    console.warn('Live GeM Scraper notice:', err.message);
-  }
+    
+    db.tenders = liveScannedBids || [];
+    writeDB(db);
 
-  res.json({
-    message: 'Official GeM Tender Portal Scanned Successfully',
-    scannedCount: (db.tenders || []).length,
-    scannedAt: new Date().toISOString(),
-    tenders: db.tenders || []
-  });
+    const health = getSourceHealthStatus();
+    const count = (liveScannedBids || []).length;
+    const isVerified = health.status === "VERIFIED_CONNECTED" || health.status === "SOURCE_REACHABLE_ZERO";
+
+    res.json({
+      scanId: health.scan_id || `SCAN-${Date.now()}`,
+      status: health.status,
+      sourceVerified: isVerified,
+      verified: isVerified,
+      recordsRetrieved: count,
+      uniqueRecords: count,
+      pagesProcessed: health.pages_processed || 0,
+      scannedCount: count,
+      scannedAt: new Date().toISOString(),
+      tenders: db.tenders || [],
+      error: health.last_error
+    });
+  } catch (err) {
+    db.tenders = [];
+    writeDB(db);
+    res.status(500).json({
+      scanId: `SCAN-${Date.now()}`,
+      status: "FAILED",
+      sourceVerified: false,
+      verified: false,
+      recordsRetrieved: 0,
+      uniqueRecords: 0,
+      pagesProcessed: 0,
+      scannedCount: 0,
+      tenders: [],
+      error: err.message
+    });
+  }
 });
 
 // POST /api/tenders/:id/save & DELETE /api/tenders/:id/save

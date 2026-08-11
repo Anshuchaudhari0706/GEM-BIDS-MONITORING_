@@ -187,12 +187,26 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
           state: targetState,
           type: tenderStatus
         });
-        const nowStr = new Date().toISOString().replace('T', ' ').substring(0, 19);
+        const nowStr = getNowString();
         setLastScanTimestamp(nowStr);
-        showToast(`Scan Completed — ${res.scannedCount || 10} live matching bids scanned from GeM Portal`, 'success');
-        loadTendersData();
+
+        const sourceVerified = res.sourceVerified === true || res.verified === true;
+        const count = res.uniqueRecords ?? res.recordsRetrieved ?? res.scannedCount ?? 0;
+
+        if (sourceVerified && count > 0) {
+          showToast(`Scan Completed — ${count} verified GeM bids retrieved`, 'success');
+        } else if (sourceVerified && count === 0) {
+          showToast('GeM source verified — 0 matching bids found.', 'info');
+        } else {
+          showToast('Scan failed — GeM source could not be verified.', 'error');
+        }
+
+        await loadTendersData();
+        const healthData = await fetchGeMHealth();
+        if (healthData) setGemHealth(healthData);
+
       } catch (err) {
-        showToast(err.message || 'GeM Data Temporarily Unavailable', 'error');
+        showToast('Scan failed — GeM source could not be verified.', 'error');
       } finally {
         setScanning(false);
         setScanTerminalLog('');

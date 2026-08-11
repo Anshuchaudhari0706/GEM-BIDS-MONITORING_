@@ -147,13 +147,25 @@ export default function ScanBidsPage({ searchQuery }) {
         const nowStr = new Date().toISOString().replace('T', ' ').substring(0, 19);
         setLastScanTimestamp(nowStr);
 
-        const count = res.scannedCount || allScannedTenders.length || 196;
-        const msg = `Scan Completed — ${count} live matching bids scanned from GeM Portal (384 pages scanned)`;
-        setScanResultNotice({ type: 'success', text: msg });
-        showToast(msg, 'success');
-        loadFilteredTenders();
+        const sourceVerified = res.sourceVerified === true || res.verified === true;
+        const count = res.uniqueRecords ?? res.recordsRetrieved ?? res.scannedCount ?? 0;
+
+        let msg = 'Scan failed — GeM source could not be verified.';
+        let toastType = 'error';
+
+        if (sourceVerified && count > 0) {
+          msg = `Scan Completed — ${count} verified GeM bids retrieved`;
+          toastType = 'success';
+        } else if (sourceVerified && count === 0) {
+          msg = 'GeM source verified — 0 matching bids found.';
+          toastType = 'info';
+        }
+
+        setScanResultNotice({ type: toastType, text: msg });
+        showToast(msg, toastType);
+        await loadFilteredTenders();
       } catch (err) {
-        showToast(err.message || 'GeM Data Temporarily Unavailable. Please try again later.', 'error');
+        showToast('Scan failed — GeM source could not be verified.', 'error');
       } finally {
         setScanning(false);
         setScanTerminalLog('');
