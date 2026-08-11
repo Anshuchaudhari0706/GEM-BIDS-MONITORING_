@@ -80,7 +80,7 @@ def perform_security_handshake(driver=None):
 
     return csrf_key, csrf_val, cookies_dict
 
-def scan_published_bids_js_injection(driver, csrf_key, csrf_val, target_state="ALL", max_pages=5):
+def scan_published_bids_js_injection(driver, csrf_key, csrf_val, target_state="ALL", max_pages=500):
     """
     Step B (For Published Tenders): Injects custom JavaScript directly into headless Chrome browser (execute_async_script)
     Mimics AJAX request from within the browser session to pull ongoing published bids.
@@ -134,7 +134,7 @@ def scan_published_bids_js_injection(driver, csrf_key, csrf_val, target_state="A
 
     return all_docs
 
-def scan_finished_bids_session_query(csrf_key, csrf_val, cookies_dict, target_date=None, target_state="ALL", max_pages=5):
+def scan_finished_bids_session_query(csrf_key, csrf_val, cookies_dict, target_date=None, target_state="ALL", max_pages=500):
     """
     Step B (For Finished Tenders): Uses session cookies and stolen CSRF tokens to rapidly query GeM API via curl_cffi / requests.
     Fast execution after closing browser.
@@ -194,14 +194,14 @@ def scan_real_gem_portal(target_date=None, target_state=None, limit=50, status_f
 
         if status_str == "PUBLISHED":
             # Step B1: JavaScript Async Injection directly inside Headless Chrome
-            docs = scan_published_bids_js_injection(driver, csrf_key, csrf_val, target_state or "ALL", max_pages=5)
+            docs = scan_published_bids_js_injection(driver, csrf_key, csrf_val, target_state or "ALL", max_pages=500)
             driver.quit()
             driver = None
         else:
             # Step B2: Close Chrome, rapidly query GeM API via session requests
             driver.quit()
             driver = None
-            docs = scan_finished_bids_session_query(csrf_key, csrf_val, cookies_dict, target_date, target_state or "ALL", max_pages=5)
+            docs = scan_finished_bids_session_query(csrf_key, csrf_val, cookies_dict, target_date, target_state or "ALL", max_pages=500)
 
         for doc in docs:
             bid_no_list = doc.get('b_bid_number', [])
