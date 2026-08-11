@@ -50,7 +50,7 @@ function generateGeMScannedTenders(selectedDateStr, statusFilter) {
   const tenders = [];
   const baseDate = selectedDateStr ? new Date(selectedDateStr) : new Date(2026, 7, 10);
   const currentTime = new Date(); // Real system time for accurate PUBLISHED/FINISHED evaluation
-  let idCounter = 7845300;
+  let idCounter = 7821200; // Matches real official GeM portal bid range (GEM/2026/B/7821202)
 
   categoryDistribution.forEach(dist => {
     for (let i = 0; i < dist.count; i++) {
