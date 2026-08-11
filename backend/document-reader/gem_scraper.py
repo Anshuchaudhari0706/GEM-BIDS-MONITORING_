@@ -193,15 +193,15 @@ def scan_real_gem_portal(target_date=None, target_state=None, limit=50, status_f
         status_str = (status_filter or "PUBLISHED").upper()
 
         if status_str == "PUBLISHED":
-            # Step B1: JavaScript Async Injection directly inside Headless Chrome
-            docs = scan_published_bids_js_injection(driver, csrf_key, csrf_val, target_state or "ALL", max_pages=500)
+            # Step B1: JavaScript Async Injection directly inside Headless Chrome (Fast 10-page scan for 100 bids)
+            docs = scan_published_bids_js_injection(driver, csrf_key, csrf_val, target_state or "ALL", max_pages=10)
             driver.quit()
             driver = None
         else:
-            # Step B2: Close Chrome, rapidly query GeM API via session requests
+            # Step B2: Close Chrome, rapidly query GeM API via session requests (Fast 10-page scan)
             driver.quit()
             driver = None
-            docs = scan_finished_bids_session_query(csrf_key, csrf_val, cookies_dict, target_date, target_state or "ALL", max_pages=500)
+            docs = scan_finished_bids_session_query(csrf_key, csrf_val, cookies_dict, target_date, target_state or "ALL", max_pages=10)
 
         for doc in docs:
             bid_no_list = doc.get('b_bid_number', [])
