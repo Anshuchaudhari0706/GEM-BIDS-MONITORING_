@@ -467,10 +467,11 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
 
   if (state && state !== 'ALL') {
     results = results.filter(t => {
+      if (t.is_real_gem_bid) return true;
       const st = (t.state || t.work_location?.state || '').toLowerCase();
       const dept = (t.department || '').toLowerCase();
       const targetSt = state.toLowerCase();
-      return st === targetSt || dept.includes(targetSt);
+      return st === targetSt || dept.includes(targetSt) || st.includes('all india');
     });
   }
 

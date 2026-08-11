@@ -104,12 +104,12 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
       // Apply tenderStatus filter
       let filtered = fetched;
       if (tenderStatus !== 'ALL') {
-        filtered = filtered.filter(t => t.status.toUpperCase() === tenderStatus.toUpperCase());
+        filtered = filtered.filter(t => t.is_real_gem_bid || t.status.toUpperCase() === tenderStatus.toUpperCase());
       }
 
       // Apply service category filter
       if (selectedServiceCategory !== 'ALL') {
-        filtered = filtered.filter(t => (t.category || '').toLowerCase().includes(selectedServiceCategory.toLowerCase()));
+        filtered = filtered.filter(t => t.is_real_gem_bid || (t.category || '').toLowerCase().includes(selectedServiceCategory.toLowerCase()));
       }
 
       setTenders(filtered);
