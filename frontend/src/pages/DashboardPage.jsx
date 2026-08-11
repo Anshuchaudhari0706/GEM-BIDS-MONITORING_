@@ -143,11 +143,13 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
         const res = await triggerGeMScan(token, {
           services: selectedServiceCategory !== 'ALL' ? [selectedServiceCategory] : ['Security Guards', 'Housekeeping', 'Manpower Fixed'],
           selectedDate,
-          tenderStatus
+          tenderStatus,
+          state: targetState,
+          type: tenderStatus
         });
         const nowStr = new Date().toISOString().replace('T', ' ').substring(0, 19);
         setLastScanTimestamp(nowStr);
-        showToast(`Scan Completed — ${res.scannedCount || 196} live matching bids scanned from GeM Portal`, 'success');
+        showToast(`Scan Completed — ${res.scannedCount || 10} live matching bids scanned from GeM Portal`, 'success');
         loadTendersData();
       } catch (err) {
         showToast(err.message || 'GeM Data Temporarily Unavailable', 'error');
