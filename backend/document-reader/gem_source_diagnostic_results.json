@@ -6,19 +6,17 @@
   "sourceTotal": 5713364,
   "queryTotalSource": "SOURCE_RESPONSE",
   "sourceReportedQueryTotal": true,
-  "queryTotal": 30,
-  "pagesProcessed": 3,
-  "recordsRetrieved": 30,
-  "validRecords": 30,
+  "queryTotal": 187,
+  "pagesProcessed": 20,
+  "recordsRetrieved": 187,
+  "validRecords": 187,
   "duplicatesRemoved": 0,
-  "finalMatchingRecords": 30,
+  "finalMatchingRecords": 187,
   "paginationComplete": true,
   "dateFilterVerified": true,
   "page4Check": {
     "records": 10,
-    "validNew": 10,
     "firstBid": "GEM/2026/B/7606693",
-    "lastBid": "GEM/2026/B/7866124",
     "hasMore": true
   },
   "pageDetails": [
@@ -45,6 +43,142 @@
       "duplicates": 0,
       "firstBidNumber": "GEM/2026/B/7790919",
       "lastBidNumber": "GEM/2026/B/7596737"
+    },
+    {
+      "page": 4,
+      "records": 10,
+      "valid": 10,
+      "duplicates": 0,
+      "firstBidNumber": "GEM/2026/B/7606693",
+      "lastBidNumber": "GEM/2026/B/7866124"
+    },
+    {
+      "page": 5,
+      "records": 10,
+      "valid": 10,
+      "duplicates": 0,
+      "firstBidNumber": "GEM/2026/B/7866118",
+      "lastBidNumber": "GEM/2026/B/7710974"
+    },
+    {
+      "page": 6,
+      "records": 10,
+      "valid": 10,
+      "duplicates": 0,
+      "firstBidNumber": "GEM/2026/B/7865692",
+      "lastBidNumber": "GEM/2026/B/7865289"
+    },
+    {
+      "page": 7,
+      "records": 10,
+      "valid": 10,
+      "duplicates": 0,
+      "firstBidNumber": "GEM/2026/B/7865422",
+      "lastBidNumber": "GEM/2026/B/7865983"
+    },
+    {
+      "page": 8,
+      "records": 10,
+      "valid": 10,
+      "duplicates": 0,
+      "firstBidNumber": "GEM/2026/B/7865997",
+      "lastBidNumber": "GEM/2026/B/7848945"
+    },
+    {
+      "page": 9,
+      "records": 10,
+      "valid": 10,
+      "duplicates": 0,
+      "firstBidNumber": "GEM/2026/B/7837707",
+      "lastBidNumber": "GEM/2026/B/7687899"
+    },
+    {
+      "page": 10,
+      "records": 10,
+      "valid": 10,
+      "duplicates": 0,
+      "firstBidNumber": "GEM/2026/B/7843675",
+      "lastBidNumber": "GEM/2026/B/7822432"
+    },
+    {
+      "page": 11,
+      "records": 10,
+      "valid": 10,
+      "duplicates": 0,
+      "firstBidNumber": "GEM/2026/B/7822525",
+      "lastBidNumber": "GEM/2026/B/7750291"
+    },
+    {
+      "page": 12,
+      "records": 10,
+      "valid": 10,
+      "duplicates": 0,
+      "firstBidNumber": "GEM/2026/B/7873799",
+      "lastBidNumber": "GEM/2026/B/7881265"
+    },
+    {
+      "page": 13,
+      "records": 10,
+      "valid": 10,
+      "duplicates": 0,
+      "firstBidNumber": "GEM/2026/B/7825054",
+      "lastBidNumber": "GEM/2026/B/7878797"
+    },
+    {
+      "page": 14,
+      "records": 10,
+      "valid": 10,
+      "duplicates": 0,
+      "firstBidNumber": "GEM/2026/B/7791848",
+      "lastBidNumber": "GEM/2026/B/7551314"
+    },
+    {
+      "page": 15,
+      "records": 10,
+      "valid": 10,
+      "duplicates": 0,
+      "firstBidNumber": "GEM/2026/B/7548981",
+      "lastBidNumber": "GEM/2026/B/7888370"
+    },
+    {
+      "page": 16,
+      "records": 10,
+      "valid": 10,
+      "duplicates": 0,
+      "firstBidNumber": "GEM/2026/B/7715119",
+      "lastBidNumber": "GEM/2026/B/7893999"
+    },
+    {
+      "page": 17,
+      "records": 10,
+      "valid": 10,
+      "duplicates": 0,
+      "firstBidNumber": "GEM/2026/B/7425035",
+      "lastBidNumber": "GEM/2026/B/7852176"
+    },
+    {
+      "page": 18,
+      "records": 10,
+      "valid": 10,
+      "duplicates": 0,
+      "firstBidNumber": "GEM/2026/B/7806980",
+      "lastBidNumber": "GEM/2026/B/7832550"
+    },
+    {
+      "page": 19,
+      "records": 5,
+      "valid": 5,
+      "duplicates": 0,
+      "firstBidNumber": "GEM/2026/B/7896035",
+      "lastBidNumber": "GEM/2026/B/7846844"
+    },
+    {
+      "page": 20,
+      "records": 2,
+      "valid": 2,
+      "duplicates": 0,
+      "firstBidNumber": "GEM/2026/B/7836037",
+      "lastBidNumber": "GEM/2026/B/7857777"
     }
   ],
   "requestParameters": {
@@ -69,9 +203,9 @@
     "http_status": 200,
     "content_type": "text/html; charset=UTF-8",
     "response_size_bytes": 149523,
-    "request_timestamp": "2026-08-11T23:30:00.280931Z",
-    "duration_ms": 16004,
-    "records_found": 30,
+    "request_timestamp": "2026-08-11T23:30:34.405241Z",
+    "duration_ms": 64459,
+    "records_found": 187,
     "pagination": "VERIFIED_ADVANCING",
     "parser_result": "SUCCESS",
     "first_real_bid_number": "GEM/2026/B/7617709",
