@@ -40,6 +40,27 @@ export async function fetchGeMRawScan(token) {
   return data;
 }
 
+export async function startScanJob(token, body) {
+  const { ok, data } = await safeJsonFetch(`${API_BASE}/scans`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify(body)
+  });
+  if (!ok) throw new Error(data.error || 'Failed to start scan job');
+  return data;
+}
+
+export async function fetchScanJobStatus(token, scanId) {
+  const { ok, data } = await safeJsonFetch(`${API_BASE}/scans/${scanId}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!ok) throw new Error(data.error || 'Failed to fetch scan job status');
+  return data;
+}
+
 export async function loginUser(email, password) {
   const { ok, data } = await safeJsonFetch(`${API_BASE}/auth/login`, {
     method: 'POST',

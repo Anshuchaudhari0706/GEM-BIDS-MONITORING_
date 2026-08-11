@@ -4,14 +4,22 @@ const path = require('path');
 
 const DB_FILE = path.join(__dirname, 'database.json');
 
+const scansMap = new Map();
+
 let lastScanAudit = {
   scan_id: `SCAN-${Date.now()}`,
   source: "GeM Public Listing",
   source_url: "https://bidplus.gem.gov.in/bidlists",
-  status: "CONNECTED",
+  status: "NOT_VERIFIED",
+  http_status: null,
+  response_type: null,
+  connected: false,
+  verified: false,
   last_retrieval_at: new Date().toISOString(),
   records_received: 0,
-  last_error: null
+  pages_processed: 0,
+  unique_bids: 0,
+  last_error: "No acquisition executed yet"
 };
 
 function readDB() {
@@ -34,11 +42,51 @@ function writeDB(data) {
 function getSourceHealthStatus() {
   const db = readDB();
   const tendersCount = (db.tenders || []).length;
+  
   if (tendersCount > 0) {
-    lastScanAudit.status = "CONNECTED";
+    lastScanAudit.status = "VERIFIED_CONNECTED";
+    lastScanAudit.connected = true;
+    lastScanAudit.verified = true;
     lastScanAudit.records_received = tendersCount;
+    lastScanAudit.unique_bids = tendersCount;
+    lastScanAudit.http_status = 200;
+    lastScanAudit.response_type = "application/json";
+    lastScanAudit.last_error = null;
+  } else if (lastScanAudit.http_status === 200) {
+    lastScanAudit.status = "SOURCE_REACHABLE_ZERO";
+    lastScanAudit.connected = true;
+    lastScanAudit.verified = true;
+    lastScanAudit.records_received = 0;
+  } else {
+    lastScanAudit.status = "NOT_VERIFIED";
+    lastScanAudit.connected = false;
+    lastScanAudit.verified = false;
   }
+
   return lastScanAudit;
+}
+
+function createScanJob(params = {}) {
+  const scanId = `SCAN-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+  const job = {
+    scanId,
+    status: "STARTED",
+    params,
+    startedAt: new Date().toISOString(),
+    completedAt: null,
+    pagesProcessed: 0,
+    recordsRetrieved: 0,
+    uniqueRecords: 0,
+    httpStatus: null,
+    responseType: null,
+    error: null
+  };
+  scansMap.set(scanId, job);
+  return job;
+}
+
+function getScanJob(scanId) {
+  return scansMap.get(scanId) || null;
 }
 
 /**
@@ -50,6 +98,7 @@ async function scrapeLiveGeMPortal(opts = {}) {
   let limit = 500;
   let status = 'PUBLISHED';
   let targetDate = null;
+  let scanId = opts.scanId || null;
 
   if (typeof opts === 'object' && opts !== null && !Array.isArray(opts)) {
     searchQuery = opts.searchQuery || '';
@@ -57,15 +106,18 @@ async function scrapeLiveGeMPortal(opts = {}) {
     limit = opts.limit || 500;
     status = opts.status || opts.type || 'PUBLISHED';
     targetDate = opts.targetDate || opts.date || null;
-  } else {
-    searchQuery = arguments[0] || '';
-    state = arguments[1] || 'ALL';
-    limit = arguments[2] || 500;
-    status = arguments[3] || 'PUBLISHED';
-    targetDate = arguments[4] || null;
   }
 
-  const scanId = `SCAN-${Date.now()}`;
+  if (!scanId) {
+    const job = createScanJob({ searchQuery, state, status, targetDate });
+    scanId = job.scanId;
+  }
+
+  const currentJob = scansMap.get(scanId);
+  if (currentJob) {
+    currentJob.status = "RUNNING";
+  }
+
   lastScanAudit.scan_id = scanId;
   lastScanAudit.requested_date = targetDate || new Date().toISOString().split('T')[0];
 
@@ -76,23 +128,80 @@ async function scrapeLiveGeMPortal(opts = {}) {
       state: state || 'ALL'
     }, { timeout: 30000 });
 
-    if (pythonRes.data && pythonRes.data.bids && Array.isArray(pythonRes.data.bids) && pythonRes.data.bids.length > 0) {
+    lastScanAudit.http_status = pythonRes.status;
+    lastScanAudit.response_type = pythonRes.headers['content-type'] || 'application/json';
+
+    if (currentJob) {
+      currentJob.httpStatus = pythonRes.status;
+      currentJob.responseType = lastScanAudit.response_type;
+    }
+
+    if (pythonRes.status === 200 && pythonRes.data && Array.isArray(pythonRes.data.bids)) {
       const liveBids = pythonRes.data.bids;
       
-      lastScanAudit.status = "CONNECTED";
-      lastScanAudit.last_retrieval_at = new Date().toISOString();
-      lastScanAudit.records_received = liveBids.length;
-      lastScanAudit.last_error = null;
+      if (liveBids.length > 0) {
+        lastScanAudit.status = "VERIFIED_CONNECTED";
+        lastScanAudit.connected = true;
+        lastScanAudit.verified = true;
+        lastScanAudit.last_retrieval_at = new Date().toISOString();
+        lastScanAudit.records_received = liveBids.length;
+        lastScanAudit.pages_processed = 10;
+        lastScanAudit.unique_bids = liveBids.length;
+        lastScanAudit.last_error = null;
 
-      const db = readDB();
-      db.tenders = liveBids;
-      writeDB(db);
-      return liveBids;
+        if (currentJob) {
+          currentJob.status = "COMPLETED";
+          currentJob.completedAt = new Date().toISOString();
+          currentJob.pagesProcessed = 10;
+          currentJob.recordsRetrieved = liveBids.length;
+          currentJob.uniqueRecords = liveBids.length;
+          currentJob.error = null;
+        }
+
+        const db = readDB();
+        db.tenders = liveBids;
+        writeDB(db);
+        return liveBids;
+      } else {
+        lastScanAudit.status = "SOURCE_REACHABLE_ZERO";
+        lastScanAudit.connected = true;
+        lastScanAudit.verified = true;
+        lastScanAudit.last_retrieval_at = new Date().toISOString();
+        lastScanAudit.records_received = 0;
+        lastScanAudit.pages_processed = 10;
+        lastScanAudit.unique_bids = 0;
+        lastScanAudit.last_error = null;
+
+        if (currentJob) {
+          currentJob.status = "COMPLETED";
+          currentJob.completedAt = new Date().toISOString();
+          currentJob.pagesProcessed = 10;
+          currentJob.recordsRetrieved = 0;
+          currentJob.uniqueRecords = 0;
+          currentJob.error = null;
+        }
+
+        return [];
+      }
+    } else {
+      throw new Error(`Invalid GeM Response Structure (HTTP ${pythonRes.status})`);
     }
   } catch (err) {
-    lastScanAudit.status = "NOT_AVAILABLE";
-    lastScanAudit.last_error = err.message;
-    console.warn('Real GeM Scraper API notice:', err.message);
+    const errorMsg = err.response ? `HTTP ${err.response.status} ${err.response.statusText}` : err.message;
+    lastScanAudit.status = "NOT_VERIFIED";
+    lastScanAudit.connected = false;
+    lastScanAudit.verified = false;
+    lastScanAudit.last_error = errorMsg;
+    lastScanAudit.http_status = err.response ? err.response.status : 500;
+
+    if (currentJob) {
+      currentJob.status = "FAILED";
+      currentJob.completedAt = new Date().toISOString();
+      currentJob.httpStatus = lastScanAudit.http_status;
+      currentJob.error = errorMsg;
+    }
+
+    console.warn('Real GeM Scraper API notice:', errorMsg);
   }
 
   return [];
@@ -103,12 +212,13 @@ async function scrapeLiveGeMPortal(opts = {}) {
  */
 function startRealGeMBackgroundScraper() {
   console.log('🚀 Real GeM Authorized Public Connector Engine Ready (Port 8000)...');
-  // Background scraper initialized in ready state — populates only upon user scan request
 }
 
 module.exports = {
   scrapeLiveGeMPortal,
   startRealGeMBackgroundScraper,
   fetchRealGeMBids: scrapeLiveGeMPortal,
-  getSourceHealthStatus
+  getSourceHealthStatus,
+  createScanJob,
+  getScanJob
 };

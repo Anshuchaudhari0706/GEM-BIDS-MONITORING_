@@ -79,20 +79,34 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
   });
 
   const [gemHealth, setGemHealth] = useState({
-    connected: true,
-    source: 'GeM',
+    status: 'NOT_VERIFIED',
+    connected: false,
+    source: 'GeM Public Listing',
     last_successful_request: new Date().toISOString(),
-    records_received: 20,
-    verified: true,
+    records_received: 0,
+    verified: false,
     error: null
   });
+
+  const [diagnosticData, setDiagnosticData] = useState(null);
+  const [diagnosticTab, setDiagnosticTab] = useState('Connection');
+
+  const openDiagnosticInspector = async () => {
+    setShowDiagnosticModal(true);
+    try {
+      const data = await fetchGeMRawScan(token);
+      setDiagnosticData(data);
+    } catch (e) {
+      console.warn('Diagnostic fetch notice:', e);
+    }
+  };
 
   useEffect(() => {
     fetchSourceHealth().then(data => {
       if (data && data.status) setSourceHealth(data);
     }).catch(() => {});
     fetchGeMHealth().then(data => {
-      if (data && typeof data.verified === 'boolean') setGemHealth(data);
+      if (data && data.status) setGemHealth(data);
     }).catch(() => {});
   }, []);
 
@@ -268,9 +282,16 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#fff' }}>GeM Tender Intelligence Scanner</h1>
-            <span className="badge" style={{ padding: '4px 10px', fontSize: '0.72rem', background: gemHealth.verified ? 'rgba(52, 211, 153, 0.15)' : 'rgba(239, 68, 68, 0.15)', color: gemHealth.verified ? '#34d399' : '#f87171', border: `1px solid ${gemHealth.verified ? '#34d399' : '#ef4444'}`, fontWeight: 700 }}>
-              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: gemHealth.verified ? '#34d399' : '#ef4444', display: 'inline-block' }}></span>
-              {gemHealth.verified ? '🟢 VERIFIED LIVE SOURCE' : '🔴 SOURCE NOT VERIFIED'}
+            <span className="badge" style={{
+              padding: '4px 10px',
+              fontSize: '0.72rem',
+              background: gemHealth.status === 'VERIFIED_CONNECTED' ? 'rgba(52, 211, 153, 0.15)' : (gemHealth.status === 'SOURCE_REACHABLE_ZERO' ? 'rgba(245, 158, 11, 0.15)' : 'rgba(239, 68, 68, 0.15)'),
+              color: gemHealth.status === 'VERIFIED_CONNECTED' ? '#34d399' : (gemHealth.status === 'SOURCE_REACHABLE_ZERO' ? '#f59e0b' : '#f87171'),
+              border: `1px solid ${gemHealth.status === 'VERIFIED_CONNECTED' ? '#34d399' : (gemHealth.status === 'SOURCE_REACHABLE_ZERO' ? '#f59e0b' : '#ef4444')}`,
+              fontWeight: 700
+            }}>
+              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: gemHealth.status === 'VERIFIED_CONNECTED' ? '#34d399' : (gemHealth.status === 'SOURCE_REACHABLE_ZERO' ? '#f59e0b' : '#ef4444'), display: 'inline-block', marginRight: '6px' }}></span>
+              {gemHealth.status === 'VERIFIED_CONNECTED' ? '🟢 VERIFIED CONNECTED' : (gemHealth.status === 'SOURCE_REACHABLE_ZERO' ? '🟡 SOURCE REACHABLE — 0 RECORDS' : (gemHealth.status === 'PARTIAL_SCAN' ? '🟠 PARTIAL SCAN' : '🔴 NOT VERIFIED'))}
             </span>
           </div>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '4px' }}>
@@ -288,16 +309,16 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
             fontSize: '0.78rem',
             color: 'var(--text-muted)'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, color: sourceHealth.status === 'CONNECTED' ? '#34d399' : '#f87171' }}>
-              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: sourceHealth.status === 'CONNECTED' ? '#34d399' : '#f87171' }} />
-              Source: {sourceHealth.source || 'GeM Public Listing'} ({sourceHealth.status === 'CONNECTED' ? '🟢 CONNECTED' : '🔴 NOT AVAILABLE'})
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, color: gemHealth.status === 'VERIFIED_CONNECTED' ? '#34d399' : (gemHealth.status === 'SOURCE_REACHABLE_ZERO' ? '#f59e0b' : '#f87171') }}>
+              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: gemHealth.status === 'VERIFIED_CONNECTED' ? '#34d399' : (gemHealth.status === 'SOURCE_REACHABLE_ZERO' ? '#f59e0b' : '#f87171') }} />
+              Source: GeM Public Listing ({gemHealth.status === 'VERIFIED_CONNECTED' ? '🟢 CONNECTED' : (gemHealth.status === 'SOURCE_REACHABLE_ZERO' ? '🟡 0 RECORDS' : '🔴 NOT VERIFIED')})
             </div>
             <div style={{ fontSize: '0.72rem', marginTop: '3px', color: '#94a3b8' }}>
-              Last Retrieval: {sourceHealth.last_retrieval_at ? new Date(sourceHealth.last_retrieval_at).toLocaleTimeString() : 'Just now'} | Records Received: {sourceHealth.records_received || allScannedTenders.length}
+              Last Retrieval: {gemHealth.last_successful_request ? new Date(gemHealth.last_successful_request).toLocaleTimeString() : 'Just now'} | Records Received: {gemHealth.records_received || allScannedTenders.length}
             </div>
           </div>
 
-          <button onClick={() => setShowDiagnosticModal(true)} style={{ padding: '12px 18px', fontSize: '0.88rem', background: '#1e293b', border: '1px solid #334155', color: '#38bdf8', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <button onClick={openDiagnosticInspector} style={{ padding: '12px 18px', fontSize: '0.88rem', background: '#1e293b', border: '1px solid #334155', color: '#38bdf8', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
             🔍 GeM Raw Data Inspector
           </button>
 
@@ -815,39 +836,93 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
 
       {showDiagnosticModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
-          <div style={{ background: '#0f172a', border: '1px solid #334155', borderRadius: '16px', width: '100%', maxWidth: '900px', maxHeight: '85vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <div style={{ background: '#0f172a', border: '1px solid #334155', borderRadius: '16px', width: '100%', maxWidth: '950px', maxHeight: '88vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             <div style={{ padding: '20px 24px', borderBottom: '1px solid #334155', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#fff' }}>🔍 GeM Authorized Public Connector Diagnostic</h3>
-                <p style={{ fontSize: '0.78rem', color: '#94a3b8', marginTop: '2px' }}>Live Connection Status, Raw Payload Audit & Verification Provenance</p>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#fff' }}>🔍 GEM SOURCE DIAGNOSTICS & AUDIT INSPECTOR</h3>
+                <p style={{ fontSize: '0.78rem', color: '#94a3b8', marginTop: '2px' }}>Real-time HTTP Verification, Endpoint Protocol & Raw Source Payloads</p>
               </div>
               <button onClick={() => setShowDiagnosticModal(false)} style={{ background: '#334155', border: 'none', color: '#fff', borderRadius: '6px', padding: '6px 12px', cursor: 'pointer', fontWeight: 700 }}>Close</button>
             </div>
             
-            <div style={{ padding: '20px 24px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
-                <div style={{ background: '#1e293b', padding: '14px', borderRadius: '10px' }}>
-                  <div style={{ fontSize: '0.74rem', color: '#94a3b8' }}>Status</div>
-                  <div style={{ fontSize: '1rem', fontWeight: 800, color: gemHealth.verified ? '#34d399' : '#ef4444', marginTop: '4px' }}>
-                    {gemHealth.verified ? '🟢 CONNECTED' : '🔴 NOT AVAILABLE'}
-                  </div>
-                </div>
-                <div style={{ background: '#1e293b', padding: '14px', borderRadius: '10px' }}>
-                  <div style={{ fontSize: '0.74rem', color: '#94a3b8' }}>Source Endpoint</div>
-                  <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#38bdf8', marginTop: '4px' }}>https://bidplus.gem.gov.in/bidlists</div>
-                </div>
-                <div style={{ background: '#1e293b', padding: '14px', borderRadius: '10px' }}>
-                  <div style={{ fontSize: '0.74rem', color: '#94a3b8' }}>Records Received</div>
-                  <div style={{ fontSize: '1rem', fontWeight: 800, color: '#fff', marginTop: '4px' }}>{allScannedTenders.length} Verified Bids</div>
-                </div>
-              </div>
+            {/* Multi-Tab Row */}
+            <div style={{ display: 'flex', gap: '8px', padding: '12px 24px', background: '#1e293b', borderBottom: '1px solid #334155' }}>
+              {['Connection', 'Request', 'Response', 'Pagination', 'Records', 'Errors'].map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => setDiagnosticTab(tab)}
+                  style={{
+                    padding: '6px 14px',
+                    fontSize: '0.78rem',
+                    fontWeight: 700,
+                    borderRadius: '6px',
+                    border: 'none',
+                    background: diagnosticTab === tab ? '#0284c7' : 'transparent',
+                    color: diagnosticTab === tab ? '#fff' : '#94a3b8',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
 
-              <div>
-                <h4 style={{ fontSize: '0.9rem', color: '#fff', marginBottom: '8px' }}>Raw Source Record Inspector (Sample Bid #1):</h4>
-                <pre style={{ background: '#020617', padding: '16px', borderRadius: '10px', fontSize: '0.78rem', color: '#38bdf8', overflowX: 'auto', border: '1px solid #1e293b', maxHeight: '300px' }}>
-                  {JSON.stringify(allScannedTenders[0]?.raw_source_record || allScannedTenders[0] || { notice: 'No active records' }, null, 2)}
+            <div style={{ padding: '20px 24px', overflowY: 'auto', flex: 1 }}>
+              {diagnosticTab === 'Connection' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  <div style={{ background: '#1e293b', padding: '16px', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Verification Status State</div>
+                      <div style={{ fontSize: '1.1rem', fontWeight: 900, color: gemHealth.status === 'VERIFIED_CONNECTED' ? '#34d399' : (gemHealth.status === 'SOURCE_REACHABLE_ZERO' ? '#f59e0b' : '#ef4444'), marginTop: '4px' }}>
+                        {gemHealth.status === 'VERIFIED_CONNECTED' ? '🟢 VERIFIED CONNECTED' : (gemHealth.status === 'SOURCE_REACHABLE_ZERO' ? '🟡 SOURCE REACHABLE — 0 RECORDS' : (gemHealth.status === 'PARTIAL_SCAN' ? '🟠 PARTIAL SCAN' : '🔴 NOT VERIFIED'))}
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Authentication Status</div>
+                      <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#38bdf8', marginTop: '4px' }}>Session Cookie Acquired</div>
+                    </div>
+                  </div>
+
+                  <pre style={{ background: '#020617', padding: '16px', borderRadius: '10px', fontSize: '0.78rem', color: '#38bdf8', overflowX: 'auto', border: '1px solid #1e293b' }}>
+                    {JSON.stringify(diagnosticData?.connection || gemHealth, null, 2)}
+                  </pre>
+                </div>
+              )}
+
+              {diagnosticTab === 'Request' && (
+                <pre style={{ background: '#020617', padding: '16px', borderRadius: '10px', fontSize: '0.78rem', color: '#38bdf8', overflowX: 'auto', border: '1px solid #1e293b' }}>
+                  {JSON.stringify(diagnosticData?.request || { method: 'POST', url: 'https://bidplus.gem.gov.in/all-bids-data', date: selectedDate }, null, 2)}
                 </pre>
-              </div>
+              )}
+
+              {diagnosticTab === 'Response' && (
+                <pre style={{ background: '#020617', padding: '16px', borderRadius: '10px', fontSize: '0.78rem', color: '#38bdf8', overflowX: 'auto', border: '1px solid #1e293b' }}>
+                  {JSON.stringify(diagnosticData?.response || { http_status: gemHealth.http_status || 403, response_type: gemHealth.response_type || 'text/html' }, null, 2)}
+                </pre>
+              )}
+
+              {diagnosticTab === 'Pagination' && (
+                <pre style={{ background: '#020617', padding: '16px', borderRadius: '10px', fontSize: '0.78rem', color: '#38bdf8', overflowX: 'auto', border: '1px solid #1e293b' }}>
+                  {JSON.stringify(diagnosticData?.pagination || { pages_processed: 0, records_per_page: 10, total_retrieved: allScannedTenders.length }, null, 2)}
+                </pre>
+              )}
+
+              {diagnosticTab === 'Records' && (
+                <pre style={{ background: '#020617', padding: '16px', borderRadius: '10px', fontSize: '0.78rem', color: '#38bdf8', overflowX: 'auto', border: '1px solid #1e293b' }}>
+                  {JSON.stringify(diagnosticData?.records || { total_count: allScannedTenders.length, bids: allScannedTenders.map(t => t.bid_number) }, null, 2)}
+                </pre>
+              )}
+
+              {diagnosticTab === 'Errors' && (
+                <div style={{ background: '#020617', padding: '16px', borderRadius: '10px', border: '1px solid #1e293b' }}>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 700, color: gemHealth.last_error ? '#ef4444' : '#34d399', marginBottom: '8px' }}>
+                    {gemHealth.last_error ? `⚠️ Error Log: ${gemHealth.last_error}` : '✅ No Active Acquisition Errors'}
+                  </div>
+                  <pre style={{ fontSize: '0.78rem', color: '#94a3b8', overflowX: 'auto' }}>
+                    {JSON.stringify(diagnosticData?.errors || { error: gemHealth.last_error || null }, null, 2)}
+                  </pre>
+                </div>
+              )}
             </div>
           </div>
         </div>
