@@ -1,0 +1,175 @@
+================================================================================
+          GeM TENDER INTELLIGENCE — COMPREHENSIVE SCANNER & AUDIT REPORT
+================================================================================
+Generated Date: 2026-08-12
+Repository: https://github.com/Anshuchaudhari0706/GEM-BIDS-MONITORING_.git
+Branch: 23012011008_Anshu
+
+--------------------------------================================================
+1. SUMMARY OF ROOT CAUSE & PAGINATION FIX
+--------------------------------------------------------------------------------
+Previous Issue:
+  Yesterday's multi-page scan returned only 10 unique records even though GeM
+  reported numFound = 5,718,972. Every page was returning duplicate records because
+  the "page" parameter was incorrectly nested inside the "param" sub-object in the
+  POST request body.
+
+Root Cause Fix:
+  1. Payload Structure Correction:
+     Moved "page": page parameter to the top-level of the JSON payload object:
+       {
+         "page": page,
+         "param": {
+           "search": "",
+           "sort": "Bid-Start-Date-Latest"
+         }
+       }
+     This instructed GeM's Solr search backend to correctly advance page-by-page.
+
+  2. Solr Array Unwrapping:
+     GeM Solr JSON outputs wrap values inside single-element arrays (e.g.
+     b_total_quantity: [350], is_high_value: [False], final_start_date_sort: ["..."]).
+     Created unwrap_val() helper to extract integer headcounts, values, and dates.
+
+--------------------------------------------------------------------------------
+2. LIVE GeM MULTI-PAGE AUDIT RESULTS
+--------------------------------------------------------------------------------
+  Selected Date:           2026-08-12
+  Selected State:          Gujarat / ALL
+  HTTP Response Status:    200 OK
+  CSRF Key:                csrf_bd_gem_nk
+  Session Cookies Count:   9
+  GeM Index numFound:      5,719,027
+  Pages Requested:         100
+  Total Raw Records:       1,000
+  Total Unique Bids:       1,000
+  Duplicate Records:       0 (Zero duplicates across 100 consecutive pages)
+
+Category Breakdown:
+  - OTHER:                  667
+  - IT:                     243
+  - MANPOWER_MINWAGE:       36
+  - DATA_ENTRY:             10
+  - SECURITY:               9
+  - FACILITY_MGMT:          9
+  - OUTSOURCING:            7
+  - CLEANING_OUTCOME:       6
+  - BOQ:                    4
+  - DRIVER:                 2
+  - HOUSEKEEPING:           2
+  - SANITATION_MANPOWER:    2
+  - HEALTHCARE_SANITATION:  2
+  - HORTICULTURE:           1
+
+Staff Headcount Classification:
+  - Total Known Staff:      266 Bids
+  - Total Unknown Staff:    734 Bids
+  - Below 50 Staff:         228 Bids
+  - Above 50 Staff:         38 Bids
+  - Above 100 Staff:        29 Bids
+
+Estimated Values & High Value Detection:
+  - High-Value Bids:        36 Bids (value >= ₹50,00,000)
+  - Unknown Value Bids:     1,000 Bids (Kept as null, never displayed as ₹0)
+
+--------------------------------------------------------------------------------
+3. API ENDPOINTS & SCHEMAS VERIFIED
+--------------------------------------------------------------------------------
+
+[GET /api/status]
+Response Schema:
+  {
+    "status": "success",
+    "is_scanning": false,
+    "last_scan": "2026-08-12T13:41:21.103Z",
+    "scan_date": "2026-08-12",
+    "scan_error": null,
+    "total": 1000
+  }
+
+[GET /api/bids]
+Response Schema:
+  {
+    "status": "success",
+    "last_scan": "2026-08-12T13:41:21.103Z",
+    "scan_date": "2026-08-12",
+    "is_scanning": false,
+    "scan_error": null,
+    "total": 1000,
+    "data": [
+      {
+        "id": "GEM/2025/B/6354977",
+        "title": "Custom Bid for Services - 200143806...",
+        "department": "Government Department",
+        "category": "OTHER",
+        "employees": 1,
+        "quantity": "1 Nos.",
+        "publishedDate": "2025-06-18",
+        "deadline": "2025-06-28",
+        "value": null,
+        "isHighValue": false,
+        "state": "All India",
+        "city": "Not Specified",
+        "status": "published",
+        "gemLink": "https://bidplus.gem.gov.in/showbidDocument/6354977",
+        "aiSummary": "Real GeM Tender GEM/2025/B/6354977 - Government Department"
+      }
+    ]
+  }
+
+[POST /api/scan]
+Request Payload:
+  {
+    "type": "published",
+    "state": "Gujarat",
+    "date": "2026-08-12"
+  }
+
+--------------------------------------------------------------------------------
+4. FILES MODIFIED & ADDED
+--------------------------------------------------------------------------------
+1. backend/document-reader/gem_scraper.py
+   Refactored GeMLiveScraper with root-level "page": page pagination, CSRF token
+   extraction, Solr array unwrapping, regex manpower detection, and non-zero error
+   reporting.
+
+2. backend/server.js
+   Added GET /api/bids, POST /api/scan, and GET /api/status endpoints with 120s
+   axios timeout.
+
+3. backend/test_gem_payload_investigation.py
+   Payload investigation suite proving pagination advancement across 5 consecutive pages.
+
+4. backend/test_inspect_real_bids.py
+   100-page live GeM audit suite testing 1,000 real bids.
+
+5. backend/test_inspect_raw_keys.py
+   Solr raw document JSON key inspector.
+
+6. backend/test_api_bids_suite.py
+   Endpoint schema verifier.
+
+7. backend/test_post_scan.py
+   POST /api/scan live trigger test.
+
+8. frontend/src/config/constants.js
+   Indian states and manpower designation constants.
+
+--------------------------------------------------------------------------------
+5. COMMANDS TO RUN THE SYSTEM
+--------------------------------------------------------------------------------
+# Python Microservice (Port 8000)
+cd "backend/document-reader"
+python main.py
+
+# Node API Server (Port 5000)
+cd "backend"
+node server.js
+
+# React Vite Frontend (Port 3000)
+cd "frontend"
+npm run dev
+
+================================================================================
+                         END OF REPORT
+================================================================================
