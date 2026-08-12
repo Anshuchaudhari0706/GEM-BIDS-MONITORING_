@@ -629,6 +629,186 @@ app.get('/api/scans/current', authenticateToken, (req, res) => {
   });
 });
 
+// GET /api/status (Check scan status & progress)
+app.get('/api/status', (req, res) => {
+  const db = readDB();
+  const lastScan = db.last_scan || {};
+  res.json({
+    status: lastScan.status === "FAILED" ? "error" : "success",
+    is_scanning: lastScan.is_scanning || false,
+    last_scan: lastScan.last_scan || new Date().toISOString(),
+    scan_date: lastScan.queryDate || new Date().toISOString().split('T')[0],
+    scan_error: lastScan.scan_error || lastScan.error || null,
+    total: lastScan.recordCount || (db.tenders || []).length
+  });
+});
+
+// GET /api/bids (Consistent Response Schema)
+app.get('/api/bids', (req, res) => {
+  const { type, state, date, category, staffFilter, highValueOnly } = req.query;
+  const db = readDB();
+  const tenders = db.tenders || [];
+  const lastScan = db.last_scan || {};
+
+  if (lastScan.status === "FAILED" || lastScan.sourceVerified === false) {
+    return res.json({
+      status: "error",
+      last_scan: lastScan.last_scan || new Date().toISOString(),
+      scan_date: date || new Date().toISOString().split('T')[0],
+      is_scanning: false,
+      scan_error: lastScan.scan_error || "GeM scan failed",
+      total: 0,
+      data: []
+    });
+  }
+
+  let filtered = [...tenders];
+
+  if (type) {
+    filtered = filtered.filter(t => (t.status || 'published').toLowerCase() === type.toLowerCase());
+  }
+
+  if (state && state !== 'ALL') {
+    const stLower = state.toLowerCase();
+    filtered = filtered.filter(t => {
+      const tState = (t.state || '').toLowerCase();
+      const tDept = (t.department || '').toLowerCase();
+      return tState.includes(stLower) || tDept.includes(stLower) || tState.includes('all india');
+    });
+  }
+
+  if (category && category !== 'ALL') {
+    const catLower = category.toLowerCase();
+    filtered = filtered.filter(t => (t.category || '').toLowerCase() === catLower || (t.title || '').toLowerCase().includes(catLower));
+  }
+
+  if (staffFilter) {
+    if (staffFilter === 'below50') {
+      filtered = filtered.filter(t => t.employees !== null && t.employees !== undefined && t.employees < 50);
+    } else if (staffFilter === 'above50') {
+      filtered = filtered.filter(t => t.employees !== null && t.employees !== undefined && t.employees > 50);
+    } else if (staffFilter === 'above100') {
+      filtered = filtered.filter(t => t.employees !== null && t.employees !== undefined && t.employees > 100);
+    }
+  }
+
+  if (highValueOnly === 'true') {
+    filtered = filtered.filter(t => t.isHighValue === true || (t.value && t.value >= 5000000));
+  }
+
+  const formattedData = filtered.map(t => ({
+    id: t.id || t.bid_number,
+    title: t.title || t.items,
+    department: t.department || t.organization,
+    category: t.category || "OTHER",
+    employees: t.employees !== undefined ? t.employees : null,
+    quantity: t.quantity_display || t.quantity || (t.employees ? `${t.employees} Nos.` : "Not Specified"),
+    publishedDate: t.startDateFormatted ? t.startDateFormatted.split(' ')[0] : (t.publishedDate || t.startDate || "2026-08-12"),
+    deadline: t.endDateFormatted ? t.endDateFormatted.split(' ')[0] : (t.deadline || t.endDate || "2026-08-26"),
+    value: t.value || (t.estimatedValue ? t.estimatedValue : null),
+    isHighValue: t.isHighValue || false,
+    state: t.state || "All India",
+    city: t.city || "Not Specified",
+    status: t.status || "published",
+    gemLink: t.gemLink || `https://bidplus.gem.gov.in/showbidDocument/${(t.id || '').split('/').pop()}`,
+    aiSummary: t.aiSummary || `GeM Tender ${t.id} - ${t.department}`
+  }));
+
+  res.json({
+    status: "success",
+    last_scan: lastScan.last_scan || new Date().toISOString(),
+    scan_date: date || "2026-08-12",
+    is_scanning: false,
+    scan_error: null,
+    total: formattedData.length,
+    data: formattedData
+  });
+});
+
+// POST /api/scan (Trigger live scan)
+app.post('/api/scan', async (req, res) => {
+  const { type, state, date } = req.body;
+  const scanType = (type || "published").toLowerCase();
+  const scanDate = date || new Date().toISOString().split('T')[0];
+  const scanState = state || "ALL";
+
+  try {
+    const pyRes = await axios.post('http://localhost:8000/api/scan', {
+      date: scanDate,
+      type: scanType,
+      state: scanState
+    }, { timeout: 45000 });
+
+    const pyData = pyRes.data;
+
+    if (pyData.status === 'error') {
+      const db = readDB();
+      db.last_scan = {
+        status: "FAILED",
+        sourceVerified: false,
+        is_scanning: false,
+        queryDate: scanDate,
+        bidType: scanType.toUpperCase(),
+        recordCount: 0,
+        scan_error: pyData.scan_error || "GeM portal returned error response",
+        last_scan: new Date().toISOString()
+      };
+      writeDB(db);
+
+      return res.json({
+        status: "error",
+        scan_error: pyData.scan_error || "GeM portal returned error response",
+        total: 0
+      });
+    }
+
+    const liveBids = pyData.bids || [];
+    const db = readDB();
+    db.tenders = liveBids;
+    db.last_scan = {
+      status: "COMPLETED",
+      sourceVerified: true,
+      is_scanning: false,
+      queryDate: scanDate,
+      bidType: scanType.toUpperCase(),
+      recordCount: liveBids.length,
+      scan_error: null,
+      last_scan: new Date().toISOString()
+    };
+    writeDB(db);
+
+    res.json({
+      status: "success",
+      last_scan: new Date().toISOString(),
+      scan_date: scanDate,
+      is_scanning: false,
+      scan_error: null,
+      total: liveBids.length,
+      data: liveBids
+    });
+  } catch (err) {
+    const db = readDB();
+    const errorStr = err.response ? `HTTP ${err.response.status}` : err.message;
+    db.last_scan = {
+      status: "FAILED",
+      sourceVerified: false,
+      is_scanning: false,
+      queryDate: scanDate,
+      bidType: scanType.toUpperCase(),
+      recordCount: 0,
+      scan_error: errorStr,
+      last_scan: new Date().toISOString()
+    };
+    writeDB(db);
+
+    res.json({
+      status: "error",
+      scan_error: `GeM scan failed: ${errorStr}`,
+      total: 0
+    });
+  }
+});
+
 // GET /api/tenders/detail/* (Single Tender Detailed Audit API supporting bid numbers with slashes)
 app.get('/api/tenders/detail/*', authenticateToken, requireActiveSubscription, (req, res) => {
   const db = readDB();

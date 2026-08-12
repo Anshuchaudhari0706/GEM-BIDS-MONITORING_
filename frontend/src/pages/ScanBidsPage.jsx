@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import CustomDatePicker from '../components/CustomDatePicker';
 import CustomStatusDropdown from '../components/CustomStatusDropdown';
 import TenderDetailsModal from '../components/TenderDetailsModal';
+import { INDIAN_STATES } from '../config/constants';
 import {
   Radar,
   Zap,
@@ -270,15 +271,9 @@ export default function ScanBidsPage({ searchQuery }) {
               style={{ fontSize: '0.82rem', height: '38px', borderRadius: '8px' }}
             >
               <option value="ALL">All India (All States)</option>
-              <option value="Gujarat">Gujarat</option>
-              <option value="Delhi">Delhi</option>
-              <option value="Maharashtra">Maharashtra</option>
-              <option value="Karnataka">Karnataka</option>
-              <option value="Uttarakhand">Uttarakhand</option>
-              <option value="Rajasthan">Rajasthan</option>
-              <option value="Telangana">Telangana</option>
-              <option value="Uttar Pradesh">Uttar Pradesh</option>
-              <option value="Madhya Pradesh">Madhya Pradesh</option>
+              {INDIAN_STATES.map((st) => (
+                <option key={st} value={st}>{st}</option>
+              ))}
             </select>
           </div>
 
