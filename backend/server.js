@@ -737,7 +737,7 @@ app.post('/api/scan', async (req, res) => {
       date: scanDate,
       type: scanType,
       state: scanState
-    }, { timeout: 45000 });
+    }, { timeout: 120000 });
 
     const pyData = pyRes.data;
 

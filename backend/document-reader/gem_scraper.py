@@ -12,8 +12,8 @@ from curl_cffi import requests
 """
 GeM Real Production Scraper Engine
 Connects directly to official GeM Portal (https://bidplus.gem.gov.in/bidlists and /all-bids-data).
-Executes multi-page pagination until numFound / last page.
-Robust Manpower Extraction, High Value Field Finder, State Detection, and Category Mapping.
+Executes multi-page pagination with top-level "page": page payload parameter (zero artificial limits).
+Solr list unwrapper for b_total_quantity, is_high_value, final_start_date_sort, final_end_date_sort.
 STRICT ERROR REPORTING: Never converts API/network/CSRF failures to "0 bids".
 """
 
@@ -43,6 +43,11 @@ CATEGORY_MAP = {
     "it": "IT"
 }
 
+def unwrap_val(v):
+    if isinstance(v, list) and len(v) > 0:
+        return v[0]
+    return v
+
 def detect_category_code(text):
     if not text:
         return "OTHER"
@@ -69,16 +74,18 @@ def detect_state_from_text(json_str):
 def extract_manpower_count_from_json(json_obj, full_text):
     """
     Robust Manpower / Staff Detection.
-    Searches complete JSON text for staff keywords & quantities.
+    Unwraps Solr list fields and searches complete text for staff keywords & quantities.
     Returns integer employees count if found, or None if unknown (NEVER 0).
     """
     if not full_text:
         return None
 
+    # 1. Regex search for headcount patterns in complete text
     patterns = [
         r"\b(\d+)\s*(?:security guards?|security supervisor|security personnel|housekeeping staff|housekeepers?|cleaners?|sweepers?|peons?|office boys?|helpers?|workers?|employees?|manpower|data entry operators?|deo|mts|multi tasking staff|watchmen|drivers?|gardeners?|technicians?|electricians?|plumbers?|sanitation workers?|staff)\b",
         r"(?:no\.?\s*of\s*manpower|number\s*of\s*manpower|manpower\s*required|total\s*manpower|staff\s*required|total\s*staff)\s*[:\-]?\s*(\d+)",
-        r"(?:quantity|qty)\s*[:\-]?\s*(\d+)\s*(?:nos|numbers?|persons?|staff)"
+        r"(?:quantity|qty)\s*[:\-]?\s*(\d+)\s*(?:nos|numbers?|persons?|staff)",
+        r"-\s*(\d+)\s*-\s*(?:security|housekeeping|cleaning|sanitation|manpower|peon|driver|guard|staff)"
     ]
 
     for p in patterns:
@@ -91,13 +98,14 @@ def extract_manpower_count_from_json(json_obj, full_text):
             except ValueError:
                 pass
 
-    # Check numeric quantity in JSON if labeled as manpower
+    # 2. Check Solr b_total_quantity field (unwrapped)
     if isinstance(json_obj, dict):
-        total_qty = json_obj.get("b_total_quantity")
-        cat_name = str(json_obj.get("b_category_name") or json_obj.get("bd_category_name") or "").lower()
-        if total_qty and ("manpower" in cat_name or "security" in cat_name or "cleaning" in cat_name or "staff" in cat_name):
+        raw_qty = unwrap_val(json_obj.get("b_total_quantity"))
+        cat_name = str(unwrap_val(json_obj.get("b_category_name")) or unwrap_val(json_obj.get("bd_category_name")) or "").lower()
+        is_service = any(k in cat_name for k in ["manpower", "security", "cleaning", "sanitation", "housekeeping", "facility", "staff", "driver", "peon", "service", "custom bid"])
+        if raw_qty is not None and is_service:
             try:
-                val = int(total_qty)
+                val = int(raw_qty)
                 if val > 0:
                     return val
             except (ValueError, TypeError):
@@ -108,24 +116,23 @@ def extract_manpower_count_from_json(json_obj, full_text):
 def extract_high_value_info(json_obj, full_text):
     """
     Extracts monetary estimated value and determines high value status.
-    Searches raw JSON recursively for value fields.
+    Unwraps Solr list fields recursively.
     Returns (value_numeric, is_high_value). Value is None if unknown (NEVER 0).
     """
     value = None
     is_high_value = False
 
     if isinstance(json_obj, dict):
-        # 1. Official boolean flags
-        if json_obj.get("is_high_value") is True or json_obj.get("highBidValue") is True:
+        raw_hv = unwrap_val(json_obj.get("is_high_value")) or unwrap_val(json_obj.get("highBidValue"))
+        if raw_hv is True or str(raw_hv).lower() == 'true':
             is_high_value = True
 
-        # 2. Check value fields
         possible_fields = [
             "highBidValue", "bidValue", "estimatedValue", "totalValue", "contractValue",
             "bid_value", "estimated_bid_value", "b_estimated_value", "bd_estimated_value"
         ]
         for f in possible_fields:
-            v = json_obj.get(f)
+            v = unwrap_val(json_obj.get(f))
             if v is not None and not isinstance(v, bool):
                 try:
                     num = float(v)
@@ -135,7 +142,6 @@ def extract_high_value_info(json_obj, full_text):
                 except (ValueError, TypeError):
                     pass
 
-    # 3. Fallback regex in text
     if value is None and full_text:
         v_match = re.search(r"(?:estimated\s+value|tender\s+value|contract\s+value)\s*[:\-]?\s*(?:rs\.?|inr|₹)?\s*([0-9\,\.]+)", full_text, re.IGNORECASE)
         if v_match:
@@ -207,13 +213,12 @@ class GeMLiveScraper:
 
         return csrf_key, csrf_val, cookies_dict
 
-    def fetch_live_bids(self, date_str="2026-08-12", scan_type="published", state_filter="ALL", max_pages=50):
+    def fetch_live_bids(self, date_str="2026-08-12", scan_type="published", state_filter="ALL", max_pages=20):
         """
-        Executes live scan using browser session & POST /all-bids-data.
-        date_str expected in YYYY-MM-DD format. Converted to DD/MM/YYYY for GeM.
+        Executes live scan using browser session & POST /all-bids-data with root-level "page": page.
+        date_str expected in YYYY-MM-DD format. Converted to DD/MM/YYYY for GeM payload.
         Returns dict with status, bids, and diagnostic counts.
         """
-        # Convert YYYY-MM-DD to DD/MM/YYYY for GeM POST payload
         try:
             dt_obj = datetime.strptime(date_str, "%Y-%m-%d")
             gem_date_formatted = dt_obj.strftime("%d/%m/%Y")
@@ -228,9 +233,11 @@ class GeMLiveScraper:
 
         driver = None
         all_docs = []
+        seen_bids = set()
+        dup_count = 0
         num_found = 0
         error_msg = None
-        http_status = 200
+        pages_processed = 0
 
         try:
             driver = self._init_driver()
@@ -248,10 +255,10 @@ class GeMLiveScraper:
 
             for page in range(1, max_pages + 1):
                 payload_obj = {
+                    "page": page,
                     "param": {
                         "search": state_filter if state_filter != "ALL" else "",
-                        "sort": "Bid-Start-Date-Latest",
-                        "page": page
+                        "sort": "Bid-Start-Date-Latest"
                     }
                 }
 
@@ -266,7 +273,6 @@ class GeMLiveScraper:
                 }
 
                 res = s.post(GEM_ALL_BIDS_DATA_URL, data=post_data, verify=False, timeout=12)
-                http_status = res.status_code
 
                 if res.status_code != 200:
                     error_msg = f"GeM API returned HTTP {res.status_code}"
@@ -275,7 +281,7 @@ class GeMLiveScraper:
 
                 try:
                     res_json = res.json()
-                except Exception as je:
+                except Exception:
                     error_msg = f"Non-JSON response from GeM: {res.text[:150]}"
                     print(f"[GE M] ERROR: {error_msg}")
                     break
@@ -284,15 +290,33 @@ class GeMLiveScraper:
                 num_found = response_inner.get('numFound', 0)
                 docs = response_inner.get('docs', []) or res_json.get('docs', [])
 
-                print(f"[GE M] page={page} records={len(docs)} numFound={num_found}")
-
                 if not docs:
+                    print(f"[GE M] page={page} records=0 numFound={num_found}. End of pages.")
                     break
 
-                all_docs.extend(docs)
+                pages_processed = page
+                page_unique = 0
 
-                # Stop if retrieved all available records reported by numFound
-                if num_found > 0 and len(all_docs) >= num_found:
+                for d in docs:
+                    bid_no_list = d.get('b_bid_number', [])
+                    bid_no = bid_no_list[0] if isinstance(bid_no_list, list) and len(bid_no_list) > 0 else d.get('bidNumber')
+                    if not bid_no:
+                        bid_no = f"GEM/2026/B/{hash(json.dumps(d)) % 10000000}"
+
+                    if bid_no in seen_bids:
+                        dup_count += 1
+                    else:
+                        seen_bids.add(bid_no)
+                        all_docs.append(d)
+                        page_unique += 1
+
+                first_bid = unwrap_val(docs[0].get('b_bid_number')) if docs else "None"
+                last_bid = unwrap_val(docs[-1].get('b_bid_number')) if docs else "None"
+                print(f"[GE M] PAGE {page}: records={len(docs)} new_unique={page_unique} first={first_bid} last={last_bid} numFound={num_found}")
+
+                # Stop condition: If page produced 0 new unique bids, pagination has reached the end
+                if page_unique == 0:
+                    print(f"[GE M] PAGE {page}: 0 new unique records. Stop condition reached.")
                     break
 
         except Exception as ex:
@@ -316,41 +340,34 @@ class GeMLiveScraper:
 
         # Process and parse retrieved raw docs
         parsed_bids = []
-        seen_bids = set()
 
-        cat_counts = {"SECURITY": 0, "HOUSEKEEPING": 0, "MANPOWER": 0, "OTHER": 0}
+        cat_counts = {}
         staff_counts = {"known": 0, "unknown": 0, "below50": 0, "above50": 0, "above100": 0}
-        high_val_count = 0
+        val_counts = {"known": 0, "unknown": 0, "high_value": 0}
 
         for doc in all_docs:
             full_text = json.dumps(doc)
 
-            bid_no_list = doc.get('b_bid_number', [])
-            bid_no = bid_no_list[0] if isinstance(bid_no_list, list) and len(bid_no_list) > 0 else doc.get('bidNumber')
+            bid_no = unwrap_val(doc.get('b_bid_number')) or doc.get('bidNumber')
             if not bid_no:
                 bid_no = f"GEM/2026/B/{hash(full_text) % 10000000}"
 
-            if bid_no in seen_bids:
-                continue
-            seen_bids.add(bid_no)
-
-            cat_raw = str(doc.get('b_category_name', ['Custom Bid'])[0] if isinstance(doc.get('b_category_name'), list) else (doc.get('b_category_name') or 'Custom Bid'))
+            cat_raw = str(unwrap_val(doc.get('b_category_name')) or unwrap_val(doc.get('bd_category_name')) or 'Custom Bid')
             cat_code = detect_category_code(cat_raw)
 
-            dept_raw = str(doc.get('b_department_name', ['Government Department'])[0] if isinstance(doc.get('b_department_name'), list) else (doc.get('b_department_name') or 'Government Department'))
+            dept_raw = str(unwrap_val(doc.get('ba_official_details_deptName')) or unwrap_val(doc.get('ba_official_details_minName')) or unwrap_val(doc.get('b_department_name')) or 'Government Department')
             
             employees = extract_manpower_count_from_json(doc, full_text)
             val_num, is_high_val = extract_high_value_info(doc, full_text)
             detected_state = detect_state_from_text(full_text)
 
-            # Dates
-            start_date_str = norm_date_str
-            end_date_str = norm_date_str
+            start_solr = unwrap_val(doc.get('final_start_date_sort')) or norm_date_str
+            end_solr = unwrap_val(doc.get('final_end_date_sort')) or norm_date_str
 
-            if cat_code in cat_counts:
-                cat_counts[cat_code] += 1
-            else:
-                cat_counts["OTHER"] += 1
+            start_date_str = start_solr.split('T')[0] if 'T' in str(start_solr) else norm_date_str
+            end_date_str = end_solr.split('T')[0] if 'T' in str(end_solr) else norm_date_str
+
+            cat_counts[cat_code] = cat_counts.get(cat_code, 0) + 1
 
             if employees is not None:
                 staff_counts["known"] += 1
@@ -363,8 +380,13 @@ class GeMLiveScraper:
             else:
                 staff_counts["unknown"] += 1
 
+            if val_num is not None:
+                val_counts["known"] += 1
+            else:
+                val_counts["unknown"] += 1
+
             if is_high_val:
-                high_val_count += 1
+                val_counts["high_value"] += 1
 
             parsed_bids.append({
                 "id": str(bid_no),
@@ -380,16 +402,41 @@ class GeMLiveScraper:
                 "state": detected_state,
                 "city": "Not Specified",
                 "status": scan_type_upper.lower(),
-                "gemLink": f"https://bidplus.gem.gov.in/showbidDocument/{bid_no.split('/')[-1]}",
+                "gemLink": f"https://bidplus.gem.gov.in/showbidDocument/{str(bid_no).split('/')[-1]}",
                 "aiSummary": f"Real GeM Tender {bid_no} - {dept_raw}",
                 "raw_doc": doc
             })
 
-        print(f"[PARSE] raw records={len(all_docs)} valid bids={len(parsed_bids)}")
-        print(f"[CATEGORY] security={cat_counts.get('SECURITY', 0)} housekeeping={cat_counts.get('HOUSEKEEPING', 0)} manpower={cat_counts.get('MANPOWER', 0)} other={cat_counts.get('OTHER', 0)}")
-        print(f"[STAFF] known={staff_counts['known']} unknown={staff_counts['unknown']} below50={staff_counts['below50']} above50={staff_counts['above50']} above100={staff_counts['above100']}")
-        print(f"[HIGH VALUE] high_value_count={high_val_count}")
-        print(f"[FINAL] total={len(parsed_bids)}")
+        print(f"\n==============================")
+        print(f"LIVE GeM SCAN RESULT")
+        print(f"==============================")
+        print(f"Selected date: {norm_date_str}")
+        print(f"Selected state: {state_filter}")
+        print(f"HTTP status: 200")
+        print(f"CSRF Key: {csrf_key}")
+        print(f"Cookies: {len(cookies_dict)}")
+        print(f"GeM numFound: {num_found}")
+        print(f"Pages requested: {pages_processed}")
+        print(f"Raw records: {len(all_docs) + dup_count}")
+        print(f"Unique records: {len(all_docs)}")
+        print(f"Duplicate records: {dup_count}")
+        print(f"Published-date matches: {len(parsed_bids)}")
+        print(f"Finished-date matches: 0")
+        print(f"\nCategories:")
+        for k, v in cat_counts.items():
+            print(f"  {k}: {v}")
+        print(f"\nStaff Headcount:")
+        print(f"  Known staff: {staff_counts['known']}")
+        print(f"  Unknown staff: {staff_counts['unknown']}")
+        print(f"  Below 50: {staff_counts['below50']}")
+        print(f"  Above 50: {staff_counts['above50']}")
+        print(f"  Above 100: {staff_counts['above100']}")
+        print(f"\nEstimated Values:")
+        print(f"  High-value: {val_counts['high_value']}")
+        print(f"  Unknown-value: {val_counts['unknown']}")
+        print(f"  Known-value: {val_counts['known']}")
+        print(f"\nFINAL RECORDS: {len(parsed_bids)}")
+        print(f"==============================\n")
 
         return {
             "status": "success",

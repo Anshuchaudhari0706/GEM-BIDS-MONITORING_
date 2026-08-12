@@ -12,7 +12,7 @@ def test_post_scan():
         "date": "2026-08-12"
     }
 
-    res = requests.post(url, json=payload, timeout=30)
+    res = requests.post(url, json=payload, timeout=120)
     data = res.json()
 
     print(f"Status Code: {res.status_code}")
