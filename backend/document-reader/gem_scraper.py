@@ -1,6 +1,7 @@
 import json
 import re
 import time
+import math
 from datetime import datetime
 from bs4 import BeautifulSoup
 from selenium import webdriver
@@ -302,7 +303,11 @@ class GeMLiveScraper:
                 'X-Requested-With': 'XMLHttpRequest'
             })
 
-            for page in range(1, SAFETY_MAX_PAGES + 1):
+            EMERGENCY_CEILING = 1000
+            SAFETY_MAX_PAGES = max_pages or EMERGENCY_CEILING
+            page = 1
+
+            while page <= SAFETY_MAX_PAGES:
                 payload_obj = {
                     "page": page,
                     "param": {
@@ -341,7 +346,20 @@ class GeMLiveScraper:
                     csrf_key: csrf_val
                 }
 
-                res = s.post(GEM_ALL_BIDS_DATA_URL, data=post_data, verify=False, timeout=12)
+                res = None
+                for attempt in range(1, 4):
+                    try:
+                        res = s.post(GEM_ALL_BIDS_DATA_URL, data=post_data, verify=False, timeout=15)
+                        if res.status_code == 200 or res.status_code == 404:
+                            break
+                    except Exception as req_err:
+                        print(f"[GE M] PAGE {page} Attempt {attempt}/3 failed with error: {req_err}. Retrying in 1s...")
+                        time.sleep(1)
+
+                if res is None:
+                    error_msg = f"GeM API connection timed out on page {page} after 3 attempts"
+                    print(f"[GE M] ERROR: {error_msg}")
+                    break
 
                 if res.status_code != 200:
                     # Check if GeM returned 404 "No data found" JSON
@@ -373,11 +391,17 @@ class GeMLiveScraper:
                 docs = response_inner.get('docs', []) or res_json.get('docs', [])
 
                 if not docs:
-                    print(f"[GE M] PAGE {page}: records=0 numFound={num_found}. End of pages.")
+                    print(f"[GE M] PAGE {page}: records=0 numFound={num_found}. End of pages from GeM source.")
                     records_on_last_page = 0
-                    stop_reason = "GE M SOURCE RETURNED ZERO RECORDS"
+                    stop_reason = "GE M SOURCE RETURNED ZERO RECORDS" if len(all_docs) == 0 else "ALL_GE_M_NUMFOUND_RECORDS_RETRIEVED"
                     pagination_complete = True
                     break
+
+                # Dynamic Page Limit Calculation
+                if num_found > 0 and max_pages is None:
+                    rows = len(docs) if len(docs) > 0 else 10
+                    expected_p = math.ceil(num_found / rows)
+                    SAFETY_MAX_PAGES = min(expected_p + 20, EMERGENCY_CEILING)
 
                 pages_processed = page
                 records_on_last_page = len(docs)
@@ -416,35 +440,33 @@ class GeMLiveScraper:
                         all_docs.append(d)
                         page_unique += 1
 
+                exp_pages = math.ceil(num_found / 10) if num_found > 0 else 0
                 print(
-                    f"PAGE {page}:\n"
+                    f"PAGE {page}\n"
                     f"records={len(docs)}\n"
-                    f"first_end_date={first_date_val}\n"
-                    f"last_end_date={last_date_val}\n"
-                    f"target_date={norm_date_str}\n"
-                    f"matches={page_matches}\n"
+                    f"new_unique={page_unique}\n"
+                    f"duplicates={dup_count}\n"
+                    f"collected={len(seen_bids)}\n"
+                    f"numFound={num_found}\n"
+                    f"expected_pages={exp_pages}\n"
                 )
 
-                # Completeness Stop Conditions from GeM Source:
-                if len(all_docs) >= num_found and num_found > 0:
-                    print(f"[GE M] PAGE {page}: Total numFound={num_found} reached. Pagination complete.")
-                    stop_reason = "ALL GE M numFound RECORDS RETRIEVED"
+                # Primary Stop Condition: Complete Filtered Dataset Retrieved
+                if (len(seen_bids) >= num_found or len(all_docs) >= num_found) and num_found > 0:
+                    print(f"[GE M] PAGE {page}: Complete dataset retrieved ({len(seen_bids)}/{num_found} unique records). Pagination complete.")
+                    stop_reason = "ALL_GE_M_NUMFOUND_RECORDS_RETRIEVED"
                     pagination_complete = True
                     break
 
-                if page_unique == 0:
-                    print(f"[GE M] PAGE {page}: 0 new unique records from GeM source. Pagination complete.")
-                    stop_reason = "NO_NEW_UNIQUE_RECORDS"
+                page += 1
+
+            if not pagination_complete:
+                if len(seen_bids) >= num_found and num_found > 0:
                     pagination_complete = True
-                    break
-
-            if pages_processed < SAFETY_MAX_PAGES and not pagination_complete and len(all_docs) > 0:
-                pagination_complete = True
-                if stop_reason == "SAFETY_MAX_PAGES_REACHED":
-                    stop_reason = "NO_NEW_UNIQUE_RECORDS"
-
-            if stop_reason == "SAFETY_MAX_PAGES_REACHED":
-                pagination_complete = False
+                    stop_reason = "ALL_GE_M_NUMFOUND_RECORDS_RETRIEVED"
+                else:
+                    pagination_complete = False
+                    stop_reason = "SAFETY_MAX_PAGES_REACHED"
 
         except Exception as ex:
             error_msg = f"GeM Scanner exception: {str(ex)}"
