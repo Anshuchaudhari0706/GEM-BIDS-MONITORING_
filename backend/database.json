@@ -65,7 +65,7 @@
       "companyName": "GeMIntel HQ",
       "email": "admin@gemintel.com",
       "mobile": "9876543210",
-      "passwordHash": "$2a$10$fNuXcj4Gs1gTdVQbBBw/VeC.QLWYcASET.oLja483BTgyneNa5ehS",
+      "passwordHash": "$2a$10$FcErdeIg4jbHHV/tB4lzn.0ndPnvNs8YR.lzYWTdr7WdwvlOgjsXe",
       "role": "admin",
       "status": "ACTIVE",
       "createdAt": "2026-01-01T00:00:00.000Z"
@@ -4379,7 +4379,7 @@
     "bidType": "FINISHED",
     "state": "ALL",
     "recordCount": 39,
-    "sourceTotal": 5721058,
+    "sourceTotal": 5724290,
     "pagesProcessed": 20,
     "recordsRetrieved": 200,
     "validRecords": 39,
@@ -4387,6 +4387,6 @@
     "dateMatches": 39,
     "dateMismatches": 161,
     "scan_error": null,
-    "last_scan": "2026-08-13T06:34:59.255Z"
+    "last_scan": "2026-08-13T11:54:52.482Z"
   }
 }

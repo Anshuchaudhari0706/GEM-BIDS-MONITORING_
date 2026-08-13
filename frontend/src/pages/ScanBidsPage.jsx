@@ -29,6 +29,15 @@ import {
 import { fetchTenders, triggerGeMScan, fetchServices } from '../services/api';
 import * as XLSX from 'xlsx';
 
+function getIndiaToday() {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Kolkata',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).format(new Date());
+}
+
 export default function ScanBidsPage({ searchQuery }) {
   const { token, isLicenseActive, toggleSaveTender, savedTenders, showToast, setSelectedPlanForPayment, setShowPaymentModal } = useAuth();
 
@@ -61,7 +70,8 @@ export default function ScanBidsPage({ searchQuery }) {
 
   // Filters State
   const [tenderStatus, setTenderStatus] = useState('FINISHED');
-  const [selectedDate, setSelectedDate] = useState('2026-08-10');
+  const [selectedDate, setSelectedDate] = useState(() => getIndiaToday());
+  const [targetState, setTargetState] = useState('ALL');
   const [selectedServices, setSelectedServices] = useState(['Security Guards', 'Cleaning Services', 'Manpower Fixed']);
   const [availableServices, setAvailableServices] = useState([]);
   const [activeTab, setActiveTab] = useState('FINISHED');
@@ -148,18 +158,22 @@ export default function ScanBidsPage({ searchQuery }) {
         const nowStr = new Date().toISOString().replace('T', ' ').substring(0, 19);
         setLastScanTimestamp(nowStr);
 
-        const sourceVerified = res.sourceVerified === true || res.verified === true;
-        const count = res.uniqueRecords ?? res.recordsRetrieved ?? res.scannedCount ?? 0;
+        const isReachableZero = res.status === 'SOURCE_REACHABLE_ZERO' || (res.sourceVerified === true && (res.total === 0 || res.recordsRetrieved === 0));
+        const isRealFailure = res.status === 'FAILED' || res.sourceVerified === false;
+        const count = res.total ?? res.uniqueRecords ?? res.recordsRetrieved ?? res.scannedCount ?? 0;
 
         let msg = 'Scan failed — GeM source could not be verified.';
         let toastType = 'error';
 
-        if (sourceVerified && count > 0) {
-          msg = `Scan Completed — ${count} verified GeM bids retrieved`;
-          toastType = 'success';
-        } else if (sourceVerified && count === 0) {
+        if (isRealFailure) {
+          msg = `Scan failed — ${res.scan_error || 'GeM source could not be verified.'}`;
+          toastType = 'error';
+        } else if (isReachableZero) {
           msg = 'GeM source verified — 0 matching bids found.';
           toastType = 'info';
+        } else {
+          msg = `Scan Completed — ${count} verified GeM bids retrieved`;
+          toastType = 'success';
         }
 
         setScanResultNotice({ type: toastType, text: msg });

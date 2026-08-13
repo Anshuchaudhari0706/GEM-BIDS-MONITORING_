@@ -33,6 +33,15 @@ import {
 import { fetchTenders, triggerGeMScan, fetchSourceHealth, fetchGeMHealth, fetchGeMRawScan, fetchGeMDiagnostics } from '../services/api';
 import * as XLSX from 'xlsx';
 
+function getIndiaToday() {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Kolkata',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).format(new Date());
+}
+
 export default function DashboardPage({ searchQuery, setSearchQuery }) {
   const { token, isLicenseActive, toggleSaveTender, savedTenders, showToast, setSelectedPlanForPayment, setShowPaymentModal } = useAuth();
 
@@ -56,7 +65,7 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
 
   // Filters & Sorting State
   const [tenderStatus, setTenderStatus] = useState('PUBLISHED');
-  const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState(() => getIndiaToday());
   const [selectedServiceCategory, setSelectedServiceCategory] = useState('ALL');
   const [targetState, setTargetState] = useState('ALL');
   const [valRange, setValRange] = useState('ALL');
@@ -192,15 +201,16 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
         const nowStr = getNowString();
         setLastScanTimestamp(nowStr);
 
-        const sourceVerified = res.sourceVerified === true || res.verified === true;
-        const count = res.uniqueRecords ?? res.recordsRetrieved ?? res.scannedCount ?? 0;
+        const isReachableZero = res.status === 'SOURCE_REACHABLE_ZERO' || (res.sourceVerified === true && (res.total === 0 || res.recordsRetrieved === 0));
+        const isRealFailure = res.status === 'FAILED' || res.sourceVerified === false;
+        const count = res.total ?? res.uniqueRecords ?? res.recordsRetrieved ?? res.scannedCount ?? 0;
 
-        if (sourceVerified && count > 0) {
-          showToast(`Scan Completed — ${count} verified GeM bids retrieved`, 'success');
-        } else if (sourceVerified && count === 0) {
+        if (isRealFailure) {
+          showToast(`Scan failed — ${res.scan_error || 'GeM source could not be verified.'}`, 'error');
+        } else if (isReachableZero) {
           showToast('GeM source verified — 0 matching bids found.', 'info');
         } else {
-          showToast('Scan failed — GeM source could not be verified.', 'error');
+          showToast(`Scan Completed — ${count} verified GeM bids retrieved`, 'success');
         }
 
         await loadTendersData();
@@ -241,9 +251,14 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
 
   // Synchronized Counts calculated dynamically from the current dataset
   const activeDataset = tenders.length > 0 ? tenders : allScannedTenders;
+  const isNormalClassified = (catStr) => {
+    const c = (catStr || '').toLowerCase();
+    return c.includes('security') || c.includes('cleaning') || c.includes('manpower') || c.includes('facility') || c.includes('sanitation') || c.includes('healthcare') || c.includes('horticulture') || c.includes('bop') || c.includes('global');
+  };
+
   const availableServicesList = [
     { name: 'All Services', count: activeDataset.length, key: 'ALL' },
-    { name: 'Custom Bid', count: activeDataset.filter(t => (t.category || t.title || '').toLowerCase().includes('custom')).length, key: 'Custom Bid' },
+    { name: 'Custom Bid', count: activeDataset.filter(t => (t.category || t.title || '').toLowerCase().includes('custom') && !isNormalClassified(t.category || '')).length, key: 'Custom Bid' },
     { name: 'Manpower Minimum Wage', count: activeDataset.filter(t => (t.category || t.title || '').toLowerCase().includes('minimum wage')).length, key: 'Manpower Minimum Wage' },
     { name: 'Cleaning Services', count: activeDataset.filter(t => (t.category || t.title || '').toLowerCase().includes('cleaning')).length, key: 'Cleaning Services' },
     { name: 'Security Guards', count: activeDataset.filter(t => (t.category || t.title || '').toLowerCase().includes('security')).length, key: 'Security Guards' },

@@ -800,9 +800,13 @@ const handleLiveScan = async (req, res) => {
       console.log(`[Live Scan] Python status=error sourceVerified=false dateFilterVerified=false records=0 scan_error=${errorMsg}`);
 
       return res.json({
-        status: "error",
+        status: "FAILED",
+        sourceVerified: false,
+        verified: false,
         scan_error: errorMsg,
-        total: 0
+        total: 0,
+        recordsRetrieved: 0,
+        scannedCount: 0
       });
     }
 
@@ -842,12 +846,16 @@ const handleLiveScan = async (req, res) => {
     console.log(`[Live Scan] Python status=${pyData.status} sourceVerified=true dateFilterVerified=${pyData.dateFilterVerified !== false} records=${liveBids.length} dateMatches=${pyData.dateMatches ?? 0} dateMismatches=${pyData.dateMismatches ?? 0} scan_error=${pyData.scan_error || null}`);
 
     res.json({
-      status: "success",
+      status: finalStatus,
+      sourceVerified: true,
+      verified: true,
       last_scan: new Date().toISOString(),
       scan_date: scanDate,
       is_scanning: false,
       scan_error: pyData.scan_error || null,
       total: liveBids.length,
+      recordsRetrieved: liveBids.length,
+      scannedCount: liveBids.length,
       data: liveBids
     });
   } catch (err) {
@@ -870,9 +878,13 @@ const handleLiveScan = async (req, res) => {
     console.log(`[Live Scan] Python status=FAILED sourceVerified=false records=0 scan_error=${errorStr}`);
 
     res.json({
-      status: "error",
+      status: "FAILED",
+      sourceVerified: false,
+      verified: false,
       scan_error: errorStr,
-      total: 0
+      total: 0,
+      recordsRetrieved: 0,
+      scannedCount: 0
     });
   }
 };
@@ -886,11 +898,16 @@ const handleSourceHealth = (req, res) => {
   const db = readDB();
   const lastScan = db.last_scan || { status: "NO_SCAN", sourceVerified: false };
 
-  if (lastScan.status === "FAILED") {
+  if (lastScan.status === "FAILED" || lastScan.sourceVerified === false) {
     return res.json({
       status: "FAILED",
       sourceVerified: false,
-      scan_error: lastScan.scan_error || "GeM scan failed",
+      connected: false,
+      verified: false,
+      records_received: lastScan.recordCount || 0,
+      last_successful_request: lastScan.last_scan || new Date().toISOString(),
+      scan_error: lastScan.scan_error || "GeM source could not be verified",
+      error: lastScan.scan_error || "GeM source could not be verified",
       lastScan
     });
   }
@@ -899,7 +916,11 @@ const handleSourceHealth = (req, res) => {
     return res.json({
       status: "NO_SCAN",
       sourceVerified: false,
+      connected: false,
+      verified: false,
+      records_received: 0,
       scan_error: "No GeM scan has been performed yet.",
+      error: null,
       lastScan
     });
   }
@@ -908,7 +929,12 @@ const handleSourceHealth = (req, res) => {
     return res.json({
       status: "SOURCE_REACHABLE_ZERO",
       sourceVerified: true,
+      connected: true,
+      verified: true,
+      records_received: 0,
+      last_successful_request: lastScan.last_scan || new Date().toISOString(),
       scan_error: null,
+      error: null,
       message: "GeM source verified — 0 matching bids for selected date.",
       lastScan
     });
@@ -917,7 +943,12 @@ const handleSourceHealth = (req, res) => {
   return res.json({
     status: "VERIFIED_CONNECTED",
     sourceVerified: true,
+    connected: true,
+    verified: true,
+    records_received: lastScan.recordCount || 0,
+    last_successful_request: lastScan.last_scan || new Date().toISOString(),
     scan_error: null,
+    error: null,
     lastScan
   });
 };
@@ -1083,16 +1114,6 @@ app.get('/api/tenders/:id', authenticateToken, requireActiveSubscription, (req, 
 
 const { fetchRealGeMBids, getSourceHealthStatus, createScanJob, getScanJob } = require('./gemScraper');
 const { generateGeMScannedTenders } = require('./tenderGenerator');
-
-// GET /api/gem/health (Real Live Source Connection Status)
-app.get('/api/gem/health', (req, res) => {
-  res.json(getSourceHealthStatus());
-});
-
-// GET /api/source-health (Live Source Audit Health Status)
-app.get('/api/source-health', (req, res) => {
-  res.json(getSourceHealthStatus());
-});
 
 // POST /api/scans (Start Scan Job)
 app.post('/api/scans', authenticateToken, requireActiveSubscription, async (req, res) => {
