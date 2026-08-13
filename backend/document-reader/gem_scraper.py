@@ -275,8 +275,6 @@ class GeMLiveScraper:
 
         scan_type_upper = (scan_type or "published").upper()
 
-        print(f"[SCAN] type={scan_type_upper} date={norm_date_str} state={state_filter}")
-
         driver = None
         all_docs = []
         seen_bids = set()
@@ -284,6 +282,9 @@ class GeMLiveScraper:
         num_found = 0
         error_msg = None
         pages_processed = 0
+        consecutive_zero_matches = 0
+        SAFETY_MAX_PAGES = max_pages or 50
+        pagination_complete = False
 
         try:
             driver = self._init_driver()
@@ -299,7 +300,7 @@ class GeMLiveScraper:
                 'X-Requested-With': 'XMLHttpRequest'
             })
 
-            for page in range(1, max_pages + 1):
+            for page in range(1, SAFETY_MAX_PAGES + 1):
                 payload_obj = {
                     "page": page,
                     "param": {
@@ -346,17 +347,38 @@ class GeMLiveScraper:
                 docs = response_inner.get('docs', []) or res_json.get('docs', [])
 
                 if not docs:
-                    print(f"[GE M] page={page} records=0 numFound={num_found}. End of pages.")
+                    print(f"[GE M] PAGE {page}: records=0 numFound={num_found}. End of pages.")
+                    pagination_complete = True
                     break
 
                 pages_processed = page
                 page_unique = 0
+                page_matches = 0
+
+                first_date_val = "Unknown"
+                last_date_val = "Unknown"
+
+                if docs:
+                    if scan_type_upper == "PUBLISHED":
+                        first_date_val = normalize_gem_date(unwrap_val(docs[0].get("final_start_date_sort")))
+                        last_date_val = normalize_gem_date(unwrap_val(docs[-1].get("final_start_date_sort")))
+                    else:
+                        first_date_val = normalize_gem_date(unwrap_val(docs[0].get("final_end_date_sort")))
+                        last_date_val = normalize_gem_date(unwrap_val(docs[-1].get("final_end_date_sort")))
 
                 for d in docs:
                     bid_no_list = d.get('b_bid_number', [])
                     bid_no = bid_no_list[0] if isinstance(bid_no_list, list) and len(bid_no_list) > 0 else d.get('bidNumber')
                     if not bid_no:
                         bid_no = f"GEM/2026/B/{hash(json.dumps(d)) % 10000000}"
+
+                    if scan_type_upper == "PUBLISHED":
+                        rec_date = normalize_gem_date(unwrap_val(d.get("final_start_date_sort")))
+                    else:
+                        rec_date = normalize_gem_date(unwrap_val(d.get("final_end_date_sort")))
+
+                    if rec_date == norm_date_str:
+                        page_matches += 1
 
                     if bid_no in seen_bids:
                         dup_count += 1
@@ -365,14 +387,39 @@ class GeMLiveScraper:
                         all_docs.append(d)
                         page_unique += 1
 
-                first_bid = unwrap_val(docs[0].get('b_bid_number')) if docs else "None"
-                last_bid = unwrap_val(docs[-1].get('b_bid_number')) if docs else "None"
-                print(f"[GE M] PAGE {page}: records={len(docs)} new_unique={page_unique} first={first_bid} last={last_bid} numFound={num_found}")
+                print(
+                    f"PAGE {page}:\n"
+                    f"records={len(docs)}\n"
+                    f"first_end_date={first_date_val}\n"
+                    f"last_end_date={last_date_val}\n"
+                    f"target_date={norm_date_str}\n"
+                    f"matches={page_matches}\n"
+                )
 
-                # Stop condition: If page produced 0 new unique bids, pagination has reached the end
+                if page_matches == 0:
+                    consecutive_zero_matches += 1
+                else:
+                    consecutive_zero_matches = 0
+
+                # Completeness Stop Conditions:
+                if len(all_docs) >= num_found and num_found > 0:
+                    print(f"[GE M] PAGE {page}: Total numFound={num_found} reached. Pagination complete.")
+                    pagination_complete = True
+                    break
+
                 if page_unique == 0:
                     print(f"[GE M] PAGE {page}: 0 new unique records. Stop condition reached.")
+                    pagination_complete = True
                     break
+
+                # Rule B: If 3 consecutive pages yield 0 matches, target date window has passed
+                if consecutive_zero_matches >= 3 and len(seen_bids) > 0:
+                    print(f"[GE M] PAGE {page}: Target date {norm_date_str} window passed ({consecutive_zero_matches} zero-match pages). Pagination complete.")
+                    pagination_complete = True
+                    break
+
+            if pages_processed < SAFETY_MAX_PAGES and not pagination_complete:
+                pagination_complete = True
 
         except Exception as ex:
             error_msg = f"GeM Scanner exception: {str(ex)}"
@@ -541,9 +588,11 @@ class GeMLiveScraper:
         ended_count = sum(1 for b in parsed_bids if b.get("status") == "ENDED")
 
         print("==============================================")
-        print("DATE VALIDATION")
+        print("DATE VALIDATION & PAGINATION COMPLETENESS")
         print(f"Selected scan date : {norm_date_str}")
         print(f"Scan type          : {scan_type_upper}")
+        print(f"Pages processed    : {pages_processed}")
+        print(f"Pagination Complete: {pagination_complete}")
         print(f"Date matches       : {date_matches}")
         print(f"Date mismatches    : {date_mismatches}")
         if scan_type_upper == "FINISHED":
@@ -552,18 +601,23 @@ class GeMLiveScraper:
             print(f"Finished Total     : {len(parsed_bids)}")
         print("==============================================")
 
+        scan_status_val = "success" if pagination_complete else "INCOMPLETE"
+        if len(parsed_bids) > 0:
+            scan_err = None
+        elif pagination_complete:
+            scan_err = "ZERO REAL GeM BIDS FOUND FOR THIS DATE"
+        else:
+            scan_err = "PAGINATION INCOMPLETE (SAFETY LIMIT REACHED)"
+
         return {
-            "status": "success",
+            "status": scan_status_val,
+            "paginationComplete": pagination_complete,
             "last_scan": datetime.now().isoformat() + "Z",
             "scan_date": norm_date_str,
             "scan_type": scan_type_upper,
             "is_scanning": False,
 
-            "scan_error": (
-                None
-                if len(parsed_bids) > 0
-                else "ZERO REAL GeM BIDS FOUND FOR THIS DATE"
-            ),
+            "scan_error": scan_err,
 
             "sourceTotal": num_found,
             "pagesProcessed": pages_processed,
