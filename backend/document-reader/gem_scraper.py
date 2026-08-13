@@ -396,25 +396,14 @@ class GeMLiveScraper:
                     f"matches={page_matches}\n"
                 )
 
-                if page_matches == 0:
-                    consecutive_zero_matches += 1
-                else:
-                    consecutive_zero_matches = 0
-
-                # Completeness Stop Conditions:
+                # Completeness Stop Conditions from GeM Source:
                 if len(all_docs) >= num_found and num_found > 0:
                     print(f"[GE M] PAGE {page}: Total numFound={num_found} reached. Pagination complete.")
                     pagination_complete = True
                     break
 
                 if page_unique == 0:
-                    print(f"[GE M] PAGE {page}: 0 new unique records. Stop condition reached.")
-                    pagination_complete = True
-                    break
-
-                # Rule B: If 3 consecutive pages yield 0 matches, target date window has passed
-                if consecutive_zero_matches >= 3 and len(seen_bids) > 0:
-                    print(f"[GE M] PAGE {page}: Target date {norm_date_str} window passed ({consecutive_zero_matches} zero-match pages). Pagination complete.")
+                    print(f"[GE M] PAGE {page}: 0 new unique records from GeM source. Pagination complete.")
                     pagination_complete = True
                     break
 
