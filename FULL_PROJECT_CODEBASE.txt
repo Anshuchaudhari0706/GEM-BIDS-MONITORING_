@@ -481,6 +481,41 @@ class GeMLiveScraper:
             if is_high_val:
                 val_counts["high_value"] += 1
 
+            # FINISHED vs PUBLISHED STATUS CLASSIFICATION
+            bid_status = scan_type_upper.lower()
+            bid_status_label = "PUBLISHED TODAY" if scan_type_upper == "PUBLISHED" else "FINISHED"
+            end_datetime_iso = None
+
+            if scan_type_upper == "FINISHED":
+                end_solr_str = str(end_solr) if end_solr else ""
+                now_dt = datetime.now()
+                deadline_dt = None
+
+                if 'T' in end_solr_str:
+                    try:
+                        clean_iso = end_solr_str.replace('Z', '')
+                        deadline_dt = datetime.fromisoformat(clean_iso)
+                    except Exception:
+                        deadline_dt = None
+
+                if not deadline_dt and end_date_str:
+                    try:
+                        deadline_dt = datetime.strptime(end_date_str, "%Y-%m-%d")
+                    except Exception:
+                        deadline_dt = None
+
+                if deadline_dt:
+                    end_datetime_iso = deadline_dt.isoformat()
+                    if now_dt < deadline_dt:
+                        bid_status = "CLOSING_TODAY"
+                        bid_status_label = "CLOSING TODAY"
+                    else:
+                        bid_status = "ENDED"
+                        bid_status_label = "ENDED"
+                else:
+                    bid_status = "ENDED"
+                    bid_status_label = "ENDED"
+
             parsed_bids.append({
                 "id": str(bid_no),
                 "title": cat_raw,
@@ -490,15 +525,32 @@ class GeMLiveScraper:
                 "quantity": f"{employees} Nos." if employees else "Not Specified",
                 "publishedDate": start_date_str,
                 "deadline": end_date_str,
+                "endDatetime": end_datetime_iso,
                 "value": val_num,
                 "isHighValue": is_high_val,
                 "state": detected_state,
                 "city": "Not Specified",
-                "status": scan_type_upper.lower(),
+                "status": bid_status,
+                "statusLabel": bid_status_label,
                 "gemLink": f"https://bidplus.gem.gov.in/showbidDocument/{str(bid_no).split('/')[-1]}",
                 "aiSummary": f"Real GeM Tender {bid_no} - {dept_raw}",
                 "raw_doc": doc
             })
+
+        # SORTING FOR FINISHED TENDERS:
+        # 1. CLOSING TODAY first (nearest closing time first)
+        # 2. ENDED second (most recently ended first)
+        if scan_type_upper == "FINISHED":
+            closing_today_bids = [b for b in parsed_bids if b.get("status") == "CLOSING_TODAY"]
+            ended_bids = [b for b in parsed_bids if b.get("status") == "ENDED"]
+
+            closing_today_bids.sort(key=lambda b: b.get("endDatetime") or "9999-99-99")
+            ended_bids.sort(key=lambda b: b.get("endDatetime") or "0000-00-00", reverse=True)
+
+            parsed_bids = closing_today_bids + ended_bids
+
+        closing_today_count = sum(1 for b in parsed_bids if b.get("status") == "CLOSING_TODAY")
+        ended_count = sum(1 for b in parsed_bids if b.get("status") == "ENDED")
 
         print("==============================================")
         print("DATE VALIDATION")
@@ -506,12 +558,17 @@ class GeMLiveScraper:
         print(f"Scan type          : {scan_type_upper}")
         print(f"Date matches       : {date_matches}")
         print(f"Date mismatches    : {date_mismatches}")
+        if scan_type_upper == "FINISHED":
+            print(f"Closing Today      : {closing_today_count}")
+            print(f"Already Ended      : {ended_count}")
+            print(f"Finished Total     : {len(parsed_bids)}")
         print("==============================================")
 
         return {
             "status": "success",
             "last_scan": datetime.now().isoformat() + "Z",
             "scan_date": norm_date_str,
+            "scan_type": scan_type_upper,
             "is_scanning": False,
 
             "scan_error": (
@@ -530,6 +587,10 @@ class GeMLiveScraper:
             "dateFilterVerified": True,
             "dateMatches": date_matches,
             "dateMismatches": date_mismatches,
+
+            "closingTodayCount": closing_today_count if scan_type_upper == "FINISHED" else 0,
+            "endedCount": ended_count if scan_type_upper == "FINISHED" else 0,
+            "finishedTotal": len(parsed_bids) if scan_type_upper == "FINISHED" else 0,
 
             "total": len(parsed_bids),
             "data": parsed_bids
@@ -1552,34 +1613,61 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
 
   // 2. Dynamic Real-time Status & Strict Date Validation Layer
   results = results.filter(t => {
-    let isFinished = false;
-    if (t.endDate || t.deadline) {
-      const endDt = new Date(t.endDate || t.deadline);
-      if (!isNaN(endDt.getTime())) {
-        isFinished = now >= endDt;
-      }
-    }
-    const computedStatus = isFinished ? 'FINISHED' : 'PUBLISHED';
-    t.computedStatus = computedStatus;
-
     if (reqStatus === 'FINISHED') {
-      if (!isFinished) return false;
       if (targetDate && targetDate !== 'ALL') {
         const endStr = t.endDateFormatted || t.closingDateStr || t.deadline || t.endDate || '';
         return endStr.startsWith(targetDate);
       }
       return true;
     } else if (reqStatus === 'PUBLISHED') {
-      if (isFinished) return false;
       if (targetDate && targetDate !== 'ALL') {
         const startStr = t.startDateFormatted || t.publishedDate || t.startDate || '';
         return startStr.startsWith(targetDate);
       }
       return true;
     }
-
     return true;
   });
+
+  // Determine CLOSING_TODAY vs ENDED for Finished tenders
+  results.forEach(t => {
+    if (reqStatus === 'FINISHED' || t.status === 'CLOSING_TODAY' || t.status === 'ENDED') {
+      const endStr = t.endDatetime || t.endDate || t.deadline;
+      if (endStr) {
+        const endDt = new Date(endStr);
+        if (!isNaN(endDt.getTime())) {
+          if (now < endDt) {
+            t.status = 'CLOSING_TODAY';
+            t.statusLabel = 'CLOSING TODAY';
+          } else {
+            t.status = 'ENDED';
+            t.statusLabel = 'ENDED';
+          }
+        } else {
+          t.status = 'ENDED';
+          t.statusLabel = 'ENDED';
+        }
+      } else {
+        t.status = 'ENDED';
+        t.statusLabel = 'ENDED';
+      }
+    }
+  });
+
+  // Sort Finished Tenders: CLOSING TODAY first (nearest deadline), ENDED second (most recently ended)
+  if (reqStatus === 'FINISHED') {
+    results.sort((a, b) => {
+      if (a.status === 'CLOSING_TODAY' && b.status !== 'CLOSING_TODAY') return -1;
+      if (a.status !== 'CLOSING_TODAY' && b.status === 'CLOSING_TODAY') return 1;
+      const dtA = a.endDatetime || a.deadline || '';
+      const dtB = b.endDatetime || b.deadline || '';
+      if (a.status === 'CLOSING_TODAY') {
+        return dtA.localeCompare(dtB);
+      } else {
+        return dtB.localeCompare(dtA);
+      }
+    });
+  }
 
   // 3. Scan ID Filter
   if (scanId && scanId !== 'ALL') {
@@ -1630,7 +1718,7 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
     });
   }
 
-  // 8. Sorting
+  // 8. Custom Sorting (if explicitly requested)
   if (sortBy === 'value_desc') {
     results.sort((a, b) => (b.value || 0) - (a.value || 0));
   } else if (sortBy === 'value_asc') {
@@ -1644,6 +1732,9 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
   const matchingCount = results.length;
   const currentScanStatus = (lastScan.status === "SOURCE_REACHABLE_ZERO" || matchingCount === 0) ? "SOURCE_REACHABLE_ZERO" : "COMPLETED";
 
+  const closingTodayCount = results.filter(t => t.status === 'CLOSING_TODAY').length;
+  const endedCount = results.filter(t => t.status === 'ENDED').length;
+
   res.json({
     scan: {
       scanId: lastScan.scanId || `SCAN-${targetDate.replace(/-/g, '')}-001`,
@@ -1654,7 +1745,10 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
       recordCount: matchingCount,
       sourceTotal: lastScan.sourceTotal || 5713364,
       sourceQueryTotal: matchingCount,
-      message: matchingCount === 0 ? "GeM source verified — 0 matching bids for selected date." : null
+      message: matchingCount === 0 ? "GeM source verified — 0 matching bids for selected date." : null,
+      closingTodayCount: reqStatus === 'FINISHED' ? closingTodayCount : 0,
+      endedCount: reqStatus === 'FINISHED' ? endedCount : 0,
+      finishedTotal: reqStatus === 'FINISHED' ? matchingCount : 0
     },
     historicalCount: totalStored,
     sourceQueryTotal: matchingCount,
@@ -1663,6 +1757,9 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
     duplicatesRemoved: 0,
     matchingCount: matchingCount,
     matchingTenders: matchingCount,
+    closingTodayCount: reqStatus === 'FINISHED' ? closingTodayCount : 0,
+    endedCount: reqStatus === 'FINISHED' ? endedCount : 0,
+    finishedTotal: reqStatus === 'FINISHED' ? matchingCount : 0,
     total: matchingCount,
     filters: {
       date: targetDate,

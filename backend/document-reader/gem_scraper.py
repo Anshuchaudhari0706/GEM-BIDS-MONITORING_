@@ -469,6 +469,41 @@ class GeMLiveScraper:
             if is_high_val:
                 val_counts["high_value"] += 1
 
+            # FINISHED vs PUBLISHED STATUS CLASSIFICATION
+            bid_status = scan_type_upper.lower()
+            bid_status_label = "PUBLISHED TODAY" if scan_type_upper == "PUBLISHED" else "FINISHED"
+            end_datetime_iso = None
+
+            if scan_type_upper == "FINISHED":
+                end_solr_str = str(end_solr) if end_solr else ""
+                now_dt = datetime.now()
+                deadline_dt = None
+
+                if 'T' in end_solr_str:
+                    try:
+                        clean_iso = end_solr_str.replace('Z', '')
+                        deadline_dt = datetime.fromisoformat(clean_iso)
+                    except Exception:
+                        deadline_dt = None
+
+                if not deadline_dt and end_date_str:
+                    try:
+                        deadline_dt = datetime.strptime(end_date_str, "%Y-%m-%d")
+                    except Exception:
+                        deadline_dt = None
+
+                if deadline_dt:
+                    end_datetime_iso = deadline_dt.isoformat()
+                    if now_dt < deadline_dt:
+                        bid_status = "CLOSING_TODAY"
+                        bid_status_label = "CLOSING TODAY"
+                    else:
+                        bid_status = "ENDED"
+                        bid_status_label = "ENDED"
+                else:
+                    bid_status = "ENDED"
+                    bid_status_label = "ENDED"
+
             parsed_bids.append({
                 "id": str(bid_no),
                 "title": cat_raw,
@@ -478,15 +513,32 @@ class GeMLiveScraper:
                 "quantity": f"{employees} Nos." if employees else "Not Specified",
                 "publishedDate": start_date_str,
                 "deadline": end_date_str,
+                "endDatetime": end_datetime_iso,
                 "value": val_num,
                 "isHighValue": is_high_val,
                 "state": detected_state,
                 "city": "Not Specified",
-                "status": scan_type_upper.lower(),
+                "status": bid_status,
+                "statusLabel": bid_status_label,
                 "gemLink": f"https://bidplus.gem.gov.in/showbidDocument/{str(bid_no).split('/')[-1]}",
                 "aiSummary": f"Real GeM Tender {bid_no} - {dept_raw}",
                 "raw_doc": doc
             })
+
+        # SORTING FOR FINISHED TENDERS:
+        # 1. CLOSING TODAY first (nearest closing time first)
+        # 2. ENDED second (most recently ended first)
+        if scan_type_upper == "FINISHED":
+            closing_today_bids = [b for b in parsed_bids if b.get("status") == "CLOSING_TODAY"]
+            ended_bids = [b for b in parsed_bids if b.get("status") == "ENDED"]
+
+            closing_today_bids.sort(key=lambda b: b.get("endDatetime") or "9999-99-99")
+            ended_bids.sort(key=lambda b: b.get("endDatetime") or "0000-00-00", reverse=True)
+
+            parsed_bids = closing_today_bids + ended_bids
+
+        closing_today_count = sum(1 for b in parsed_bids if b.get("status") == "CLOSING_TODAY")
+        ended_count = sum(1 for b in parsed_bids if b.get("status") == "ENDED")
 
         print("==============================================")
         print("DATE VALIDATION")
@@ -494,12 +546,17 @@ class GeMLiveScraper:
         print(f"Scan type          : {scan_type_upper}")
         print(f"Date matches       : {date_matches}")
         print(f"Date mismatches    : {date_mismatches}")
+        if scan_type_upper == "FINISHED":
+            print(f"Closing Today      : {closing_today_count}")
+            print(f"Already Ended      : {ended_count}")
+            print(f"Finished Total     : {len(parsed_bids)}")
         print("==============================================")
 
         return {
             "status": "success",
             "last_scan": datetime.now().isoformat() + "Z",
             "scan_date": norm_date_str,
+            "scan_type": scan_type_upper,
             "is_scanning": False,
 
             "scan_error": (
@@ -518,6 +575,10 @@ class GeMLiveScraper:
             "dateFilterVerified": True,
             "dateMatches": date_matches,
             "dateMismatches": date_mismatches,
+
+            "closingTodayCount": closing_today_count if scan_type_upper == "FINISHED" else 0,
+            "endedCount": ended_count if scan_type_upper == "FINISHED" else 0,
+            "finishedTotal": len(parsed_bids) if scan_type_upper == "FINISHED" else 0,
 
             "total": len(parsed_bids),
             "data": parsed_bids

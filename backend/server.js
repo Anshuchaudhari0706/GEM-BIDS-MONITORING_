@@ -512,34 +512,61 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
 
   // 2. Dynamic Real-time Status & Strict Date Validation Layer
   results = results.filter(t => {
-    let isFinished = false;
-    if (t.endDate || t.deadline) {
-      const endDt = new Date(t.endDate || t.deadline);
-      if (!isNaN(endDt.getTime())) {
-        isFinished = now >= endDt;
-      }
-    }
-    const computedStatus = isFinished ? 'FINISHED' : 'PUBLISHED';
-    t.computedStatus = computedStatus;
-
     if (reqStatus === 'FINISHED') {
-      if (!isFinished) return false;
       if (targetDate && targetDate !== 'ALL') {
         const endStr = t.endDateFormatted || t.closingDateStr || t.deadline || t.endDate || '';
         return endStr.startsWith(targetDate);
       }
       return true;
     } else if (reqStatus === 'PUBLISHED') {
-      if (isFinished) return false;
       if (targetDate && targetDate !== 'ALL') {
         const startStr = t.startDateFormatted || t.publishedDate || t.startDate || '';
         return startStr.startsWith(targetDate);
       }
       return true;
     }
-
     return true;
   });
+
+  // Determine CLOSING_TODAY vs ENDED for Finished tenders
+  results.forEach(t => {
+    if (reqStatus === 'FINISHED' || t.status === 'CLOSING_TODAY' || t.status === 'ENDED') {
+      const endStr = t.endDatetime || t.endDate || t.deadline;
+      if (endStr) {
+        const endDt = new Date(endStr);
+        if (!isNaN(endDt.getTime())) {
+          if (now < endDt) {
+            t.status = 'CLOSING_TODAY';
+            t.statusLabel = 'CLOSING TODAY';
+          } else {
+            t.status = 'ENDED';
+            t.statusLabel = 'ENDED';
+          }
+        } else {
+          t.status = 'ENDED';
+          t.statusLabel = 'ENDED';
+        }
+      } else {
+        t.status = 'ENDED';
+        t.statusLabel = 'ENDED';
+      }
+    }
+  });
+
+  // Sort Finished Tenders: CLOSING TODAY first (nearest deadline), ENDED second (most recently ended)
+  if (reqStatus === 'FINISHED') {
+    results.sort((a, b) => {
+      if (a.status === 'CLOSING_TODAY' && b.status !== 'CLOSING_TODAY') return -1;
+      if (a.status !== 'CLOSING_TODAY' && b.status === 'CLOSING_TODAY') return 1;
+      const dtA = a.endDatetime || a.deadline || '';
+      const dtB = b.endDatetime || b.deadline || '';
+      if (a.status === 'CLOSING_TODAY') {
+        return dtA.localeCompare(dtB);
+      } else {
+        return dtB.localeCompare(dtA);
+      }
+    });
+  }
 
   // 3. Scan ID Filter
   if (scanId && scanId !== 'ALL') {
@@ -590,7 +617,7 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
     });
   }
 
-  // 8. Sorting
+  // 8. Custom Sorting (if explicitly requested)
   if (sortBy === 'value_desc') {
     results.sort((a, b) => (b.value || 0) - (a.value || 0));
   } else if (sortBy === 'value_asc') {
@@ -604,6 +631,9 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
   const matchingCount = results.length;
   const currentScanStatus = (lastScan.status === "SOURCE_REACHABLE_ZERO" || matchingCount === 0) ? "SOURCE_REACHABLE_ZERO" : "COMPLETED";
 
+  const closingTodayCount = results.filter(t => t.status === 'CLOSING_TODAY').length;
+  const endedCount = results.filter(t => t.status === 'ENDED').length;
+
   res.json({
     scan: {
       scanId: lastScan.scanId || `SCAN-${targetDate.replace(/-/g, '')}-001`,
@@ -614,7 +644,10 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
       recordCount: matchingCount,
       sourceTotal: lastScan.sourceTotal || 5713364,
       sourceQueryTotal: matchingCount,
-      message: matchingCount === 0 ? "GeM source verified — 0 matching bids for selected date." : null
+      message: matchingCount === 0 ? "GeM source verified — 0 matching bids for selected date." : null,
+      closingTodayCount: reqStatus === 'FINISHED' ? closingTodayCount : 0,
+      endedCount: reqStatus === 'FINISHED' ? endedCount : 0,
+      finishedTotal: reqStatus === 'FINISHED' ? matchingCount : 0
     },
     historicalCount: totalStored,
     sourceQueryTotal: matchingCount,
@@ -623,6 +656,9 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
     duplicatesRemoved: 0,
     matchingCount: matchingCount,
     matchingTenders: matchingCount,
+    closingTodayCount: reqStatus === 'FINISHED' ? closingTodayCount : 0,
+    endedCount: reqStatus === 'FINISHED' ? endedCount : 0,
+    finishedTotal: reqStatus === 'FINISHED' ? matchingCount : 0,
     total: matchingCount,
     filters: {
       date: targetDate,
