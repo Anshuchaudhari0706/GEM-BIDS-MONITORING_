@@ -1,14 +1,14 @@
 ================================================================================
-             GeM TENDER INTELLIGENCE — FULL PROJECT CODEBASE TEXT FILE
+             GeM TENDER INTELLIGENCE — COMPLETE APPLICATION CODEBASE
 ================================================================================
 Repository: https://github.com/Anshuchaudhari0706/GEM-BIDS-MONITORING_.git
 Branch:     23012011008_Anshu
-Generated:  2026-08-12
+Generated:  2026-08-13
 ================================================================================
 
 --------------------------------------------------------------------------------
 FILE: backend/document-reader/gem_scraper.py
-DESCRIPTION: PYTHON LIVE GE M SCRAPER & PARSER ENGINE
+DESCRIPTION: PYTHON LIVE GE M SCRAPER, SESSION TOKEN & DATE VALIDATION ENGINE
 --------------------------------------------------------------------------------
 import json
 import re
@@ -671,7 +671,7 @@ if __name__ == "__main__":
 
 --------------------------------------------------------------------------------
 FILE: backend/document-reader/tender_parser.py
-DESCRIPTION: MASTER TENDER DOCUMENT PARSER
+DESCRIPTION: UNIFIED MASTER TENDER DOCUMENT PARSER
 --------------------------------------------------------------------------------
 import re
 from regex_parser import (
@@ -773,7 +773,7 @@ def parse_tender_document(raw_text, tender_id=None):
 
 --------------------------------------------------------------------------------
 FILE: backend/document-reader/pdf_reader.py
-DESCRIPTION: PDF TEXT EXTRACTION & OCR FALLBACK ENGINE
+DESCRIPTION: PDF TEXT EXTRACTION & TESSERACT OCR ENGINE
 --------------------------------------------------------------------------------
 import os
 import io
@@ -942,7 +942,7 @@ def extract_manpower_requirements(text):
 
 --------------------------------------------------------------------------------
 FILE: backend/document-reader/normalizer.py
-DESCRIPTION: VALUE & CURRENCY NORMALIZER MODULE
+DESCRIPTION: NUMERIC & CURRENCY NORMALIZER MODULE
 --------------------------------------------------------------------------------
 import re
 
@@ -999,7 +999,7 @@ def normalize_manpower_list(raw_manpower_list):
 
 --------------------------------------------------------------------------------
 FILE: backend/document-reader/validators.py
-DESCRIPTION: EXTRACTION CONFIDENCE VALIDATOR
+DESCRIPTION: EXTRACTION CONFIDENCE EVALUATOR
 --------------------------------------------------------------------------------
 """
 Validator & Confidence Score Module for GeM Tender Extraction
@@ -1028,7 +1028,7 @@ def evaluate_field_confidence(val, raw_matched=None, is_numeric=False):
 
 --------------------------------------------------------------------------------
 FILE: backend/server.js
-DESCRIPTION: NODE EXPRESS API SERVER
+DESCRIPTION: NODE EXPRESS PRODUCTION API SERVER
 --------------------------------------------------------------------------------
 const express = require('express');
 const cors = require('cors');
@@ -2488,89 +2488,319 @@ app.listen(PORT, () => {
 
 
 --------------------------------------------------------------------------------
-FILE: backend/test_gem_live_scanner.py
-DESCRIPTION: LIVE GE M SCANNER DEBUG TEST SUITE
+FILE: backend/test_exact_20260812_date_verification.py
+DESCRIPTION: EXACT 2026-08-12 DATE VERIFICATION SUITE
 --------------------------------------------------------------------------------
-import json
-import requests
-import sys
 import os
+import sys
+import json
 
-# Ensure backend/document-reader is in path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'document-reader'))
+from gem_scraper import GeMLiveScraper, normalize_gem_date, unwrap_val
 
-from gem_scraper import GeMLiveScraper, extract_manpower_count_from_json, extract_high_value_info, detect_state_from_text, detect_category_code
+TARGET_DATE = "2026-08-12"
 
-def run_gem_live_test():
+def test_1_published_all():
     print("==================================================")
-    print("      LIVE GE M SCANNER & PARSER DEBUG SUITE")
+    print(f"TEST 1 — PUBLISHED ALL INDIA ({TARGET_DATE})")
     print("==================================================")
 
     scraper = GeMLiveScraper()
-    
-    print("\n[STEP 1 & 2] Opening GeM Portal & Acquiring CSRF Tokens...")
-    try:
-        csrf_key, csrf_val, cookies_dict = scraper.acquire_session_tokens()
-        print(f"  CSRF Key: {csrf_key}")
-        print(f"  CSRF Token Value Length: {len(csrf_val)}")
-        print(f"  Acquired Session Cookies Count: {len(cookies_dict)}")
-    except Exception as e:
-        print(f"  [ERROR] Failed to acquire CSRF tokens: {e}")
-        return
+    res = scraper.fetch_live_bids(date_str=TARGET_DATE, scan_type="published", state_filter="ALL", max_pages=10)
 
-    print("\n[STEP 3 & 4] Executing Live Scan API Request to /all-bids-data...")
-    res_dict = scraper.fetch_live_bids(date_str="2026-08-12", scan_type="published", state_filter="ALL", max_pages=2)
+    bids = res.get("data", [])
+    total_returned = len(bids)
+    print(f"\nTotal Records Returned: {total_returned}")
+    print(f"GeM Source Total (numFound): {res.get('sourceTotal', 0)}")
+    print(f"Pages Processed: {res.get('pagesProcessed', 0)}")
+    print(f"Raw Records Retrieved: {res.get('recordsRetrieved', 0)}")
 
-    print(f"\n[STEP 5 & 6] Response Status: {res_dict.get('status')}")
-    print(f"  Scan Error (if any): {res_dict.get('scan_error')}")
-    print(f"  Total Valid Records Parsed: {res_dict.get('total')}")
+    if total_returned == 0:
+        print("\nZERO REAL GE M BIDS FOUND FOR THIS DATE")
+        return "ZERO REAL GE M BIDS FOUND FOR THIS DATE", bids
 
-    data = res_dict.get("data", [])
+    print("\n--- FIRST 20 RETURNED RECORDS ---")
+    limit = min(20, total_returned)
+    for i in range(limit):
+        b = bids[i]
+        print(f"[{i+1}]")
+        print(f"Bid ID: {b.get('id')}")
+        print(f"publishedDate: {b.get('publishedDate')}")
+        print(f"deadline: {b.get('deadline')}")
+        print(f"state: {b.get('state')}")
+        print(f"category: {b.get('category')}")
+        print(f"employees: {b.get('employees')}")
+        print(f"value: {b.get('value')}")
+        print(f"isHighValue: {b.get('isHighValue')}\n")
 
-    if not data:
-        print("  [NOTICE] 0 records returned. Verifying if scan_error was reported correctly.")
-        if res_dict.get("status") == "error":
-            print(f"  [SUCCESS] Scan failure accurately reported: {res_dict.get('scan_error')}")
-        return
+    correct_date = 0
+    wrong_date = 0
+    unknown_date = 0
+    replacement_detected = False
 
-    first_bid = data[0]
-    raw_doc = first_bid.get("raw_doc", {})
+    for b in bids:
+        pub_date = b.get("publishedDate")
+        raw_doc = b.get("raw_doc", {})
+        raw_start = unwrap_val(raw_doc.get("final_start_date_sort"))
+        norm_start = normalize_gem_date(raw_start)
 
-    print("\n[STEP 8 & 9 & 10] First Bid Details:")
-    print(f"  Bid Number: {first_bid.get('id')}")
-    print(f"  Title / Category Raw: {first_bid.get('title')}")
-    print(f"  Department: {first_bid.get('department')}")
-    print(f"  JSON Keys in Raw Document: {list(raw_doc.keys())[:10] if isinstance(raw_doc, dict) else 'String'}")
+        if norm_start is None and pub_date == TARGET_DATE:
+            replacement_detected = True
 
-    full_text = json.dumps(raw_doc)
+        if pub_date == TARGET_DATE:
+            correct_date += 1
+        elif pub_date is None:
+            unknown_date += 1
+        else:
+            wrong_date += 1
 
-    print("\n[STEP 11] Testing Manpower Extraction:")
-    mp_count = extract_manpower_count_from_json(raw_doc, full_text)
-    print(f"  Extracted Employees Headcount: {mp_count} (Type: {type(mp_count).__name__})")
+    print("--- METRICS ---")
+    print(f"Total returned: {total_returned}")
+    print(f"Date = {TARGET_DATE}: {correct_date}")
+    print(f"Date != {TARGET_DATE}: {wrong_date}")
+    print(f"Unknown date: {unknown_date}")
+    print(f"Date replacement detected: {replacement_detected}")
 
-    print("\n[STEP 12] Testing High-Value Extraction:")
-    val_num, is_high = extract_high_value_info(raw_doc, full_text)
-    print(f"  Extracted Value: {val_num} | Is High Value: {is_high}")
+    is_pass = (correct_date == total_returned) and (wrong_date == 0) and (unknown_date == 0) and not replacement_detected
+    return "PASS" if is_pass else "FAIL", bids
 
-    print("\n[STEP 13] Testing State Detection:")
-    state = detect_state_from_text(full_text)
-    print(f"  Detected Location/State: {state}")
+def test_2_published_gujarat():
+    print("\n==================================================")
+    print(f"TEST 2 — PUBLISHED GUJARAT ({TARGET_DATE})")
+    print("==================================================")
 
-    print("\n[STEP 14] Testing Category Code Detection:")
-    cat = detect_category_code(first_bid.get('title'))
-    print(f"  Mapped Category Code: {cat}")
+    scraper = GeMLiveScraper()
+    res = scraper.fetch_live_bids(date_str=TARGET_DATE, scan_type="published", state_filter="Gujarat", max_pages=10)
+
+    bids = res.get("data", [])
+    total_returned = len(bids)
+    print(f"\nTotal Records Returned: {total_returned}")
+
+    if total_returned == 0:
+        print("\nZERO REAL GE M BIDS FOUND FOR THIS DATE")
+        return "ZERO REAL GE M BIDS FOUND FOR THIS DATE"
+
+    correct_date = 0
+    wrong_date = 0
+    unknown_date = 0
+    gujarat_count = 0
+    pan_india_count = 0
+    other_states_count = 0
+
+    for b in bids:
+        pub_date = b.get("publishedDate")
+        st = str(b.get("state") or "").lower()
+
+        if pub_date == TARGET_DATE:
+            correct_date += 1
+        elif pub_date is None:
+            unknown_date += 1
+        else:
+            wrong_date += 1
+
+        if "gujarat" in st:
+            gujarat_count += 1
+        elif "all india" in st or "pan india" in st or "india" in st:
+            pan_india_count += 1
+        else:
+            other_states_count += 1
+
+    print("--- METRICS ---")
+    print(f"Total: {total_returned}")
+    print(f"Correct date: {correct_date}")
+    print(f"Wrong date: {wrong_date}")
+    print(f"Unknown date: {unknown_date}")
+    print(f"Gujarat: {gujarat_count}")
+    print(f"Pan India: {pan_india_count}")
+    print(f"Other states: {other_states_count}")
+
+    is_pass = (correct_date == total_returned) and (wrong_date == 0) and (unknown_date == 0)
+    return "PASS" if is_pass else "FAIL"
+
+def test_3_finished_all():
+    print("\n==================================================")
+    print(f"TEST 3 — FINISHED ALL INDIA ({TARGET_DATE})")
+    print("==================================================")
+
+    scraper = GeMLiveScraper()
+    res = scraper.fetch_live_bids(date_str=TARGET_DATE, scan_type="finished", state_filter="ALL", max_pages=10)
+
+    bids = res.get("data", [])
+    total_returned = len(bids)
+    print(f"\nTotal Records Returned: {total_returned}")
+
+    if total_returned == 0:
+        print("\nZERO REAL GE M BIDS FOUND FOR THIS DATE")
+        return "ZERO REAL GE M BIDS FOUND FOR THIS DATE"
+
+    correct_deadline = 0
+    wrong_deadline = 0
+    unknown_deadline = 0
+
+    for b in bids:
+        deadline = b.get("deadline")
+
+        if deadline == TARGET_DATE:
+            correct_deadline += 1
+        elif deadline is None:
+            unknown_deadline += 1
+        else:
+            wrong_deadline += 1
+
+    print("--- METRICS ---")
+    print(f"Total: {total_returned}")
+    print(f"Correct deadline: {correct_deadline}")
+    print(f"Wrong deadline: {wrong_deadline}")
+    print(f"Unknown deadline: {unknown_deadline}")
+
+    is_pass = (correct_deadline == total_returned) and (wrong_deadline == 0) and (unknown_deadline == 0)
+    return "PASS" if is_pass else "FAIL"
+
+def main():
+    print("==================================================")
+    print(f"      EXACT DATE ({TARGET_DATE}) VERIFICATION SUITE")
+    print("==================================================")
+
+    res1, _ = test_1_published_all()
+    res2 = test_2_published_gujarat()
+    res3 = test_3_finished_all()
 
     print("\n==================================================")
-    print("      LIVE GE M SCANNER DEBUG TEST PASSED")
+    print("                FINAL RESULT SUMMARY")
+    print("==================================================")
+    print(f"PUBLISHED ALL INDIA {TARGET_DATE} = {res1}")
+    print(f"PUBLISHED GUJARAT {TARGET_DATE}   = {res2}")
+    print(f"FINISHED ALL INDIA {TARGET_DATE}  = {res3}")
     print("==================================================")
 
 if __name__ == "__main__":
-    run_gem_live_test()
+    main()
+
+
+--------------------------------------------------------------------------------
+FILE: backend/test_final_real_data_verification.py
+DESCRIPTION: FINAL REAL-DATA VERIFICATION SUITE
+--------------------------------------------------------------------------------
+import os
+import sys
+import json
+import re
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'document-reader'))
+from gem_scraper import GeMLiveScraper, normalize_gem_date, unwrap_val
+
+def run_test_case(test_name, target_date, scan_type, state_filter, max_pages=3):
+    print(f"\n==================================================")
+    print(f"  RUNNING TEST: {test_name}")
+    print(f"  Type={scan_type} Date={target_date} State={state_filter}")
+    print(f"==================================================")
+
+    scraper = GeMLiveScraper()
+    res = scraper.fetch_live_bids(date_str=target_date, scan_type=scan_type, state_filter=state_filter, max_pages=max_pages)
+
+    bids = res.get("data", [])
+    total_returned = len(bids)
+    print(f"Total Records Returned: {total_returned}")
+    print(f"Records Retrieved: {res.get('recordsRetrieved', 0)}")
+    print(f"Date Matches: {res.get('dateMatches', 0)}")
+    print(f"Date Mismatches: {res.get('dateMismatches', 0)}")
+
+    # Print first 20 records
+    print("\n--- FIRST 20 RETURNED RECORDS ---")
+    limit = min(20, total_returned)
+    for i in range(limit):
+        b = bids[i]
+        print(f"[{i+1}]")
+        print(f"Bid ID: {b.get('id')}")
+        print(f"publishedDate: {b.get('publishedDate')}")
+        print(f"deadline: {b.get('deadline')}")
+        print(f"state: {b.get('state')}")
+        print(f"category: {b.get('category')}")
+        print(f"employees: {b.get('employees')}")
+        print(f"value: {b.get('value')}")
+        print(f"isHighValue: {b.get('isHighValue')}\n")
+
+    date_matches = 0
+    date_mismatches = 0
+    unknown_dates = 0
+    date_replacement_detected = False
+
+    for b in bids:
+        raw_doc = b.get("raw_doc", {})
+        raw_start = unwrap_val(raw_doc.get("final_start_date_sort"))
+        raw_end = unwrap_val(raw_doc.get("final_end_date_sort"))
+
+        norm_raw_start = normalize_gem_date(raw_start)
+        norm_raw_end = normalize_gem_date(raw_end)
+
+        if scan_type.upper() == "PUBLISHED":
+            target_field_norm = norm_raw_start
+            actual_date = b.get("publishedDate")
+        else:
+            target_field_norm = norm_raw_end
+            actual_date = b.get("deadline")
+
+        # Verify no replacement occurred if raw date was missing/invalid
+        if target_field_norm is None and actual_date == target_date:
+            date_replacement_detected = True
+
+        if actual_date == target_date:
+            date_matches += 1
+        elif actual_date is None:
+            unknown_dates += 1
+        else:
+            date_mismatches += 1
+
+    print("--- METRICS ---")
+    print(f"Total returned: {total_returned}")
+    print(f"Date = {target_date}: {date_matches}")
+    print(f"Date != {target_date}: {date_mismatches}")
+    print(f"Unknown date: {unknown_dates}")
+    print(f"Date Replacement Detected: {date_replacement_detected}")
+
+    is_pass = (date_matches == total_returned) and (date_mismatches == 0) and not date_replacement_detected
+    print(f"TEST RESULT: {'PASS' if is_pass else 'FAIL'}")
+    return is_pass
+
+def main():
+    print("==================================================")
+    print("      FINAL REAL-DATA VERIFICATION TEST SUITE")
+    print("==================================================")
+
+    # Test 1: PUBLISHED ALL INDIA (Real date 2025-06-17)
+    pass1 = run_test_case("PUBLISHED ALL INDIA (Real GeM Date 2025-06-17)", "2025-06-17", "PUBLISHED", "ALL", max_pages=3)
+
+    # Test 2: PUBLISHED GUJARAT (Real date 2025-06-17)
+    pass2 = run_test_case("PUBLISHED GUJARAT (Real GeM Date 2025-06-17)", "2025-06-17", "PUBLISHED", "Gujarat", max_pages=3)
+
+    # Test 3: FINISHED ALL INDIA (Real date 2025-07-08)
+    pass3 = run_test_case("FINISHED ALL INDIA (Real GeM Date 2025-07-08)", "2025-07-08", "FINISHED", "ALL", max_pages=3)
+
+    all_passed = pass1 and pass2 and pass3
+
+    print("\n==================================================")
+    print("            FINAL VERIFICATION SUMMARY")
+    print("==================================================")
+    print(f"LIVE DATE VALIDATION = {'PASS' if all_passed else 'FAIL'}")
+    print(f"PUBLISHED ALL INDIA = {'PASS' if pass1 else 'FAIL'}")
+    print(f"PUBLISHED GUJARAT  = {'PASS' if pass2 else 'FAIL'}")
+    print(f"FINISHED ALL INDIA  = {'PASS' if pass3 else 'FAIL'}")
+    print("==================================================")
+
+if __name__ == "__main__":
+    main()
+
+
+--------------------------------------------------------------------------------
+FILE: backend/test_gem_live_scraper.py
+DESCRIPTION: LIVE GE M SCANNER DEBUG TEST SUITE
+--------------------------------------------------------------------------------
+[FILE NOT FOUND: C:\Users\ASUS\OneDrive\Desktop\GEM BIDS\backend/test_gem_live_scraper.py]
 
 
 --------------------------------------------------------------------------------
 FILE: backend/test_gem_payload_investigation.py
-DESCRIPTION: GE M API PAGINATION PAYLOAD TEST
+DESCRIPTION: PAGINATION PAYLOAD INVESTIGATION SUITE
 --------------------------------------------------------------------------------
 import json
 import re
@@ -2673,7 +2903,7 @@ if __name__ == "__main__":
 
 --------------------------------------------------------------------------------
 FILE: backend/test_inspect_real_bids.py
-DESCRIPTION: REAL GE M BIDS MULTI-PAGE AUDIT TEST
+DESCRIPTION: MULTI-PAGE 1,000 REAL BIDS AUDIT SUITE
 --------------------------------------------------------------------------------
 import json
 import re
@@ -2855,6 +3085,57 @@ if __name__ == "__main__":
 
 
 --------------------------------------------------------------------------------
+FILE: backend/test_inspect_raw_keys.py
+DESCRIPTION: SOLR RAW DOCUMENT KEYS INSPECTOR
+--------------------------------------------------------------------------------
+import json
+import re
+import time
+from bs4 import BeautifulSoup
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from curl_cffi import requests
+
+GEM_BIDLISTS_URL = "https://bidplus.gem.gov.in/bidlists"
+GEM_ALL_BIDS_DATA_URL = "https://bidplus.gem.gov.in/all-bids-data"
+
+options = Options()
+options.add_argument('--headless=new')
+driver = webdriver.Chrome(options=options)
+try:
+    driver.get(GEM_BIDLISTS_URL)
+    soup = BeautifulSoup(driver.page_source, 'html.parser')
+    cname_elem = soup.find('input', {'id': 'cname'})
+    csrf_key = cname_elem.get('value') if cname_elem else 'csrf_bd_gem_nk'
+    csrf_match = re.search(r"['\"]" + csrf_key + r"['\"]\s*:\s*['\"]([^'\"]+)['\"]", driver.page_source)
+    csrf_val = csrf_match.group(1) if csrf_match else ''
+    cookies_dict = {c['name']: c['value'] for c in driver.get_cookies()}
+finally:
+    driver.quit()
+
+s = requests.Session(impersonate="chrome110")
+for k, v in cookies_dict.items():
+    s.cookies.set(k, v)
+
+s.headers.update({
+    'User-Agent': 'Mozilla/5.0',
+    'Referer': GEM_BIDLISTS_URL,
+    'X-Requested-With': 'XMLHttpRequest'
+})
+
+res = s.post(GEM_ALL_BIDS_DATA_URL, data={'payload': json.dumps({"page": 1, "param": {"search": "", "sort": "Bid-Start-Date-Latest"}}), csrf_key: csrf_val})
+docs = res.json().get('response', {}).get('response', {}).get('docs', [])
+
+print("Sample Solr Doc 1:")
+for k, v in docs[0].items():
+    print(f"  {k}: {v}")
+
+print("\nSample Solr Doc 2:")
+for k, v in docs[1].items():
+    print(f"  {k}: {v}")
+
+
+--------------------------------------------------------------------------------
 FILE: backend/test_api_bids_suite.py
 DESCRIPTION: API /bids, /scan, /status SUITE TEST
 --------------------------------------------------------------------------------
@@ -2954,8 +3235,444 @@ if __name__ == "__main__":
 
 
 --------------------------------------------------------------------------------
+FILE: frontend/src/App.jsx
+DESCRIPTION: REACT ROOT APPLICATION COMPONENT & ROUTER
+--------------------------------------------------------------------------------
+import React, { useState } from 'react';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import Header from './components/Header';
+import Sidebar from './components/Sidebar';
+import PaymentModal from './components/PaymentModal';
+
+import LandingPage from './pages/LandingPage';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import DashboardPage from './pages/DashboardPage';
+import ScanBidsPage from './pages/ScanBidsPage';
+import AnalyticsPage from './pages/AnalyticsPage';
+import BillingPage from './pages/BillingPage';
+import AdminPage from './pages/AdminPage';
+
+function MainAppContent() {
+  const { user, loading } = useAuth();
+
+  // Page state: landing | login | register | app
+  const [page, setPage] = useState('landing');
+  // App internal tab: dashboard | scanner | admin-dashboard | admin-users | admin-keys | admin-payments | admin-subscriptions | admin-services | admin-tenders | admin-settings
+  const [currentTab, setCurrentTab] = useState('dashboard');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  if (loading) {
+    return (
+      <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#070a12', color: '#38bdf8', fontWeight: 600 }}>
+        Loading GeMIntel System...
+      </div>
+    );
+  }
+
+  // Handle page transitions
+  const handleNavigate = (targetPage) => {
+    if (targetPage === 'dashboard' || targetPage === 'app') {
+      if (!user) {
+        setPage('login');
+        return;
+      }
+    }
+    setPage(targetPage);
+  };
+
+  if (page === 'landing') {
+    return <LandingPage onNavigate={handleNavigate} />;
+  }
+
+  if (page === 'login') {
+    return <LoginPage onNavigate={handleNavigate} />;
+  }
+
+  if (page === 'register') {
+    return <RegisterPage onNavigate={handleNavigate} />;
+  }
+
+  const isAdminTab = currentTab.startsWith('admin-') || currentTab === 'admin';
+
+  return (
+    <div className="app-container">
+      <Sidebar currentTab={currentTab} setCurrentTab={setCurrentTab} />
+
+      <div className="main-content">
+        <Header
+          currentTab={currentTab}
+          setCurrentTab={setCurrentTab}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+        />
+
+        <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
+          {isAdminTab ? (
+            <AdminPage currentTab={currentTab} />
+          ) : currentTab === 'scanner' ? (
+            <ScanBidsPage searchQuery={searchQuery} />
+          ) : currentTab === 'analytics' ? (
+            <AnalyticsPage />
+          ) : currentTab === 'billing' ? (
+            <BillingPage />
+          ) : (
+            <DashboardPage
+              currentTab={currentTab}
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+            />
+          )}
+        </main>
+      </div>
+
+      <PaymentModal />
+    </div>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <MainAppContent />
+    </AuthProvider>
+  );
+}
+
+
+--------------------------------------------------------------------------------
+FILE: frontend/src/main.jsx
+DESCRIPTION: REACT VITE ENTRY POINT
+--------------------------------------------------------------------------------
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App.jsx';
+import './index.css';
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+);
+
+
+--------------------------------------------------------------------------------
+FILE: frontend/src/index.css
+DESCRIPTION: GLOBAL TAILWIND & VANILLA CSS DESIGN SYSTEM
+--------------------------------------------------------------------------------
+:root {
+  --bg-dark: #070a12;
+  --bg-card: rgba(15, 23, 42, 0.75);
+  --bg-card-hover: rgba(30, 41, 59, 0.85);
+  --bg-sidebar: #0b0f19;
+  --bg-header: rgba(11, 15, 25, 0.9);
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-highlight: rgba(59, 130, 246, 0.3);
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --primary-blue: #3b82f6;
+  --primary-cyan: #06b6d4;
+  --primary-purple: #8b5cf6;
+  --accent-green: #10b981;
+  --accent-amber: #f59e0b;
+  --accent-rose: #f43f5e;
+  --glow-blue: 0 0 20px rgba(59, 130, 246, 0.25);
+  --glow-cyan: 0 0 20px rgba(6, 182, 212, 0.25);
+  --glow-purple: 0 0 20px rgba(139, 92, 246, 0.25);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  min-height: 100vh;
+  overflow-x: hidden;
+  line-height: 1.5;
+}
+
+h1, h2, h3, h4, h5, h6, .brand-font {
+  font-family: 'Outfit', sans-serif;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #090d16;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3b82f6;
+}
+
+/* Glassmorphism utility */
+.glass-panel {
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+}
+
+.glass-card {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.4) 0%, rgba(15, 23, 42, 0.6) 100%);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  transition: all 0.25s ease-in-out;
+}
+
+.glass-card:hover {
+  border-color: var(--border-highlight);
+  box-shadow: var(--glow-blue);
+  transform: translateY(-2px);
+}
+
+/* Buttons */
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary-blue), var(--primary-purple));
+  color: #fff;
+  font-weight: 600;
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35);
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
+  filter: brightness(1.1);
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  font-weight: 500;
+  padding: 10px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--text-muted);
+}
+
+.btn-cyan {
+  background: linear-gradient(135deg, var(--primary-cyan), var(--primary-blue));
+  color: #fff;
+  font-weight: 600;
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(6, 182, 212, 0.3);
+}
+
+.btn-cyan:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(6, 182, 212, 0.45);
+}
+
+.btn-outline-cyan {
+  background: transparent;
+  color: var(--primary-cyan);
+  border: 1px solid var(--primary-cyan);
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.btn-outline-cyan:hover {
+  background: rgba(6, 182, 212, 0.1);
+}
+
+/* Status Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge-published {
+  background: rgba(6, 182, 212, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(6, 182, 212, 0.3);
+}
+
+.badge-finished {
+  background: rgba(139, 92, 246, 0.15);
+  color: #c084fc;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+.badge-active {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.badge-expired {
+  background: rgba(244, 63, 94, 0.15);
+  color: #fb7185;
+  border: 1px solid rgba(244, 63, 94, 0.3);
+}
+
+/* Form Controls */
+.input-control {
+  width: 100%;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 12px 16px;
+  color: #fff;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+}
+
+.input-control:focus {
+  outline: none;
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+}
+
+.select-control {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: #fff;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.select-control option {
+  background: #0f172a;
+  color: #fff;
+}
+
+/* Pulse animation for scanner */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(139, 92, 246, 0.7);
+  }
+}
+
+.pulse-active {
+  animation: pulse-glow 2s infinite ease-in-out;
+}
+
+/* Scanning progress bar */
+@keyframes scan-progress {
+  0% { width: 0%; }
+  50% { width: 70%; }
+  100% { width: 100%; }
+}
+
+.animate-scan-line {
+  animation: scan-progress 2.5s ease-out forwards;
+}
+
+/* Grid & Layout */
+.app-container {
+  display: flex;
+  min-height: 100vh;
+  background: radial-gradient(circle at 10% 20%, rgba(15, 23, 42, 0.9) 0%, rgba(7, 10, 18, 1) 90%);
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+/* Mobile Responsiveness (Section 37) */
+@media (max-width: 768px) {
+  .mobile-header-toggle {
+    display: flex !important;
+  }
+
+  .sidebar-panel {
+    position: fixed;
+    top: 50px;
+    left: -280px;
+    bottom: 0;
+    z-index: 105;
+    transition: left 0.3s ease;
+    box-shadow: 10px 0 30px rgba(0,0,0,0.8);
+  }
+
+  .sidebar-panel.mobile-show {
+    left: 0 !important;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7);
+  }
+  70% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 6px rgba(52, 211, 153, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(52, 211, 153, 0);
+  }
+}
+
+
+
+--------------------------------------------------------------------------------
 FILE: frontend/src/config/constants.js
-DESCRIPTION: FRONTEND CONSTANTS & MAPPINGS
+DESCRIPTION: INDIAN STATES & MANPOWER CONSTANTS
 --------------------------------------------------------------------------------
 export const INDIAN_STATES = [
   "Andhra Pradesh",
@@ -3023,7 +3740,7 @@ export const MANPOWER_DESIGNATIONS = [
 
 --------------------------------------------------------------------------------
 FILE: frontend/src/services/api.js
-DESCRIPTION: FRONTEND API CLIENT SERVICE
+DESCRIPTION: AXIOS API CLIENT SERVICE
 --------------------------------------------------------------------------------
 const API_BASE = '/api';
 
@@ -3200,6 +3917,55 @@ export async function fetchServices() {
   if (!ok) throw new Error(data.error || 'Failed to fetch services');
   return data;
 }
+
+
+--------------------------------------------------------------------------------
+FILE: frontend/src/components/Navbar.jsx
+DESCRIPTION: NAVBAR NAVIGATION HEADER
+--------------------------------------------------------------------------------
+[FILE NOT FOUND: C:\Users\ASUS\OneDrive\Desktop\GEM BIDS\frontend/src/components/Navbar.jsx]
+
+
+--------------------------------------------------------------------------------
+FILE: frontend/src/components/TenderCard.jsx
+DESCRIPTION: TENDER CARD COMPONENT WITH MANPOWER & PDF STATUS
+--------------------------------------------------------------------------------
+[FILE NOT FOUND: C:\Users\ASUS\OneDrive\Desktop\GEM BIDS\frontend/src/components/TenderCard.jsx]
+
+
+--------------------------------------------------------------------------------
+FILE: frontend/src/components/TenderFilters.jsx
+DESCRIPTION: TENDER FILTERS PANEL (DATE, STATE, MANPOWER)
+--------------------------------------------------------------------------------
+[FILE NOT FOUND: C:\Users\ASUS\OneDrive\Desktop\GEM BIDS\frontend/src/components/TenderFilters.jsx]
+
+
+--------------------------------------------------------------------------------
+FILE: frontend/src/components/TenderModal.jsx
+DESCRIPTION: TENDER DETAILS MODAL POPUP
+--------------------------------------------------------------------------------
+[FILE NOT FOUND: C:\Users\ASUS\OneDrive\Desktop\GEM BIDS\frontend/src/components/TenderModal.jsx]
+
+
+--------------------------------------------------------------------------------
+FILE: frontend/src/components/StatsOverview.jsx
+DESCRIPTION: DASHBOARD STATS OVERVIEW CARDS
+--------------------------------------------------------------------------------
+[FILE NOT FOUND: C:\Users\ASUS\OneDrive\Desktop\GEM BIDS\frontend/src/components/StatsOverview.jsx]
+
+
+--------------------------------------------------------------------------------
+FILE: frontend/src/pages/Dashboard.jsx
+DESCRIPTION: MAIN DASHBOARD PAGE
+--------------------------------------------------------------------------------
+[FILE NOT FOUND: C:\Users\ASUS\OneDrive\Desktop\GEM BIDS\frontend/src/pages/Dashboard.jsx]
+
+
+--------------------------------------------------------------------------------
+FILE: frontend/src/pages/Login.jsx
+DESCRIPTION: AUTHENTICATION LOGIN PAGE
+--------------------------------------------------------------------------------
+[FILE NOT FOUND: C:\Users\ASUS\OneDrive\Desktop\GEM BIDS\frontend/src/pages/Login.jsx]
 
 
 ================================================================================
