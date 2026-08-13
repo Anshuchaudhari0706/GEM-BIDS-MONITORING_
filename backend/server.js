@@ -508,7 +508,7 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
       if (isFinished) return false;
       if (targetDate && targetDate !== 'ALL') {
         const startStr = t.startDateFormatted || t.publishedDate || t.startDate || '';
-        return startStr.includes(targetDate) || t.queryDate === targetDate || t.is_real_gem_bid;
+        return startStr.includes(targetDate) || t.queryDate === targetDate;
       }
       return true;
     }

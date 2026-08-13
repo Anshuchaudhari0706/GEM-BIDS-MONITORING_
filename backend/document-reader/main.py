@@ -49,24 +49,33 @@ def scan_tenders_endpoint(req: ScanRequest):
     res = scan_real_gem_portal(req.date, req.state, 500, scan_type.upper())
 
     return {
-        "success": True,
+        "success": res.get("status") == "success",
         "type": scan_type,
         "date": req.date,
         "state": req.state,
-        "status": res.get("status", "COMPLETED"),
-        "sourceVerified": res.get("sourceVerified", True),
-        "queryVerified": res.get("queryVerified", True),
-        "paginationComplete": res.get("paginationComplete", True),
-        "dateFilterVerified": res.get("dateFilterVerified", True),
-        "sourceTotal": res.get("sourceTotal", 5713364),
-        "queryTotal": res.get("queryTotal", len(res.get("bids", []))),
-        "pagesProcessed": res.get("pagesProcessed", 1),
-        "recordsRetrieved": res.get("recordsRetrieved", len(res.get("bids", []))),
-        "validRecords": res.get("validRecords", len(res.get("bids", []))),
+
+        "status": res.get("status"),
+        "sourceVerified": res.get("sourceVerified", False),
+        "queryVerified": res.get("queryVerified", False),
+        "paginationComplete": res.get("paginationComplete", False),
+        "dateFilterVerified": res.get("dateFilterVerified", False),
+
+        "sourceTotal": res.get("sourceTotal"),
+        "queryTotal": res.get("total", 0),
+
+        "pagesProcessed": res.get("pagesProcessed", 0),
+        "recordsRetrieved": res.get("recordsRetrieved", 0),
+        "validRecords": res.get("validRecords", 0),
         "duplicatesRemoved": res.get("duplicatesRemoved", 0),
-        "finalMatchingRecords": res.get("finalMatchingRecords", len(res.get("bids", []))),
-        "count": len(res.get("bids", [])),
-        "bids": res.get("bids", [])
+
+        "dateMatches": res.get("dateMatches", 0),
+        "dateMismatches": res.get("dateMismatches", 0),
+
+        "finalMatchingRecords": res.get("total", 0),
+        "count": len(res.get("data", [])),
+        "bids": res.get("data", []),
+
+        "scan_error": res.get("scan_error")
     }
 
 @app.post("/parse")

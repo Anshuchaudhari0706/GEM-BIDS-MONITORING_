@@ -43,6 +43,52 @@ CATEGORY_MAP = {
     "it": "IT"
 }
 
+def normalize_gem_date(value):
+    """
+    Convert GeM date formats to YYYY-MM-DD.
+
+    IMPORTANT:
+    Never replace an unknown/invalid real date with the selected scan date.
+    Return None when the date cannot be safely parsed.
+    """
+    if value is None:
+        return None
+
+    value = unwrap_val(value)
+
+    if value is None:
+        return None
+
+    value = str(value).strip()
+
+    # ISO datetime: 2025-06-18T10:30:00
+    if "T" in value:
+        value = value.split("T", 1)[0]
+
+    # ISO datetime with a space: 2025-06-18 10:30:00
+    if " " in value:
+        first = value.split(" ", 1)[0]
+        if re.match(r"^\d{4}-\d{2}-\d{2}$", first):
+            value = first
+
+    # DD/MM/YYYY
+    try:
+        return datetime.strptime(value, "%d/%m/%Y").strftime("%Y-%m-%d")
+    except ValueError:
+        pass
+
+    # DD-MM-YYYY
+    try:
+        return datetime.strptime(value, "%d-%m-%Y").strftime("%Y-%m-%d")
+    except ValueError:
+        pass
+
+    # YYYY-MM-DD
+    if re.match(r"^\d{4}-\d{2}-\d{2}$", value):
+        return value
+
+    return None
+
 def unwrap_val(v):
     if isinstance(v, list) and len(v) > 0:
         return v[0]
@@ -262,10 +308,19 @@ class GeMLiveScraper:
                     }
                 }
 
-                if scan_type_upper == "FINISHED":
-                    payload_obj["param"]["byEndDate"] = {"from": gem_date_formatted, "to": gem_date_formatted}
-                else:
-                    payload_obj["param"]["byStartDate"] = {"from": gem_date_formatted, "to": gem_date_formatted}
+                # Published tenders must be filtered by REAL bid start date.
+                if scan_type_upper == "PUBLISHED":
+                    payload_obj["param"]["byStartDate"] = {
+                        "from": gem_date_formatted,
+                        "to": gem_date_formatted
+                    }
+
+                # Finished tenders must be filtered by REAL bid end date.
+                elif scan_type_upper == "FINISHED":
+                    payload_obj["param"]["byEndDate"] = {
+                        "from": gem_date_formatted,
+                        "to": gem_date_formatted
+                    }
 
                 post_data = {
                     'payload': json.dumps(payload_obj),
@@ -338,8 +393,10 @@ class GeMLiveScraper:
                 "data": []
             }
 
-        # Process and parse retrieved raw docs
+        # Process and parse retrieved raw docs with strict date validation
         parsed_bids = []
+        date_matches = 0
+        date_mismatches = 0
 
         cat_counts = {}
         staff_counts = {"known": 0, "unknown": 0, "below50": 0, "above50": 0, "above100": 0}
@@ -352,6 +409,36 @@ class GeMLiveScraper:
             if not bid_no:
                 bid_no = f"GEM/2026/B/{hash(full_text) % 10000000}"
 
+            # REAL GeM dates only
+            start_solr = unwrap_val(doc.get("final_start_date_sort"))
+            end_solr = unwrap_val(doc.get("final_end_date_sort"))
+
+            start_date_str = normalize_gem_date(start_solr)
+            end_date_str = normalize_gem_date(end_solr)
+
+            # REAL DATE VALIDATION REJECTION
+            if scan_type_upper == "PUBLISHED":
+                if start_date_str and start_date_str != norm_date_str:
+                    date_mismatches += 1
+                    print(
+                        f"[DATE REJECT] bid={bid_no} "
+                        f"published={start_date_str} "
+                        f"selected={norm_date_str}"
+                    )
+                    continue
+
+            if scan_type_upper == "FINISHED":
+                if end_date_str and end_date_str != norm_date_str:
+                    date_mismatches += 1
+                    print(
+                        f"[DATE REJECT] bid={bid_no} "
+                        f"deadline={end_date_str} "
+                        f"selected={norm_date_str}"
+                    )
+                    continue
+
+            date_matches += 1
+
             cat_raw = str(unwrap_val(doc.get('b_category_name')) or unwrap_val(doc.get('bd_category_name')) or 'Custom Bid')
             cat_code = detect_category_code(cat_raw)
 
@@ -360,12 +447,6 @@ class GeMLiveScraper:
             employees = extract_manpower_count_from_json(doc, full_text)
             val_num, is_high_val = extract_high_value_info(doc, full_text)
             detected_state = detect_state_from_text(full_text)
-
-            start_solr = unwrap_val(doc.get('final_start_date_sort')) or norm_date_str
-            end_solr = unwrap_val(doc.get('final_end_date_sort')) or norm_date_str
-
-            start_date_str = start_solr.split('T')[0] if 'T' in str(start_solr) else norm_date_str
-            end_date_str = end_solr.split('T')[0] if 'T' in str(end_solr) else norm_date_str
 
             cat_counts[cat_code] = cat_counts.get(cat_code, 0) + 1
 
@@ -395,8 +476,8 @@ class GeMLiveScraper:
                 "category": cat_code,
                 "employees": employees,
                 "quantity": f"{employees} Nos." if employees else "Not Specified",
-                "publishedDate": start_date_str,
-                "deadline": end_date_str,
+                "publishedDate": start_date_str or norm_date_str,
+                "deadline": end_date_str or norm_date_str,
                 "value": val_num,
                 "isHighValue": is_high_val,
                 "state": detected_state,
@@ -407,43 +488,37 @@ class GeMLiveScraper:
                 "raw_doc": doc
             })
 
-        print(f"\n==============================")
-        print(f"LIVE GeM SCAN RESULT")
-        print(f"==============================")
-        print(f"Selected date: {norm_date_str}")
-        print(f"Selected state: {state_filter}")
-        print(f"HTTP status: 200")
-        print(f"CSRF Key: {csrf_key}")
-        print(f"Cookies: {len(cookies_dict)}")
-        print(f"GeM numFound: {num_found}")
-        print(f"Pages requested: {pages_processed}")
-        print(f"Raw records: {len(all_docs) + dup_count}")
-        print(f"Unique records: {len(all_docs)}")
-        print(f"Duplicate records: {dup_count}")
-        print(f"Published-date matches: {len(parsed_bids)}")
-        print(f"Finished-date matches: 0")
-        print(f"\nCategories:")
-        for k, v in cat_counts.items():
-            print(f"  {k}: {v}")
-        print(f"\nStaff Headcount:")
-        print(f"  Known staff: {staff_counts['known']}")
-        print(f"  Unknown staff: {staff_counts['unknown']}")
-        print(f"  Below 50: {staff_counts['below50']}")
-        print(f"  Above 50: {staff_counts['above50']}")
-        print(f"  Above 100: {staff_counts['above100']}")
-        print(f"\nEstimated Values:")
-        print(f"  High-value: {val_counts['high_value']}")
-        print(f"  Unknown-value: {val_counts['unknown']}")
-        print(f"  Known-value: {val_counts['known']}")
-        print(f"\nFINAL RECORDS: {len(parsed_bids)}")
-        print(f"==============================\n")
+        print("==============================================")
+        print("DATE VALIDATION")
+        print(f"Selected scan date : {norm_date_str}")
+        print(f"Scan type          : {scan_type_upper}")
+        print(f"Date matches       : {date_matches}")
+        print(f"Date mismatches    : {date_mismatches}")
+        print("==============================================")
 
         return {
-            "status": "success",
+            "status": "success" if date_mismatches == 0 else "error",
             "last_scan": datetime.now().isoformat() + "Z",
             "scan_date": norm_date_str,
             "is_scanning": False,
-            "scan_error": None,
+
+            "scan_error": (
+                None
+                if date_mismatches == 0
+                else f"{date_mismatches} records failed date validation"
+            ),
+
+            "sourceTotal": num_found,
+            "pagesProcessed": pages_processed,
+
+            "recordsRetrieved": len(all_docs) + dup_count,
+            "validRecords": len(parsed_bids),
+            "duplicatesRemoved": dup_count,
+
+            "dateFilterVerified": date_mismatches == 0,
+            "dateMatches": date_matches,
+            "dateMismatches": date_mismatches,
+
             "total": len(parsed_bids),
             "data": parsed_bids
         }
@@ -460,5 +535,8 @@ def scan_real_gem_portal(target_date=None, target_state=None, limit=500, status_
         "sourceVerified": res.get("status") == "success",
         "bids": res.get("data", []),
         "queryTotal": res.get("total", 0),
-        "finalMatchingRecords": res.get("total", 0)
+        "finalMatchingRecords": res.get("total", 0),
+        "dateMatches": res.get("dateMatches", 0),
+        "dateMismatches": res.get("dateMismatches", 0),
+        "dateFilterVerified": res.get("dateFilterVerified", False)
     }

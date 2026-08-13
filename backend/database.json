@@ -65,7 +65,7 @@
       "companyName": "GeMIntel HQ",
       "email": "admin@gemintel.com",
       "mobile": "9876543210",
-      "passwordHash": "$2a$10$usxBJMHrkzEpEO5N2poPE.84DiH4aU7vuw77aB5XjPhtLKso0co2m",
+      "passwordHash": "$2a$10$jBPeNIdOuSnhguWBDzJfS.w1QkvKIqhwO69U8RDT0gc7g8Ah1Gwku",
       "role": "admin",
       "status": "ACTIVE",
       "createdAt": "2026-01-01T00:00:00.000Z"
@@ -98403,13 +98403,13 @@
     }
   ],
   "last_scan": {
-    "status": "COMPLETED",
-    "sourceVerified": true,
+    "status": "FAILED",
+    "sourceVerified": false,
     "is_scanning": false,
     "queryDate": "2026-08-12",
     "bidType": "PUBLISHED",
-    "recordCount": 1000,
-    "scan_error": null,
-    "last_scan": "2026-08-12T13:41:21.103Z"
+    "recordCount": 0,
+    "scan_error": "GeM portal returned error response",
+    "last_scan": "2026-08-13T05:32:25.168Z"
   }
 }
