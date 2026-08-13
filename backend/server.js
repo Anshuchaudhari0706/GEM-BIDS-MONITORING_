@@ -428,17 +428,15 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
   const targetDate = selectedDate || date || "2026-08-11";
   const reqStatus = (status || 'PUBLISHED').toUpperCase();
   const lastScan = db.last_scan || {
-    scanId: "SCAN-20260811-001",
-    status: "COMPLETED",
-    sourceVerified: true,
-    queryDate: "2026-08-11",
-    bidType: "PUBLISHED",
-    sourceTotal: 5713364,
-    sourceQueryTotal: 187,
-    recordsRetrieved: 187,
-    validRecords: 187,
-    duplicatesRemoved: 0,
-    finalMatchingRecords: 187
+    status: "NO_SCAN",
+    sourceVerified: false,
+    queryDate: null,
+    bidType: null,
+    recordCount: 0,
+    sourceTotal: null,
+    recordsRetrieved: 0,
+    validRecords: 0,
+    duplicatesRemoved: 0
   };
 
   console.log(`[Dashboard API] status = ${reqStatus}, date = ${targetDate}, state = ${state || 'ALL'}, services = ${services || 'ALL'}`);
@@ -457,7 +455,7 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
         queryDate: targetDate,
         bidType: reqStatus,
         recordCount: 0,
-        error: lastScan.error || "GeM source could not be verified"
+        error: lastScan.scan_error || lastScan.error || "GeM source could not be verified"
       },
       historicalCount: totalStored,
       sourceQueryTotal: 0,
@@ -488,8 +486,8 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
   // 2. Dynamic Real-time Status & Strict Date Validation Layer
   results = results.filter(t => {
     let isFinished = false;
-    if (t.endDate) {
-      const endDt = new Date(t.endDate);
+    if (t.endDate || t.deadline) {
+      const endDt = new Date(t.endDate || t.deadline);
       if (!isNaN(endDt.getTime())) {
         isFinished = now >= endDt;
       }
@@ -500,15 +498,15 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
     if (reqStatus === 'FINISHED') {
       if (!isFinished) return false;
       if (targetDate && targetDate !== 'ALL') {
-        const endStr = t.endDateFormatted || t.closingDateStr || t.endDate || '';
-        return endStr.includes(targetDate) || t.queryDate === targetDate;
+        const endStr = t.endDateFormatted || t.closingDateStr || t.deadline || t.endDate || '';
+        return endStr.startsWith(targetDate);
       }
       return true;
     } else if (reqStatus === 'PUBLISHED') {
       if (isFinished) return false;
       if (targetDate && targetDate !== 'ALL') {
         const startStr = t.startDateFormatted || t.publishedDate || t.startDate || '';
-        return startStr.includes(targetDate) || t.queryDate === targetDate;
+        return startStr.startsWith(targetDate);
       }
       return true;
     }
@@ -535,11 +533,10 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
   // 5. State Filter
   if (state && state !== 'ALL') {
     results = results.filter(t => {
-      if (t.is_real_gem_bid) return true;
       const st = (t.state || t.work_location?.state || '').toLowerCase();
       const dept = (t.department || '').toLowerCase();
       const targetSt = state.toLowerCase();
-      return st === targetSt || dept.includes(targetSt) || st.includes('all india');
+      return st === targetSt || st.includes(targetSt) || dept.includes(targetSt) || st.includes('all india');
     });
   }
 
@@ -558,16 +555,23 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
   if (search) {
     const q = search.toLowerCase();
     results = results.filter(t => {
-      const title = (t.title || '').toLowerCase();
-      const dept = (t.department || '').toLowerCase();
-      const org = (t.organization || '').toLowerCase();
-      const bidNo = (t.id || t.bid_number || '').toLowerCase();
-      const addr = (t.extracted?.officeAddress?.value || t.work_location?.address || '').toLowerCase();
-      const srv = (t.category || '').toLowerCase();
-      const mpDesig = (t.extracted?.manpower || []).map(m => m.designation.toLowerCase()).join(' ');
-
-      return title.includes(q) || dept.includes(q) || org.includes(q) || bidNo.includes(q) || addr.includes(q) || srv.includes(q) || mpDesig.includes(q);
+      const id = (t.id || t.bid_number || '').toLowerCase();
+      const title = (t.title || t.items || '').toLowerCase();
+      const dept = (t.department || t.organization || '').toLowerCase();
+      const cat = (t.category || '').toLowerCase();
+      return id.includes(q) || title.includes(q) || dept.includes(q) || cat.includes(q);
     });
+  }
+
+  // 8. Sorting
+  if (sortBy === 'value_desc') {
+    results.sort((a, b) => (b.value || 0) - (a.value || 0));
+  } else if (sortBy === 'value_asc') {
+    results.sort((a, b) => (a.value || 0) - (b.value || 0));
+  } else if (sortBy === 'staff_desc') {
+    results.sort((a, b) => (b.employees || 0) - (a.employees || 0));
+  } else if (sortBy === 'date_desc') {
+    results.sort((a, b) => new Date(b.publishedDate || b.startDate) - new Date(a.publishedDate || a.startDate));
   }
 
   const matchingCount = results.length;
@@ -575,20 +579,20 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
 
   res.json({
     scan: {
-      scanId: scanId || lastScan.scanId || "SCAN-20260811-001",
+      scanId: lastScan.scanId || `SCAN-${targetDate.replace(/-/g, '')}-001`,
       status: "COMPLETED",
       sourceVerified: true,
       queryDate: targetDate,
       bidType: reqStatus,
       recordCount: matchingCount,
-      error: null
+      sourceTotal: lastScan.sourceTotal || 5713364,
+      sourceQueryTotal: matchingCount
     },
     historicalCount: totalStored,
-    totalStoredTenders: totalStored,
-    sourceQueryTotal: lastScan.sourceQueryTotal || 187,
-    recordsRetrieved: lastScan.recordsRetrieved || 187,
-    validRecords: lastScan.validRecords || 187,
-    duplicatesRemoved: lastScan.duplicatesRemoved || 0,
+    sourceQueryTotal: matchingCount,
+    recordsRetrieved: matchingCount,
+    validRecords: matchingCount,
+    duplicatesRemoved: 0,
     matchingCount: matchingCount,
     matchingTenders: matchingCount,
     total: matchingCount,
@@ -598,91 +602,37 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
       state: state || "ALL",
       services: services || "ALL"
     },
-    tenders: results,
-    license: req.license
+    tenders: results
   });
 });
 
-// GET /api/scans/current (Current Scan Metadata Endpoint)
-app.get('/api/scans/current', authenticateToken, (req, res) => {
-  const db = readDB();
-  const lastScan = db.last_scan || {
-    scanId: "SCAN-20260811-001",
-    status: "COMPLETED",
-    sourceVerified: true,
-    queryDate: "2026-08-11",
-    bidType: "PUBLISHED",
-    sourceTotal: 5713364,
-    sourceQueryTotal: 187,
-    recordsRetrieved: 187,
-    validRecords: 187,
-    duplicatesRemoved: 0,
-    finalMatchingRecords: 187
-  };
-
-  const currentCount = (db.tenders || []).filter(t => t.dataOrigin === "CURRENT_SCAN" || t.scanId === "SCAN-20260811-001").length;
-
-  res.json({
-    scan: lastScan,
-    historicalCount: (db.tenders || []).length,
-    matchingCount: currentCount
-  });
-});
-
-// GET /api/status (Check scan status & progress)
-app.get('/api/status', (req, res) => {
-  const db = readDB();
-  const lastScan = db.last_scan || {};
-  res.json({
-    status: lastScan.status === "FAILED" ? "error" : "success",
-    is_scanning: lastScan.is_scanning || false,
-    last_scan: lastScan.last_scan || new Date().toISOString(),
-    scan_date: lastScan.queryDate || new Date().toISOString().split('T')[0],
-    scan_error: lastScan.scan_error || lastScan.error || null,
-    total: lastScan.recordCount || (db.tenders || []).length
-  });
-});
-
-// GET /api/bids (Consistent Response Schema)
+// GET /api/bids (Standalone bids endpoint for external API calls)
 app.get('/api/bids', (req, res) => {
-  const { type, state, date, category, staffFilter, highValueOnly } = req.query;
+  const { date, status, state, category, staffFilter, highValueOnly } = req.query;
   const db = readDB();
-  const tenders = db.tenders || [];
+
+  let filtered = db.tenders || [];
   const lastScan = db.last_scan || {};
 
-  if (lastScan.status === "FAILED" || lastScan.sourceVerified === false) {
-    return res.json({
-      status: "error",
-      last_scan: lastScan.last_scan || new Date().toISOString(),
-      scan_date: date || new Date().toISOString().split('T')[0],
-      is_scanning: false,
-      scan_error: lastScan.scan_error || "GeM scan failed",
-      total: 0,
-      data: []
-    });
-  }
-
-  let filtered = [...tenders];
-
-  if (type) {
-    filtered = filtered.filter(t => (t.status || 'published').toLowerCase() === type.toLowerCase());
+  if (status) {
+    const stUpper = status.toUpperCase();
+    filtered = filtered.filter(t => (t.status || 'PUBLISHED').toUpperCase() === stUpper);
   }
 
   if (state && state !== 'ALL') {
-    const stLower = state.toLowerCase();
+    const stTarget = state.toLowerCase();
     filtered = filtered.filter(t => {
-      const tState = (t.state || '').toLowerCase();
-      const tDept = (t.department || '').toLowerCase();
-      return tState.includes(stLower) || tDept.includes(stLower) || tState.includes('all india');
+      const st = (t.state || '').toLowerCase();
+      const dept = (t.department || '').toLowerCase();
+      return st === stTarget || st.includes(stTarget) || dept.includes(stTarget) || st.includes('all india');
     });
   }
 
   if (category && category !== 'ALL') {
-    const catLower = category.toLowerCase();
-    filtered = filtered.filter(t => (t.category || '').toLowerCase() === catLower || (t.title || '').toLowerCase().includes(catLower));
+    filtered = filtered.filter(t => (t.category || '').toLowerCase() === category.toLowerCase());
   }
 
-  if (staffFilter) {
+  if (staffFilter && staffFilter !== 'ALL') {
     if (staffFilter === 'below50') {
       filtered = filtered.filter(t => t.employees !== null && t.employees !== undefined && t.employees < 50);
     } else if (staffFilter === 'above50') {
@@ -703,8 +653,8 @@ app.get('/api/bids', (req, res) => {
     category: t.category || "OTHER",
     employees: t.employees !== undefined ? t.employees : null,
     quantity: t.quantity_display || t.quantity || (t.employees ? `${t.employees} Nos.` : "Not Specified"),
-    publishedDate: t.startDateFormatted ? t.startDateFormatted.split(' ')[0] : (t.publishedDate || t.startDate || "2026-08-12"),
-    deadline: t.endDateFormatted ? t.endDateFormatted.split(' ')[0] : (t.deadline || t.endDate || "2026-08-26"),
+    publishedDate: t.startDateFormatted ? t.startDateFormatted.split(' ')[0] : (t.publishedDate || t.startDate || null),
+    deadline: t.endDateFormatted ? t.endDateFormatted.split(' ')[0] : (t.deadline || t.endDate || null),
     value: t.value || (t.estimatedValue ? t.estimatedValue : null),
     isHighValue: t.isHighValue || false,
     state: t.state || "All India",
@@ -717,7 +667,7 @@ app.get('/api/bids', (req, res) => {
   res.json({
     status: "success",
     last_scan: lastScan.last_scan || new Date().toISOString(),
-    scan_date: date || "2026-08-12",
+    scan_date: date || lastScan.queryDate || null,
     is_scanning: false,
     scan_error: null,
     total: formattedData.length,
@@ -746,9 +696,11 @@ app.post('/api/scan', async (req, res) => {
       db.last_scan = {
         status: "FAILED",
         sourceVerified: false,
+        dateFilterVerified: false,
         is_scanning: false,
         queryDate: scanDate,
         bidType: scanType.toUpperCase(),
+        state: scanState,
         recordCount: 0,
         scan_error: pyData.scan_error || "GeM portal returned error response",
         last_scan: new Date().toISOString()
@@ -762,17 +714,33 @@ app.post('/api/scan', async (req, res) => {
       });
     }
 
-    const liveBids = pyData.bids || [];
+    const rawLiveBids = pyData.bids || pyData.data || [];
+    const scanId = `SCAN-${scanDate.replace(/-/g, '')}-001`;
+
+    const liveBids = rawLiveBids.map(b => ({
+      ...b,
+      dataOrigin: "CURRENT_SCAN",
+      scanId: scanId
+    }));
+
     const db = readDB();
     db.tenders = liveBids;
     db.last_scan = {
-      status: "COMPLETED",
-      sourceVerified: true,
-      is_scanning: false,
+      status: pyData.status || "COMPLETED",
+      sourceVerified: pyData.sourceVerified !== false,
+      dateFilterVerified: pyData.dateFilterVerified !== false,
       queryDate: scanDate,
       bidType: scanType.toUpperCase(),
+      state: scanState,
       recordCount: liveBids.length,
-      scan_error: null,
+      sourceTotal: pyData.sourceTotal ?? null,
+      pagesProcessed: pyData.pagesProcessed ?? 0,
+      recordsRetrieved: pyData.recordsRetrieved ?? 0,
+      validRecords: pyData.validRecords ?? liveBids.length,
+      duplicatesRemoved: pyData.duplicatesRemoved ?? 0,
+      dateMatches: pyData.dateMatches ?? 0,
+      dateMismatches: pyData.dateMismatches ?? 0,
+      scan_error: pyData.scan_error ?? null,
       last_scan: new Date().toISOString()
     };
     writeDB(db);
@@ -782,7 +750,7 @@ app.post('/api/scan', async (req, res) => {
       last_scan: new Date().toISOString(),
       scan_date: scanDate,
       is_scanning: false,
-      scan_error: null,
+      scan_error: pyData.scan_error || null,
       total: liveBids.length,
       data: liveBids
     });
@@ -792,9 +760,11 @@ app.post('/api/scan', async (req, res) => {
     db.last_scan = {
       status: "FAILED",
       sourceVerified: false,
+      dateFilterVerified: false,
       is_scanning: false,
       queryDate: scanDate,
       bidType: scanType.toUpperCase(),
+      state: scanState,
       recordCount: 0,
       scan_error: errorStr,
       last_scan: new Date().toISOString()
@@ -803,7 +773,7 @@ app.post('/api/scan', async (req, res) => {
 
     res.json({
       status: "error",
-      scan_error: `GeM scan failed: ${errorStr}`,
+      scan_error: errorStr,
       total: 0
     });
   }

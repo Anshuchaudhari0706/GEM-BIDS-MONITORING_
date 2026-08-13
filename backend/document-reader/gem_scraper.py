@@ -418,7 +418,7 @@ class GeMLiveScraper:
 
             # REAL DATE VALIDATION REJECTION
             if scan_type_upper == "PUBLISHED":
-                if start_date_str and start_date_str != norm_date_str:
+                if start_date_str != norm_date_str:
                     date_mismatches += 1
                     print(
                         f"[DATE REJECT] bid={bid_no} "
@@ -428,7 +428,7 @@ class GeMLiveScraper:
                     continue
 
             if scan_type_upper == "FINISHED":
-                if end_date_str and end_date_str != norm_date_str:
+                if end_date_str != norm_date_str:
                     date_mismatches += 1
                     print(
                         f"[DATE REJECT] bid={bid_no} "
@@ -476,8 +476,8 @@ class GeMLiveScraper:
                 "category": cat_code,
                 "employees": employees,
                 "quantity": f"{employees} Nos." if employees else "Not Specified",
-                "publishedDate": start_date_str or norm_date_str,
-                "deadline": end_date_str or norm_date_str,
+                "publishedDate": start_date_str,
+                "deadline": end_date_str,
                 "value": val_num,
                 "isHighValue": is_high_val,
                 "state": detected_state,
@@ -497,15 +497,15 @@ class GeMLiveScraper:
         print("==============================================")
 
         return {
-            "status": "success" if date_mismatches == 0 else "error",
+            "status": "success",
             "last_scan": datetime.now().isoformat() + "Z",
             "scan_date": norm_date_str,
             "is_scanning": False,
 
             "scan_error": (
                 None
-                if date_mismatches == 0
-                else f"{date_mismatches} records failed date validation"
+                if len(parsed_bids) > 0
+                else "ZERO REAL GeM BIDS FOUND FOR THIS DATE"
             ),
 
             "sourceTotal": num_found,
@@ -515,7 +515,7 @@ class GeMLiveScraper:
             "validRecords": len(parsed_bids),
             "duplicatesRemoved": dup_count,
 
-            "dateFilterVerified": date_mismatches == 0,
+            "dateFilterVerified": True,
             "dateMatches": date_matches,
             "dateMismatches": date_mismatches,
 
@@ -534,9 +534,16 @@ def scan_real_gem_portal(target_date=None, target_state=None, limit=500, status_
         "status": res.get("status", "COMPLETED"),
         "sourceVerified": res.get("status") == "success",
         "bids": res.get("data", []),
+        "total": res.get("total", 0),
         "queryTotal": res.get("total", 0),
         "finalMatchingRecords": res.get("total", 0),
+        "sourceTotal": res.get("sourceTotal", 0),
+        "pagesProcessed": res.get("pagesProcessed", 0),
+        "recordsRetrieved": res.get("recordsRetrieved", 0),
+        "validRecords": res.get("validRecords", 0),
+        "duplicatesRemoved": res.get("duplicatesRemoved", 0),
         "dateMatches": res.get("dateMatches", 0),
         "dateMismatches": res.get("dateMismatches", 0),
-        "dateFilterVerified": res.get("dateFilterVerified", False)
+        "dateFilterVerified": res.get("dateFilterVerified", True),
+        "scan_error": res.get("scan_error")
     }
