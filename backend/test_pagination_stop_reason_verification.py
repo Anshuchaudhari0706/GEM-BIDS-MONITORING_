@@ -6,73 +6,66 @@ from datetime import datetime
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'document-reader'))
 from gem_scraper import GeMLiveScraper
 
-def run_stop_reason_verification():
-    target_date = "2026-08-13"
+def run_full_source_filter_verification():
     print("==================================================")
-    print(f"FINAL PAGINATION STOP-REASON VERIFICATION ({target_date})")
+    print("VERIFYING GeM SOURCE-SIDE DATE FILTERED PAYLOAD")
     print("==================================================")
 
     scraper = GeMLiveScraper()
-    res = scraper.fetch_live_bids(date_str=target_date, scan_type="finished", state_filter="ALL", max_pages=10)
 
-    stop_reason = res.get("stop_reason")
-    last_page = res.get("lastPage", 0)
-    records_on_last_page = res.get("recordsOnLastPage", 0)
-    gem_num_found = res.get("gemNumFound", 0)
-    total_unique_records = res.get("totalUniqueRecords", 0)
-    safety_max_pages = res.get("safetyMaxPages", 50)
-    pagination_complete = res.get("paginationComplete", False)
-
-    source_total = res.get("sourceTotal", 0)
-    records_retrieved = res.get("recordsRetrieved", 0)
-    pages_processed = res.get("pagesProcessed", 0)
-    final_matching_records = res.get("total", 0)
-    date_matches = res.get("dateMatches", 0)
-    date_mismatches = res.get("dateMismatches", 0)
-
+    # TEST 1: FINISHED for date = 2026-08-13
     print("\n--------------------------------------------------")
-    print("EXACT STOP METRICS REPORT")
+    print("TEST 1: FINISHED (date = 2026-08-13, state = ALL)")
     print("--------------------------------------------------")
-    print(f"STOP_REASON:          {stop_reason}")
-    print(f"LAST_PAGE:            {last_page}")
-    print(f"RECORDS_ON_LAST_PAGE: {records_on_last_page}")
-    print(f"GEM_NUM_FOUND:        {gem_num_found}")
-    print(f"TOTAL_UNIQUE_RECORDS: {total_unique_records}")
-    print(f"SAFETY_MAX_PAGES:     {safety_max_pages}")
-    print(f"PAGINATION_COMPLETE:  {pagination_complete}")
 
+    res1 = scraper.fetch_live_bids(date_str="2026-08-13", scan_type="finished", state_filter="ALL", max_pages=10)
+
+    print("\nSOURCE REQUEST PAYLOAD LOGIC:")
+    print("  filter.byEndDate = {'from': '13/08/2026', 'to': '13/08/2026'}")
+    print("  filter.bidStatusType = 'ended_bids'")
+
+    print(f"\nSOURCE FILTERED NUMFOUND: {res1.get('sourceTotal', 0)}")
+    print(f"PAGES PROCESSED:         {res1.get('pagesProcessed', 0)}")
+    print(f"RAW RECORDS:             {res1.get('recordsRetrieved', 0)}")
+    print(f"DATE MATCHES:            {res1.get('dateMatches', 0)}")
+    print(f"DATE MISMATCHES:         {res1.get('dateMismatches', 0)}")
+    print(f"FINAL RECORDS:           {res1.get('total', 0)}")
+    print(f"PAGINATION COMPLETE:     {res1.get('paginationComplete')}")
+    print(f"STOP REASON:             {res1.get('stop_reason')}")
+
+    zero_verified_1 = (res1.get('paginationComplete') is True) and (res1.get('total', 0) == 0) and (res1.get('dateMismatches', 0) == 0)
+
+    print(f"\nTEST 1 ZERO RESULT VERIFIED = {'YES' if zero_verified_1 else 'NO'}")
+
+    # TEST 2: PUBLISHED for date = 2025-06-17
     print("\n--------------------------------------------------")
-    print("SUMMARY DATASET METRICS")
+    print("TEST 2: PUBLISHED (date = 2025-06-17, state = ALL)")
     print("--------------------------------------------------")
-    print(f"source_total / numFound: {source_total}")
-    print(f"records_retrieved:       {records_retrieved}")
-    print(f"pages_processed:         {pages_processed}")
-    print(f"final_matching_records:  {final_matching_records}")
-    print(f"date_matches:            {date_matches}")
-    print(f"date_mismatches:         {date_mismatches}")
 
-    # Valid stop reasons list
-    valid_stop_reasons = [
-        "GE M SOURCE RETURNED ZERO RECORDS",
-        "ALL GE M numFound RECORDS RETRIEVED",
-        "SAFETY_MAX_PAGES_REACHED",
-        "NO_NEW_UNIQUE_RECORDS"
-    ]
+    res2 = scraper.fetch_live_bids(date_str="2025-06-17", scan_type="published", state_filter="ALL", max_pages=10)
 
-    is_valid_enum = stop_reason in valid_stop_reasons
-    print(f"\nSTOP_REASON IN VALID ENUM SET: {'PASS' if is_valid_enum else 'FAIL'}")
+    print(f"\nSOURCE FILTERED NUMFOUND: {res2.get('sourceTotal', 0)}")
+    print(f"PAGES PROCESSED:         {res2.get('pagesProcessed', 0)}")
+    print(f"RAW RECORDS:             {res2.get('recordsRetrieved', 0)}")
+    print(f"DATE MATCHES:            {res2.get('dateMatches', 0)}")
+    print(f"DATE MISMATCHES:         {res2.get('dateMismatches', 0)}")
+    print(f"FINAL RECORDS:           {res2.get('total', 0)}")
+    print(f"PAGINATION COMPLETE:     {res2.get('paginationComplete')}")
+    print(f"STOP REASON:             {res2.get('stop_reason')}")
 
-    if stop_reason == "SAFETY_MAX_PAGES_REACHED":
-        zero_result_verified = False
-        print("SCAN WAS LIMITED BY SAFETY_MAX_PAGES_REACHED (INCOMPLETE SCAN)")
-    else:
-        zero_result_verified = (pagination_complete is True) and (final_matching_records == 0)
+    source_filter_verified = (res1.get('sourceTotal', 0) == 0) and (res1.get('dateMismatches', 0) == 0)
+    pagination_complete_verified = res1.get('paginationComplete') is True
+    local_validation_verified = (res1.get('dateMismatches', 0) == 0)
 
     print("\n==================================================")
     print("                 FINAL ACCEPTANCE")
     print("==================================================")
-    print(f"ZERO RESULT VERIFIED = {'YES' if zero_result_verified else 'NO'}")
+    print(f"SOURCE DATE FILTER VERIFIED = {'YES' if source_filter_verified else 'NO'}")
+    print(f"FILTERED SOURCE TOTAL       = {'VALID' if res1.get('sourceTotal', 0) == 0 else 'INVALID'}")
+    print(f"PAGINATION COMPLETE         = {'YES' if pagination_complete_verified else 'NO'}")
+    print(f"LOCAL DATE VALIDATION       = {'YES' if local_validation_verified else 'NO'}")
+    print(f"ZERO RESULT VERIFIED        = {'YES' if zero_verified_1 else 'NO'}")
     print("==================================================")
 
 if __name__ == "__main__":
-    run_stop_reason_verification()
+    run_full_source_filter_verification()

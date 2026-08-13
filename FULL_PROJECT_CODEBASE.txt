@@ -319,23 +319,34 @@ class GeMLiveScraper:
                     "page": page,
                     "param": {
                         "search": state_filter if state_filter != "ALL" else "",
-                        "sort": "Bid-Start-Date-Latest"
+                        "searchBid": "",
+                        "searchType": "fullText"
+                    },
+                    "filter": {
+                        "bidStatusType": "all_bids" if scan_type_upper == "ALL" else ("ongoing_bids" if scan_type_upper == "PUBLISHED" else "ended_bids"),
+                        "byType": "all",
+                        "highBidValue": "",
+                        "sort": "Bid-Start-Date-Latest" if scan_type_upper == "PUBLISHED" else "Bid-End-Date-Oldest"
                     }
                 }
 
                 # Published tenders must be filtered by REAL bid start date.
                 if scan_type_upper == "PUBLISHED":
-                    payload_obj["param"]["byStartDate"] = {
+                    date_filter = {
                         "from": gem_date_formatted,
                         "to": gem_date_formatted
                     }
+                    payload_obj["filter"]["byStartDate"] = date_filter
+                    payload_obj["param"]["byStartDate"] = date_filter
 
                 # Finished tenders must be filtered by REAL bid end date.
                 elif scan_type_upper == "FINISHED":
-                    payload_obj["param"]["byEndDate"] = {
+                    date_filter = {
                         "from": gem_date_formatted,
                         "to": gem_date_formatted
                     }
+                    payload_obj["filter"]["byEndDate"] = date_filter
+                    payload_obj["param"]["byEndDate"] = date_filter
 
                 post_data = {
                     'payload': json.dumps(payload_obj),
@@ -345,6 +356,19 @@ class GeMLiveScraper:
                 res = s.post(GEM_ALL_BIDS_DATA_URL, data=post_data, verify=False, timeout=12)
 
                 if res.status_code != 200:
+                    # Check if GeM returned 404 "No data found" JSON
+                    try:
+                        err_json = res.json()
+                        if isinstance(err_json, dict) and err_json.get("message") == "No data found":
+                            print(f"[GE M] PAGE {page}: GeM source returned 'No data found' (0 records found for date {norm_date_str}).")
+                            records_on_last_page = 0
+                            stop_reason = "GE M SOURCE RETURNED ZERO RECORDS"
+                            pagination_complete = True
+                            error_msg = None
+                            break
+                    except Exception:
+                        pass
+
                     error_msg = f"GeM API returned HTTP {res.status_code}"
                     print(f"[GE M] ERROR: {error_msg} Content-Type: {res.headers.get('content-type')} Preview: {res.text[:200]}")
                     break
