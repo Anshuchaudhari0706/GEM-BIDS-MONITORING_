@@ -267,10 +267,10 @@ class GeMLiveScraper:
         """
         try:
             dt_obj = datetime.strptime(date_str, "%Y-%m-%d")
-            gem_date_formatted = dt_obj.strftime("%d/%m/%Y")
+            gem_date_formatted = dt_obj.strftime("%m/%d/%Y")
             norm_date_str = date_str
         except Exception:
-            gem_date_formatted = datetime.now().strftime("%d/%m/%Y")
+            gem_date_formatted = datetime.now().strftime("%m/%d/%Y")
             norm_date_str = datetime.now().strftime("%Y-%m-%d")
 
         scan_type_upper = (scan_type or "published").upper()
