@@ -531,8 +531,9 @@ def scan_real_gem_portal(target_date=None, target_state=None, limit=500, status_
         state_filter=target_state or "ALL"
     )
     return {
-        "status": res.get("status", "COMPLETED"),
+        "status": res.get("status", "success"),
         "sourceVerified": res.get("status") == "success",
+        "data": res.get("data", []),
         "bids": res.get("data", []),
         "total": res.get("total", 0),
         "queryTotal": res.get("total", 0),

@@ -147,7 +147,7 @@ export async function fetchTenders(token, filters = {}) {
 }
 
 export async function triggerGeMScan(token, scanParams) {
-  const { ok, data } = await safeJsonFetch(`${API_BASE}/tenders/scan`, {
+  const { ok, data } = await safeJsonFetch(`${API_BASE}/scan`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -155,7 +155,7 @@ export async function triggerGeMScan(token, scanParams) {
     },
     body: JSON.stringify(scanParams)
   });
-  if (!ok) throw new Error(data.error || 'Failed to execute GeM Portal Scan');
+  if (!ok) throw new Error(data.scan_error || data.error || 'Failed to execute GeM Portal Scan');
   return data;
 }
 

@@ -441,11 +441,38 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
 
   console.log(`[Dashboard API] status = ${reqStatus}, date = ${targetDate}, state = ${state || 'ALL'}, services = ${services || 'ALL'}`);
   console.log(`[Dashboard API] historicalCount = ${totalStored}`);
+  console.log(`[Dashboard] lastScan.status=${lastScan.status} lastScan.sourceVerified=${lastScan.sourceVerified} lastScan.queryDate=${lastScan.queryDate} lastScan.recordCount=${lastScan.recordCount} lastScan.scan_error=${lastScan.scan_error}`);
 
-  // Check if current scan failed or forceFail is requested
-  const isFailedScan = forceFail === 'true' || lastScan.sourceVerified === false || lastScan.status === "FAILED";
+  // Handle NO_SCAN state
+  if (lastScan.status === "NO_SCAN") {
+    return res.json({
+      scan: {
+        scanId: "NO_SCAN",
+        status: "NO_SCAN",
+        sourceVerified: false,
+        queryDate: targetDate,
+        bidType: reqStatus,
+        recordCount: 0,
+        error: "No live GeM scan has been completed"
+      },
+      historicalCount: totalStored,
+      sourceQueryTotal: 0,
+      recordsRetrieved: 0,
+      validRecords: 0,
+      duplicatesRemoved: 0,
+      matchingCount: 0,
+      matchingTenders: 0,
+      total: 0,
+      filters: { date: targetDate, status: reqStatus, state: state || "ALL", services: services || "ALL" },
+      tenders: []
+    });
+  }
+
+  // Handle FAILED scan state
+  const isFailedScan = forceFail === 'true' || lastScan.status === "FAILED";
 
   if (isFailedScan) {
+    const errorMsg = lastScan.scan_error || lastScan.error || "GeM scan failed";
     console.log(`[Dashboard API] SCAN FAILED — returning 0 matching tenders for current query, preserving ${totalStored} historical tenders.`);
     return res.json({
       scan: {
@@ -455,7 +482,7 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
         queryDate: targetDate,
         bidType: reqStatus,
         recordCount: 0,
-        error: lastScan.scan_error || lastScan.error || "GeM source could not be verified"
+        error: errorMsg
       },
       historicalCount: totalStored,
       sourceQueryTotal: 0,
@@ -575,18 +602,19 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
   }
 
   const matchingCount = results.length;
-  console.log(`[Dashboard API] matchingCount = ${matchingCount}`);
+  const currentScanStatus = (lastScan.status === "SOURCE_REACHABLE_ZERO" || matchingCount === 0) ? "SOURCE_REACHABLE_ZERO" : "COMPLETED";
 
   res.json({
     scan: {
       scanId: lastScan.scanId || `SCAN-${targetDate.replace(/-/g, '')}-001`,
-      status: "COMPLETED",
+      status: currentScanStatus,
       sourceVerified: true,
       queryDate: targetDate,
       bidType: reqStatus,
       recordCount: matchingCount,
       sourceTotal: lastScan.sourceTotal || 5713364,
-      sourceQueryTotal: matchingCount
+      sourceQueryTotal: matchingCount,
+      message: matchingCount === 0 ? "GeM source verified — 0 matching bids for selected date." : null
     },
     historicalCount: totalStored,
     sourceQueryTotal: matchingCount,
@@ -610,9 +638,33 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
 app.get('/api/bids', (req, res) => {
   const { date, status, state, category, staffFilter, highValueOnly } = req.query;
   const db = readDB();
+  const lastScan = db.last_scan || { status: "NO_SCAN", sourceVerified: false };
+
+  if (lastScan.status === "FAILED") {
+    return res.json({
+      status: "error",
+      last_scan: lastScan.last_scan || new Date().toISOString(),
+      scan_date: date || lastScan.queryDate || null,
+      is_scanning: false,
+      scan_error: lastScan.scan_error || "GeM scan failed",
+      total: 0,
+      data: []
+    });
+  }
+
+  if (lastScan.status === "NO_SCAN") {
+    return res.json({
+      status: "no_scan",
+      last_scan: null,
+      scan_date: date || null,
+      is_scanning: false,
+      scan_error: "No GeM scan has been performed yet.",
+      total: 0,
+      data: []
+    });
+  }
 
   let filtered = db.tenders || [];
-  const lastScan = db.last_scan || {};
 
   if (status) {
     const stUpper = status.toUpperCase();
@@ -675,8 +727,8 @@ app.get('/api/bids', (req, res) => {
   });
 });
 
-// POST /api/scan (Trigger live scan)
-app.post('/api/scan', async (req, res) => {
+// Single Authoritative Live Scan Handler
+const handleLiveScan = async (req, res) => {
   const { type, state, date } = req.body;
   const scanType = (type || "published").toLowerCase();
   const scanDate = date || new Date().toISOString().split('T')[0];
@@ -690,8 +742,10 @@ app.post('/api/scan', async (req, res) => {
     }, { timeout: 120000 });
 
     const pyData = pyRes.data;
+    const isPyError = pyData.status === 'error';
 
-    if (pyData.status === 'error') {
+    if (isPyError) {
+      const errorMsg = pyData.scan_error || "GeM portal returned error response";
       const db = readDB();
       db.last_scan = {
         status: "FAILED",
@@ -702,14 +756,16 @@ app.post('/api/scan', async (req, res) => {
         bidType: scanType.toUpperCase(),
         state: scanState,
         recordCount: 0,
-        scan_error: pyData.scan_error || "GeM portal returned error response",
+        scan_error: errorMsg,
         last_scan: new Date().toISOString()
       };
       writeDB(db);
 
+      console.log(`[Live Scan] Python status=error sourceVerified=false dateFilterVerified=false records=0 scan_error=${errorMsg}`);
+
       return res.json({
         status: "error",
-        scan_error: pyData.scan_error || "GeM portal returned error response",
+        scan_error: errorMsg,
         total: 0
       });
     }
@@ -723,11 +779,13 @@ app.post('/api/scan', async (req, res) => {
       scanId: scanId
     }));
 
+    const finalStatus = liveBids.length === 0 ? "SOURCE_REACHABLE_ZERO" : "COMPLETED";
+
     const db = readDB();
     db.tenders = liveBids;
     db.last_scan = {
-      status: pyData.status || "COMPLETED",
-      sourceVerified: pyData.sourceVerified !== false,
+      status: finalStatus,
+      sourceVerified: true,
       dateFilterVerified: pyData.dateFilterVerified !== false,
       queryDate: scanDate,
       bidType: scanType.toUpperCase(),
@@ -740,10 +798,12 @@ app.post('/api/scan', async (req, res) => {
       duplicatesRemoved: pyData.duplicatesRemoved ?? 0,
       dateMatches: pyData.dateMatches ?? 0,
       dateMismatches: pyData.dateMismatches ?? 0,
-      scan_error: pyData.scan_error ?? null,
+      scan_error: pyData.scan_error || null,
       last_scan: new Date().toISOString()
     };
     writeDB(db);
+
+    console.log(`[Live Scan] Python status=${pyData.status} sourceVerified=true dateFilterVerified=${pyData.dateFilterVerified !== false} records=${liveBids.length} dateMatches=${pyData.dateMatches ?? 0} dateMismatches=${pyData.dateMismatches ?? 0} scan_error=${pyData.scan_error || null}`);
 
     res.json({
       status: "success",
@@ -771,13 +831,63 @@ app.post('/api/scan', async (req, res) => {
     };
     writeDB(db);
 
+    console.log(`[Live Scan] Python status=FAILED sourceVerified=false records=0 scan_error=${errorStr}`);
+
     res.json({
       status: "error",
       scan_error: errorStr,
       total: 0
     });
   }
-});
+};
+
+// POST /api/scan & POST /api/tenders/scan (Single Authoritative Endpoint)
+app.post('/api/scan', handleLiveScan);
+app.post('/api/tenders/scan', handleLiveScan);
+
+// GET /api/gem/health & GET /api/source-health (Authoritative Health Status)
+const handleSourceHealth = (req, res) => {
+  const db = readDB();
+  const lastScan = db.last_scan || { status: "NO_SCAN", sourceVerified: false };
+
+  if (lastScan.status === "FAILED") {
+    return res.json({
+      status: "FAILED",
+      sourceVerified: false,
+      scan_error: lastScan.scan_error || "GeM scan failed",
+      lastScan
+    });
+  }
+
+  if (lastScan.status === "NO_SCAN") {
+    return res.json({
+      status: "NO_SCAN",
+      sourceVerified: false,
+      scan_error: "No GeM scan has been performed yet.",
+      lastScan
+    });
+  }
+
+  if (lastScan.status === "SOURCE_REACHABLE_ZERO") {
+    return res.json({
+      status: "SOURCE_REACHABLE_ZERO",
+      sourceVerified: true,
+      scan_error: null,
+      message: "GeM source verified — 0 matching bids for selected date.",
+      lastScan
+    });
+  }
+
+  return res.json({
+    status: "VERIFIED_CONNECTED",
+    sourceVerified: true,
+    scan_error: null,
+    lastScan
+  });
+};
+
+app.get('/api/gem/health', handleSourceHealth);
+app.get('/api/source-health', handleSourceHealth);
 
 // GET /api/tenders/detail/* (Single Tender Detailed Audit API supporting bid numbers with slashes)
 app.get('/api/tenders/detail/*', authenticateToken, requireActiveSubscription, (req, res) => {
