@@ -285,6 +285,8 @@ class GeMLiveScraper:
         consecutive_zero_matches = 0
         SAFETY_MAX_PAGES = max_pages or 50
         pagination_complete = False
+        stop_reason = "SAFETY_MAX_PAGES_REACHED"
+        records_on_last_page = 0
 
         try:
             driver = self._init_driver()
@@ -348,10 +350,13 @@ class GeMLiveScraper:
 
                 if not docs:
                     print(f"[GE M] PAGE {page}: records=0 numFound={num_found}. End of pages.")
+                    records_on_last_page = 0
+                    stop_reason = "GE M SOURCE RETURNED ZERO RECORDS"
                     pagination_complete = True
                     break
 
                 pages_processed = page
+                records_on_last_page = len(docs)
                 page_unique = 0
                 page_matches = 0
 
@@ -399,16 +404,23 @@ class GeMLiveScraper:
                 # Completeness Stop Conditions from GeM Source:
                 if len(all_docs) >= num_found and num_found > 0:
                     print(f"[GE M] PAGE {page}: Total numFound={num_found} reached. Pagination complete.")
+                    stop_reason = "ALL GE M numFound RECORDS RETRIEVED"
                     pagination_complete = True
                     break
 
                 if page_unique == 0:
                     print(f"[GE M] PAGE {page}: 0 new unique records from GeM source. Pagination complete.")
+                    stop_reason = "NO_NEW_UNIQUE_RECORDS"
                     pagination_complete = True
                     break
 
-            if pages_processed < SAFETY_MAX_PAGES and not pagination_complete:
+            if pages_processed < SAFETY_MAX_PAGES and not pagination_complete and len(all_docs) > 0:
                 pagination_complete = True
+                if stop_reason == "SAFETY_MAX_PAGES_REACHED":
+                    stop_reason = "NO_NEW_UNIQUE_RECORDS"
+
+            if stop_reason == "SAFETY_MAX_PAGES_REACHED":
+                pagination_complete = False
 
         except Exception as ex:
             error_msg = f"GeM Scanner exception: {str(ex)}"
@@ -424,6 +436,7 @@ class GeMLiveScraper:
         if error_msg and len(all_docs) == 0:
             return {
                 "status": "error",
+                "stop_reason": "GE M SOURCE RETURNED ZERO RECORDS",
                 "scan_error": error_msg,
                 "total": 0,
                 "data": []
@@ -581,6 +594,7 @@ class GeMLiveScraper:
         print(f"Selected scan date : {norm_date_str}")
         print(f"Scan type          : {scan_type_upper}")
         print(f"Pages processed    : {pages_processed}")
+        print(f"Stop Reason        : {stop_reason}")
         print(f"Pagination Complete: {pagination_complete}")
         print(f"Date matches       : {date_matches}")
         print(f"Date mismatches    : {date_mismatches}")
@@ -601,6 +615,13 @@ class GeMLiveScraper:
         return {
             "status": scan_status_val,
             "paginationComplete": pagination_complete,
+            "stop_reason": stop_reason,
+            "lastPage": pages_processed,
+            "recordsOnLastPage": records_on_last_page,
+            "gemNumFound": num_found,
+            "totalUniqueRecords": len(seen_bids),
+            "safetyMaxPages": SAFETY_MAX_PAGES,
+
             "last_scan": datetime.now().isoformat() + "Z",
             "scan_date": norm_date_str,
             "scan_type": scan_type_upper,
