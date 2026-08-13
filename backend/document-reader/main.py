@@ -46,16 +46,16 @@ def run_diagnostic_endpoint():
 @app.post("/api/scan")
 def scan_tenders_endpoint(req: ScanRequest):
     scan_type = (req.type or "published").lower()
-    res = scan_real_gem_portal(req.date, req.state, 500, scan_type.upper())
+    res = scan_real_gem_portal(req.date, req.state, None, scan_type.upper())
 
     return {
-        "success": res.get("status") == "success",
+        "success": res.get("status") in ("success", "SOURCE_REACHABLE_ZERO"),
         "type": scan_type,
         "date": req.date,
         "state": req.state,
 
         "status": res.get("status"),
-        "sourceVerified": res.get("sourceVerified", False),
+        "sourceVerified": res.get("sourceVerified", res.get("status") in ("success", "SOURCE_REACHABLE_ZERO")),
         "queryVerified": res.get("queryVerified", False),
         "paginationComplete": res.get("paginationComplete", False),
         "dateFilterVerified": res.get("dateFilterVerified", False),
@@ -67,11 +67,15 @@ def scan_tenders_endpoint(req: ScanRequest):
         "recordsRetrieved": res.get("recordsRetrieved", 0),
         "validRecords": res.get("validRecords", 0),
         "duplicatesRemoved": res.get("duplicatesRemoved", 0),
-
         "dateMatches": res.get("dateMatches", 0),
         "dateMismatches": res.get("dateMismatches", 0),
 
         "finalMatchingRecords": res.get("total", 0),
+        "stop_reason": res.get("stop_reason"),
+        "gemNumFound": res.get("gemNumFound"),
+        "safetyMaxPages": res.get("safetyMaxPages"),
+        "closingTodayCount": res.get("closingTodayCount", 0),
+        "endedCount": res.get("endedCount", 0),
         "count": len(res.get("data", [])),
         "bids": res.get("data", []),
 

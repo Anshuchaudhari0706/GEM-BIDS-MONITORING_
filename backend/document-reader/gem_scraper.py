@@ -253,29 +253,34 @@ class GeMLiveScraper:
             print(f"[GE M] Session acquisition notice: {e}")
         finally:
             if should_quit and driver:
-                try:
-                    driver.quit()
-                except:
-                    pass
-
         return csrf_key, csrf_val, cookies_dict
 
-    def fetch_live_bids(self, date_str="2026-08-12", scan_type="published", state_filter="ALL", max_pages=20):
+    def fetch_live_bids(self, date_str=None, scan_type="published", state_filter="ALL", max_pages=None):
         """
         Executes live scan using browser session & POST /all-bids-data with root-level "page": page.
         date_str expected in YYYY-MM-DD format. Converted to DD/MM/YYYY for GeM payload.
         Returns dict with status, bids, and diagnostic counts.
         """
+        if not date_str:
+            return {
+                "status": "error", "paginationComplete": False,
+                "stop_reason": "MISSING_SCAN_DATE",
+                "scan_error": "A scan date is required; no fallback date is allowed.",
+                "total": 0, "data": []
+            }
         try:
             dt_obj = datetime.strptime(date_str, "%Y-%m-%d")
-            gem_date_formatted = dt_obj.strftime("%m/%d/%Y")
-            norm_date_str = date_str
-        except Exception:
-            gem_date_formatted = datetime.now().strftime("%m/%d/%Y")
-            norm_date_str = datetime.now().strftime("%Y-%m-%d")
+            gem_date_formatted = dt_obj.strftime("%d/%m/%Y")
+            norm_date_str = dt_obj.strftime("%Y-%m-%d")
+        except ValueError:
+            return {
+                "status": "error", "paginationComplete": False,
+                "stop_reason": "INVALID_SCAN_DATE",
+                "scan_error": f"Invalid scan date: {date_str}. Expected YYYY-MM-DD.",
+                "total": 0, "data": []
+            }
 
         scan_type_upper = (scan_type or "published").upper()
-
         driver = None
         all_docs = []
         seen_bids = set()
@@ -283,8 +288,6 @@ class GeMLiveScraper:
         num_found = 0
         error_msg = None
         pages_processed = 0
-        consecutive_zero_matches = 0
-        SAFETY_MAX_PAGES = max_pages or 50
         pagination_complete = False
         stop_reason = "SAFETY_MAX_PAGES_REACHED"
         records_on_last_page = 0
@@ -304,7 +307,7 @@ class GeMLiveScraper:
             })
 
             EMERGENCY_CEILING = 1000
-            SAFETY_MAX_PAGES = max_pages or EMERGENCY_CEILING
+            SAFETY_MAX_PAGES = max_pages if max_pages is not None else EMERGENCY_CEILING
             page = 1
 
             while page <= SAFETY_MAX_PAGES:
@@ -330,7 +333,6 @@ class GeMLiveScraper:
                         "to": gem_date_formatted
                     }
                     payload_obj["filter"]["byStartDate"] = date_filter
-                    payload_obj["param"]["byStartDate"] = date_filter
 
                 # Finished tenders must be filtered by REAL bid end date.
                 elif scan_type_upper == "FINISHED":
@@ -339,7 +341,6 @@ class GeMLiveScraper:
                         "to": gem_date_formatted
                     }
                     payload_obj["filter"]["byEndDate"] = date_filter
-                    payload_obj["param"]["byEndDate"] = date_filter
 
                 post_data = {
                     'payload': json.dumps(payload_obj),
@@ -408,17 +409,6 @@ class GeMLiveScraper:
                 page_unique = 0
                 page_matches = 0
 
-                first_date_val = "Unknown"
-                last_date_val = "Unknown"
-
-                if docs:
-                    if scan_type_upper == "PUBLISHED":
-                        first_date_val = normalize_gem_date(unwrap_val(docs[0].get("final_start_date_sort")))
-                        last_date_val = normalize_gem_date(unwrap_val(docs[-1].get("final_start_date_sort")))
-                    else:
-                        first_date_val = normalize_gem_date(unwrap_val(docs[0].get("final_end_date_sort")))
-                        last_date_val = normalize_gem_date(unwrap_val(docs[-1].get("final_end_date_sort")))
-
                 for d in docs:
                     bid_no_list = d.get('b_bid_number', [])
                     bid_no = bid_no_list[0] if isinstance(bid_no_list, list) and len(bid_no_list) > 0 else d.get('bidNumber')
@@ -440,7 +430,6 @@ class GeMLiveScraper:
                         all_docs.append(d)
                         page_unique += 1
 
-                exp_pages = math.ceil(num_found / 10) if num_found > 0 else 0
                 print(
                     f"PAGE {page}\n"
                     f"records={len(docs)}\n"
@@ -448,7 +437,6 @@ class GeMLiveScraper:
                     f"duplicates={dup_count}\n"
                     f"collected={len(seen_bids)}\n"
                     f"numFound={num_found}\n"
-                    f"expected_pages={exp_pages}\n"
                 )
 
                 # Primary Stop Condition: Complete Filtered Dataset Retrieved
@@ -534,11 +522,24 @@ class GeMLiveScraper:
 
             date_matches += 1
 
-            cat_raw = str(unwrap_val(doc.get('b_category_name')) or unwrap_val(doc.get('bd_category_name')) or 'Custom Bid')
-            cat_code = detect_category_code(cat_raw)
+            cat_raw = str(unwrap_val(doc.get('b_category_name')) or unwrap_val(doc.get('bd_category_name')) or '')
+            classification_text = full_text
+            cat_code = detect_category_code(classification_text)
+            if cat_code == "OTHER" and cat_raw:
+                cat_code = detect_category_code(cat_raw)
+
+            display_title = (
+                unwrap_val(doc.get('b_bid_description'))
+                or unwrap_val(doc.get('bd_bid_description'))
+                or unwrap_val(doc.get('b_title'))
+                or unwrap_val(doc.get('title'))
+                or unwrap_val(doc.get('bid_title'))
+                or cat_raw
+                or 'GeM Tender'
+            )
+            display_title = str(display_title)[:300]
 
             dept_raw = str(unwrap_val(doc.get('ba_official_details_deptName')) or unwrap_val(doc.get('ba_official_details_minName')) or unwrap_val(doc.get('b_department_name')) or 'Government Department')
-            
             employees = extract_manpower_count_from_json(doc, full_text)
             val_num, is_high_val = extract_high_value_info(doc, full_text)
             detected_state = detect_state_from_text(full_text)
@@ -569,27 +570,25 @@ class GeMLiveScraper:
             bid_status_label = "PUBLISHED TODAY" if scan_type_upper == "PUBLISHED" else "FINISHED"
             end_datetime_iso = None
 
+            deadline_time = None
+            deadline_datetime = None
             if scan_type_upper == "FINISHED":
-                end_solr_str = str(end_solr) if end_solr else ""
-                now_dt = datetime.now()
+                end_solr_str = str(unwrap_val(end_solr) or "").strip()
                 deadline_dt = None
-
-                if 'T' in end_solr_str:
-                    try:
-                        clean_iso = end_solr_str.replace('Z', '')
+                try:
+                    clean_iso = end_solr_str.replace('Z', '')
+                    if 'T' in clean_iso:
                         deadline_dt = datetime.fromisoformat(clean_iso)
-                    except Exception:
-                        deadline_dt = None
-
-                if not deadline_dt and end_date_str:
-                    try:
-                        deadline_dt = datetime.strptime(end_date_str, "%Y-%m-%d")
-                    except Exception:
-                        deadline_dt = None
+                    elif ' ' in clean_iso:
+                        deadline_dt = datetime.strptime(clean_iso, "%Y-%m-%d %H:%M:%S")
+                except Exception:
+                    deadline_dt = None
 
                 if deadline_dt:
-                    end_datetime_iso = deadline_dt.isoformat()
-                    if now_dt < deadline_dt:
+                    deadline_datetime = deadline_dt.isoformat()
+                    deadline_time = deadline_dt.strftime("%I:%M %p")
+                    india_now = datetime.now(ZoneInfo("Asia/Kolkata")).replace(tzinfo=None)
+                    if india_now < deadline_dt:
                         bid_status = "CLOSING_TODAY"
                         bid_status_label = "CLOSING TODAY"
                     else:
@@ -598,17 +597,23 @@ class GeMLiveScraper:
                 else:
                     bid_status = "ENDED"
                     bid_status_label = "ENDED"
+            else:
+                bid_status = "ENDED"
+                bid_status_label = "ENDED"
 
             parsed_bids.append({
                 "id": str(bid_no),
-                "title": cat_raw,
+                "title": display_title,
                 "department": dept_raw,
                 "category": cat_code,
                 "employees": employees,
                 "quantity": f"{employees} Nos." if employees else "Not Specified",
                 "publishedDate": start_date_str,
                 "deadline": end_date_str,
-                "endDatetime": end_datetime_iso,
+                "deadlineDate": end_date_str,
+                "deadlineTime": deadline_time,
+                "deadlineDateTime": deadline_datetime,
+                "endDatetime": deadline_datetime,
                 "value": val_num,
                 "isHighValue": is_high_val,
                 "state": detected_state,
@@ -697,13 +702,15 @@ class GeMLiveScraper:
 def scan_real_gem_portal(target_date=None, target_state=None, limit=500, status_filter="PUBLISHED"):
     scraper = GeMLiveScraper()
     res = scraper.fetch_live_bids(
-        date_str=target_date or datetime.now().strftime("%Y-%m-%d"),
+        date_str=target_date,
         scan_type=status_filter or "published",
         state_filter=target_state or "ALL"
     )
+    final_status = res.get("status", "success")
+    source_verified = final_status in ("success", "SOURCE_REACHABLE_ZERO")
     return {
-        "status": res.get("status", "success"),
-        "sourceVerified": res.get("status") == "success",
+        "status": final_status,
+        "sourceVerified": source_verified,
         "data": res.get("data", []),
         "bids": res.get("data", []),
         "total": res.get("total", 0),

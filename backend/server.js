@@ -420,13 +420,19 @@ app.post('/api/payment/verify', authenticateToken, (req, res) => {
     payment: paymentLog
   });
 });
+
 // GET /api/tenders (Search, Scope, ScanId & Structured Filtering)
 app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res) => {
   const { search, category, services, status, state, selectedDate, date, scanId, includeHistorical, valRange, minVal, maxVal, manpowerType, minStaff, maxStaff, sortBy, forceFail } = req.query;
   const db = readDB();
   const totalStored = (db.tenders || []).length;
-  const targetDate = selectedDate || date || "2026-08-11";
+  const targetDate = selectedDate || date || null;
   const reqStatus = (status || 'PUBLISHED').toUpperCase();
+
+  if (!targetDate) {
+    return res.status(400).json({ status: 'error', error: 'selectedDate is required. The dashboard must never fall back to an old scan date.' });
+  }
+
   const lastScan = db.last_scan || {
     status: "NO_SCAN",
     sourceVerified: false,
@@ -440,8 +446,6 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
   };
 
   console.log(`[Dashboard API] status = ${reqStatus}, date = ${targetDate}, state = ${state || 'ALL'}, services = ${services || 'ALL'}`);
-  console.log(`[Dashboard API] historicalCount = ${totalStored}`);
-  console.log(`[Dashboard] lastScan.status=${lastScan.status} lastScan.sourceVerified=${lastScan.sourceVerified} lastScan.queryDate=${lastScan.queryDate} lastScan.recordCount=${lastScan.recordCount} lastScan.scan_error=${lastScan.scan_error}`);
 
   // Handle NO_SCAN state
   if (lastScan.status === "NO_SCAN") {
@@ -470,10 +474,8 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
 
   // Handle FAILED scan state
   const isFailedScan = forceFail === 'true' || lastScan.status === "FAILED";
-
   if (isFailedScan) {
     const errorMsg = lastScan.scan_error || lastScan.error || "GeM scan failed";
-    console.log(`[Dashboard API] SCAN FAILED — returning 0 matching tenders for current query, preserving ${totalStored} historical tenders.`);
     return res.json({
       scan: {
         scanId: lastScan.scanId || "SCAN-FAILED-001",
@@ -502,12 +504,20 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
     });
   }
 
+  if (lastScan.queryDate && lastScan.queryDate !== targetDate) {
+    return res.json({ scan: { scanId: lastScan.scanId || "SCAN-DATE-MISMATCH", status: "SCAN_DATE_MISMATCH", sourceVerified: !!lastScan.sourceVerified, queryDate: lastScan.queryDate, requestedDate: targetDate, bidType: reqStatus, recordCount: 0, error: `No live scan exists for selected date ${targetDate}. Last scan is ${lastScan.queryDate}. Please scan the selected date.` }, historicalCount: totalStored, sourceQueryTotal: 0, recordsRetrieved: 0, validRecords: 0, duplicatesRemoved: 0, matchingCount: 0, matchingTenders: 0, total: 0, filters: { date: targetDate, status: reqStatus, state: state || "ALL", services: services || "ALL" }, tenders: [] });
+  }
+
+  if (lastScan.status === "INCOMPLETE") {
+    return res.json({ scan: { scanId: lastScan.scanId || "SCAN-INCOMPLETE", status: "INCOMPLETE", sourceVerified: !!lastScan.sourceVerified, queryDate: lastScan.queryDate || targetDate, bidType: reqStatus, recordCount: 0, error: lastScan.scan_error || "PAGINATION INCOMPLETE" }, historicalCount: totalStored, sourceQueryTotal: lastScan.sourceTotal || 0, recordsRetrieved: lastScan.recordsRetrieved || 0, validRecords: 0, duplicatesRemoved: lastScan.duplicatesRemoved || 0, matchingCount: 0, matchingTenders: 0, total: 0, filters: { date: targetDate, status: reqStatus, state: state || "ALL", services: services || "ALL" }, tenders: [] });
+  }
+
   let results = [...(db.tenders || [])];
   const now = new Date();
 
   // 1. Separate CURRENT_SCAN from HISTORICAL (Unless includeHistorical=true or explicit historical scanId)
-  if (includeHistorical !== 'true' && (!scanId || scanId === 'SCAN-20260811-001')) {
-    results = results.filter(t => t.dataOrigin === "CURRENT_SCAN" || t.scanId === "SCAN-20260811-001");
+  if (includeHistorical !== 'true') {
+    results = results.filter(t => t.dataOrigin === "CURRENT_SCAN");
   }
 
   // 2. Dynamic Real-time Status & Strict Date Validation Layer
@@ -642,7 +652,7 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
       queryDate: targetDate,
       bidType: reqStatus,
       recordCount: matchingCount,
-      sourceTotal: lastScan.sourceTotal || 5713364,
+      sourceTotal: lastScan.sourceTotal ?? null,
       sourceQueryTotal: matchingCount,
       message: matchingCount === 0 ? "GeM source verified — 0 matching bids for selected date." : null,
       closingTodayCount: reqStatus === 'FINISHED' ? closingTodayCount : 0,
@@ -701,7 +711,6 @@ app.get('/api/bids', (req, res) => {
   }
 
   let filtered = db.tenders || [];
-
   if (status) {
     const stUpper = status.toUpperCase();
     filtered = filtered.filter(t => (t.status || 'PUBLISHED').toUpperCase() === stUpper);
@@ -767,10 +776,20 @@ app.get('/api/bids', (req, res) => {
 const handleLiveScan = async (req, res) => {
   const { type, state, date } = req.body;
   const scanType = (type || "published").toLowerCase();
-  const scanDate = date || new Date().toISOString().split('T')[0];
+  const scanDate = date;
   const scanState = state || "ALL";
 
+  if (!scanDate || !/^\d{4}-\d{2}-\d{2}$/.test(scanDate)) {
+    return res.status(400).json({ status: "FAILED", sourceVerified: false, verified: false, scan_error: "A valid scan date in YYYY-MM-DD format is required.", total: 0 });
+  }
+
   try {
+    {
+      const db = readDB();
+      db.tenders = [];
+      db.last_scan = { status: "SCANNING", sourceVerified: false, dateFilterVerified: false, is_scanning: true, queryDate: scanDate, bidType: scanType.toUpperCase(), state: scanState, recordCount: 0, scan_error: null, last_scan: new Date().toISOString() };
+      writeDB(db);
+    }
     const pyRes = await axios.post('http://localhost:8000/api/scan', {
       date: scanDate,
       type: scanType,
@@ -778,14 +797,16 @@ const handleLiveScan = async (req, res) => {
     }, { timeout: 120000 });
 
     const pyData = pyRes.data;
-    const isPyError = pyData.status === 'error';
+    const isPyError = ['error', 'INCOMPLETE', 'FAILED'].includes(pyData.status);
 
     if (isPyError) {
       const errorMsg = pyData.scan_error || "GeM portal returned error response";
       const db = readDB();
+      const finalFailureStatus = pyData.status === "INCOMPLETE" ? "INCOMPLETE" : "FAILED";
+      db.tenders = [];
       db.last_scan = {
-        status: "FAILED",
-        sourceVerified: false,
+        status: finalFailureStatus,
+        sourceVerified: pyData.status !== "FAILED",
         dateFilterVerified: false,
         is_scanning: false,
         queryDate: scanDate,
@@ -800,9 +821,10 @@ const handleLiveScan = async (req, res) => {
       console.log(`[Live Scan] Python status=error sourceVerified=false dateFilterVerified=false records=0 scan_error=${errorMsg}`);
 
       return res.json({
-        status: "FAILED",
-        sourceVerified: false,
-        verified: false,
+        status: finalFailureStatus,
+        sourceVerified: pyData.status !== "FAILED",
+        verified: pyData.status !== "FAILED",
+        paginationComplete: pyData.paginationComplete ?? false,
         scan_error: errorMsg,
         total: 0,
         recordsRetrieved: 0,
@@ -819,14 +841,18 @@ const handleLiveScan = async (req, res) => {
       scanId: scanId
     }));
 
-    const finalStatus = liveBids.length === 0 ? "SOURCE_REACHABLE_ZERO" : "COMPLETED";
+    const pythonStatus = pyData.status;
+    const paginationComplete = pyData.paginationComplete === true;
+    const finalStatus = liveBids.length === 0
+      ? "SOURCE_REACHABLE_ZERO"
+      : (pythonStatus === "success" && paginationComplete ? "COMPLETED" : "INCOMPLETE");
 
     const db = readDB();
     db.tenders = liveBids;
     db.last_scan = {
       status: finalStatus,
-      sourceVerified: true,
-      dateFilterVerified: pyData.dateFilterVerified !== false,
+      sourceVerified: finalStatus !== "FAILED",
+      dateFilterVerified: pyData.dateFilterVerified === true,
       queryDate: scanDate,
       bidType: scanType.toUpperCase(),
       state: scanState,
@@ -838,7 +864,13 @@ const handleLiveScan = async (req, res) => {
       duplicatesRemoved: pyData.duplicatesRemoved ?? 0,
       dateMatches: pyData.dateMatches ?? 0,
       dateMismatches: pyData.dateMismatches ?? 0,
-      scan_error: pyData.scan_error || null,
+      paginationComplete: pyData.paginationComplete === true,
+      stop_reason: pyData.stop_reason || null,
+      gemNumFound: pyData.gemNumFound ?? null,
+      safetyMaxPages: pyData.safetyMaxPages ?? null,
+      closingTodayCount: pyData.closingTodayCount ?? 0,
+      endedCount: pyData.endedCount ?? 0,
+      scan_error: finalStatus === "SOURCE_REACHABLE_ZERO" ? null : (pyData.scan_error || null),
       last_scan: new Date().toISOString()
     };
     writeDB(db);
@@ -847,8 +879,9 @@ const handleLiveScan = async (req, res) => {
 
     res.json({
       status: finalStatus,
-      sourceVerified: true,
-      verified: true,
+      sourceVerified: finalStatus !== "FAILED",
+      verified: finalStatus !== "FAILED",
+      paginationComplete: pyData.paginationComplete === true,
       last_scan: new Date().toISOString(),
       scan_date: scanDate,
       is_scanning: false,
@@ -861,6 +894,7 @@ const handleLiveScan = async (req, res) => {
   } catch (err) {
     const db = readDB();
     const errorStr = err.response ? `HTTP ${err.response.status}` : err.message;
+    db.tenders = [];
     db.last_scan = {
       status: "FAILED",
       sourceVerified: false,
