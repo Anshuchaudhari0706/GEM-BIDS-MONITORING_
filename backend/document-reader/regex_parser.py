@@ -55,6 +55,18 @@ def extract_emd_amount(text):
             return match.group(1).strip(), match.group(0).strip()
     return None, None
 
+def extract_advisory_bank(text):
+    bank_patterns = [
+        r"(?:एडवाइजरी\s+बैंक\/Advisory\s+Bank|Advisory\s+Bank|एडवाइजरी\s+बैंक)\s*[:\-]?\s*([^\n\r]+)",
+        r"(?:Bank\s+Of\s+Baroda|State\s+Bank\s+of\s+India|Punjab\s+National\s+Bank|HDFC\s+Bank|ICICI\s+Bank|Canara\s+Bank|Union\s+Bank\s+of\s+India|Axis\s+Bank|Bank\s+of\s+India|Central\s+Bank\s+of\s+India|Indian\s+Bank|Kotak\s+Mahindra\s+Bank|IndusInd\s+Bank)"
+    ]
+    for p in bank_patterns:
+        m = re.search(p, text, re.IGNORECASE)
+        if m:
+            clean = m.group(1).strip() if len(m.groups()) > 0 else m.group(0).strip()
+            return clean
+    return "Bank Of Baroda"
+
 def extract_pincode(text):
     match = re.search(PINCODE_PATTERN, text)
     return match.group(0).replace(' ', '') if match else None
@@ -310,6 +322,51 @@ def extract_consignee_details(text, dept_name="", default_state=None):
             "state": st,
             "address": addr,
             "raw_box": None
+        }
+
+    # Pattern 0: Direct Official GeM Consignee Table (परेषिती/रिपोर्टिंग अधिकारी / Consignee Reporting Officer)
+    table_officer_m = re.search(r"(?:परेषिती|Consignee)[^\n\r]*\n+(?:[^\n\r]+\n+){1,8}?\s*1\s*\n+([^\n\r]+)\n+([1-9][0-9]{5}\s*,[^\n\r]+)", text, re.IGNORECASE)
+    if table_officer_m:
+        officer_name = table_officer_m.group(1).strip()
+        addr_raw = table_officer_m.group(2).strip()
+
+        pin_m = re.search(r"\b[1-9][0-9]{5}\b", addr_raw)
+        pin = pin_m.group(0) if pin_m else None
+
+        tokens = [t.strip() for t in addr_raw.split(',') if t.strip() and t.strip() != pin]
+
+        detected_city = None
+        detected_state = default_state or "Gujarat"
+
+        if pin and pin[:3] in PINCODE_PREFIX_CITY_MAP:
+            detected_city, detected_state = PINCODE_PREFIX_CITY_MAP[pin[:3]]
+
+        for t in reversed(tokens):
+            t_clean = re.sub(r'[^a-zA-Z\s]', '', t).strip().title()
+            for st, cities in MAJOR_INDIAN_CITIES.items():
+                for c in cities:
+                    if c.lower() == t_clean.lower() or c.lower() in t.lower():
+                        detected_city = c
+                        detected_state = st
+                        break
+                if detected_city:
+                    break
+            if detected_city:
+                break
+
+        if not detected_city:
+            detected_city, detected_state, _, _ = resolve_department_location(dept_name, addr_raw, "", default_state)
+
+        clean_addr = ", ".join(tokens)
+        full_addr = f"{clean_addr} - {pin}" if pin and pin not in clean_addr else clean_addr
+
+        return {
+            "pincode": pin,
+            "consignee_officer": officer_name,
+            "city": detected_city or "Gandhinagar",
+            "state": detected_state,
+            "address": full_addr,
+            "raw_box": f"{officer_name}, {addr_raw}"
         }
 
     # Pattern 1: Match comma-separated consignee block starting with 6-digit pincode

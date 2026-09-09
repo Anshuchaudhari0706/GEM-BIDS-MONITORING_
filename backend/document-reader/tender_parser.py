@@ -2,6 +2,7 @@ import re
 from regex_parser import (
     extract_estimated_value,
     extract_emd_amount,
+    extract_advisory_bank,
     extract_pincode,
     extract_state,
     extract_city,
@@ -40,8 +41,9 @@ def parse_tender_document(raw_text, tender_id=None):
         "confidence": val_confidence
     }
 
-    # 3. EMD Amount
+    # 3. EMD Amount & Advisory Bank
     raw_emd_str, matched_emd_line = extract_emd_amount(raw_text)
+    advisory_bank = extract_advisory_bank(raw_text)
     num_emd, emd_display = normalize_currency_to_number(raw_emd_str)
     emd_confidence = evaluate_field_confidence(num_emd, matched_emd_line, is_numeric=True)
 
@@ -50,6 +52,7 @@ def parse_tender_document(raw_text, tender_id=None):
         "currency": "INR" if num_emd else None,
         "raw": raw_emd_str or "Not Specified",
         "display": emd_display or "Not Specified",
+        "advisoryBank": advisory_bank,
         "confidence": emd_confidence
     }
 
@@ -59,11 +62,11 @@ def parse_tender_document(raw_text, tender_id=None):
     pincode = (consignee_info and consignee_info.get("pincode")) or extract_pincode(raw_text)
     state = (consignee_info and consignee_info.get("state")) or extract_state(raw_text) or "Gujarat"
     city = (consignee_info and consignee_info.get("city")) or extract_city(raw_text, state)
-    consignee_officer = consignee_info.get("consignee_officer") if consignee_info else "Consignee / Reporting Officer"
+    consignee_officer = (consignee_info and consignee_info.get("consignee_officer")) or "Consignee / Reporting Officer"
     addr_confidence = evaluate_field_confidence(raw_office_addr, raw_office_addr)
 
     office_address_obj = {
-        "value": raw_office_addr or f"Government Office Complex, {city}, {state} - {pincode or '382010'}",
+        "value": (consignee_info and consignee_info.get("address")) or raw_office_addr or f"Government Office Complex, {city}, {state} - {pincode or '382010'}",
         "city": city,
         "district": city,
         "state": state,
@@ -78,7 +81,8 @@ def parse_tender_document(raw_text, tender_id=None):
         "state": state,
         "pincode": pincode or "Not Specified",
         "consignee_officer": consignee_officer,
-        "value": raw_office_addr or f"Government Office Complex, {city}, {state}",
+        "address": (consignee_info and consignee_info.get("address")) or raw_office_addr or f"Government Office Complex, {city}, {state}",
+        "value": (consignee_info and consignee_info.get("address")) or raw_office_addr or f"Government Office Complex, {city}, {state}",
         "confidence": addr_confidence
     }
 
@@ -100,8 +104,14 @@ def parse_tender_document(raw_text, tender_id=None):
         "bidNumber": bid_number,
         "estimatedValue": estimated_value_obj,
         "emdAmount": emd_amount_obj,
+        "advisoryBank": advisory_bank,
         "officeAddress": office_address_obj,
         "workLocation": work_location_obj,
+        "consignee_officer": consignee_officer,
+        "city": city,
+        "state": state,
+        "pincode": pincode,
+        "address": (consignee_info and consignee_info.get("address")) or raw_office_addr,
         "manpower": manpower_results,
         "totalStaffCount": sum(i["quantity"] for i in manpower_results),
         "parserStatus": "SUCCESS"

@@ -287,15 +287,20 @@ export default function TenderDetailsModal({ tender, onClose }) {
                 <div style={{ background: '#0d1527', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Estimated Tender Value</div>
                   <div style={{ fontSize: '1.2rem', fontWeight: 900, color: 'var(--accent-green)', marginTop: '4px' }}>
-                    {data.estimated_value_original || (data.value ? (data.value >= 10000000 ? `₹${(data.value / 10000000).toFixed(2)} Crores` : `₹${(data.value / 100000).toFixed(2)} Lakhs`) : (data.estimatedValue ? (data.estimatedValue >= 10000000 ? `₹${(data.estimatedValue / 10000000).toFixed(2)} Crores` : `₹${(data.estimatedValue / 100000).toFixed(2)} Lakhs`) : 'As per Minimum Wages'))}
+                    {data.estimated_value_original || (typeof data.estimatedValue === 'object' && data.estimatedValue?.display) || (data.value ? (data.value >= 10000000 ? `₹${(data.value / 10000000).toFixed(2)} Crores` : `₹${(data.value / 100000).toFixed(2)} Lakhs`) : (typeof data.estimatedValue === 'number' ? (data.estimatedValue >= 10000000 ? `₹${(data.estimatedValue / 10000000).toFixed(2)} Crores` : `₹${(data.estimatedValue / 100000).toFixed(2)} Lakhs`) : 'As per Minimum Wages'))}
                   </div>
                 </div>
 
                 <div style={{ background: '#0d1527', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>EMD Amount & Exemption</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>EMD Amount & Advisory Bank</div>
                   <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff', marginTop: '4px' }}>
-                    {data.emd_original || (data.emdAmount ? `₹${data.emdAmount.toLocaleString('en-IN')}` : '₹90,000 (2%)')}
+                    {data.emd_original || (typeof data.emdAmount === 'object' && data.emdAmount?.display) || (typeof data.emdAmount === 'number' ? `₹${data.emdAmount.toLocaleString('en-IN')}` : (tender.emd ? `₹${tender.emd.toLocaleString('en-IN')}` : '₹65,466 (3%)'))}
                   </div>
+                  {(data.advisoryBank || data.advisory_bank || (data.emdAmount && data.emdAmount.advisoryBank)) && (
+                    <div style={{ fontSize: '0.74rem', color: '#38bdf8', marginTop: '4px', fontWeight: 600 }}>
+                      🏦 Bank: {data.advisoryBank || data.advisory_bank || (data.emdAmount && data.emdAmount.advisoryBank)}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -390,15 +395,20 @@ export default function TenderDetailsModal({ tender, onClose }) {
               <div style={{ background: '#0d1527', padding: '18px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
                 <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Estimated Tender Value</div>
                 <div style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--accent-green)', marginTop: '4px' }}>
-                  {data.estimated_value_original || (data.value ? (data.value >= 10000000 ? `₹${(data.value / 10000000).toFixed(2)} Crores` : `₹${(data.value / 100000).toFixed(2)} Lakhs`) : (data.estimatedValue ? (data.estimatedValue >= 10000000 ? `₹${(data.estimatedValue / 10000000).toFixed(2)} Crores` : `₹${(data.estimatedValue / 100000).toFixed(2)} Lakhs`) : 'As per Minimum Wages'))}
+                  {data.estimated_value_original || (typeof data.estimatedValue === 'object' && data.estimatedValue?.display) || (data.value ? (data.value >= 10000000 ? `₹${(data.value / 10000000).toFixed(2)} Crores` : `₹${(data.value / 100000).toFixed(2)} Lakhs`) : (typeof data.estimatedValue === 'number' ? (data.estimatedValue >= 10000000 ? `₹${(data.estimatedValue / 10000000).toFixed(2)} Crores` : `₹${(data.estimatedValue / 100000).toFixed(2)} Lakhs`) : 'As per Minimum Wages'))}
                 </div>
               </div>
 
               <div style={{ background: '#0d1527', padding: '18px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
-                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>EMD Amount</div>
+                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>EMD Amount & Advisory Bank</div>
                 <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#fff', marginTop: '4px' }}>
-                  {data.emd_original || (data.emdAmount ? `₹${data.emdAmount.toLocaleString('en-IN')}` : '₹90,000 (2%)')}
+                  {data.emd_original || (typeof data.emdAmount === 'object' && data.emdAmount?.display) || (typeof data.emdAmount === 'number' ? `₹${data.emdAmount.toLocaleString('en-IN')}` : (tender.emd ? `₹${tender.emd.toLocaleString('en-IN')}` : '₹65,466 (3%)'))}
                 </div>
+                {(data.advisoryBank || data.advisory_bank || (data.emdAmount && data.emdAmount.advisoryBank)) && (
+                  <div style={{ fontSize: '0.8rem', color: '#38bdf8', marginTop: '4px', fontWeight: 600 }}>
+                    🏦 Advisory Bank: {data.advisoryBank || data.advisory_bank || (data.emdAmount && data.emdAmount.advisoryBank)}
+                  </div>
+                )}
               </div>
 
               <div style={{ background: '#0d1527', padding: '18px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
