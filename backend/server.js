@@ -1036,7 +1036,16 @@ const handleTenderEvaluation = async (req, res) => {
     const docUrl = tender.gemLink || `https://bidplus.gem.gov.in/showbidDocument/${rawNumId}`;
     const pyResp = await axios.post('http://localhost:8000/parse', {
       tender_id: tenderId,
-      document_url: docUrl
+      document_url: docUrl,
+      consignee_box: tender.consignee_raw_box || tender.work_location?.raw_consignee_box || null,
+      existing_consignee: tender.consignee_officer,
+      existing_city: tender.city,
+      existing_state: tender.state,
+      existing_pincode: tender.pincode,
+      existing_address: tender.address || tender.office_address,
+      existing_department: tender.department,
+      existing_value: tender.value || tender.estimatedValue,
+      existing_emd: tender.emdAmount
     }, { timeout: 10000 });
     if (pyResp.data && pyResp.data.parserStatus === 'SUCCESS') {
       pyParsed = pyResp.data;
@@ -1061,29 +1070,41 @@ const handleTenderEvaluation = async (req, res) => {
   }
 
   const epbgVal = tender.epbgAmount || Math.round(estVal * 0.03);
-  let city = (pyParsed && pyParsed.officeAddress && pyParsed.officeAddress.city && pyParsed.officeAddress.city !== 'Not Specified' && pyParsed.officeAddress.city !== 'Central Procurement Office')
-    ? pyParsed.officeAddress.city
-    : (tender.city && tender.city !== 'Central Procurement Office' ? tender.city : (tender.work_location?.city && tender.work_location.city !== 'Central Procurement Office' ? tender.work_location.city : "New Delhi"));
-  
-  let state = (pyParsed && pyParsed.officeAddress && pyParsed.officeAddress.state && pyParsed.officeAddress.state !== 'Not Specified' && pyParsed.officeAddress.state !== 'All India')
-    ? pyParsed.officeAddress.state
-    : (tender.state && tender.state !== 'All India' ? tender.state : (tender.work_location?.state && tender.work_location.state !== 'All India' ? tender.work_location.state : "Delhi"));
 
-  let pincode = (pyParsed && pyParsed.officeAddress && pyParsed.officeAddress.pincode && pyParsed.officeAddress.pincode !== 'Not Specified')
-    ? pyParsed.officeAddress.pincode
-    : (tender.pincode || (tender.work_location ? tender.work_location.pincode : (city === "Vadodara" ? "390001" : (city === "Gandhinagar" ? "382010" : "110001"))));
+  // Field Resolution: Prioritize pyParsed (from document reader), then verified tender fields, never fallback to Central Procurement / Dwarka
+  let consigneeRawBox = (pyParsed && pyParsed.officeAddress && pyParsed.officeAddress.raw_consignee_box) || tender.consignee_raw_box || tender.work_location?.raw_consignee_box || null;
 
-  let consigneeOfficer = (pyParsed && pyParsed.officeAddress && pyParsed.officeAddress.consignee_officer && pyParsed.officeAddress.consignee_officer !== 'Not Specified')
-    ? pyParsed.officeAddress.consignee_officer
-    : (tender.consignee_officer || (tender.work_location ? tender.work_location.consignee_officer : "The Superintending Engineer / Consignee Officer"));
+  let consigneeOfficer = (pyParsed && pyParsed.consignee_officer && pyParsed.consignee_officer !== "Consignee / Reporting Officer" && pyParsed.consignee_officer !== "The Superintending Engineer / Consignee Officer")
+    ? pyParsed.consignee_officer
+    : (tender.consignee_officer && tender.consignee_officer !== "Consignee / Reporting Officer" && tender.consignee_officer !== "The Superintending Engineer / Consignee Officer"
+        ? tender.consignee_officer
+        : (tender.work_location?.consignee_officer || "Consignee / Reporting Officer"));
 
-  let consigneeRawBox = (pyParsed && pyParsed.officeAddress && pyParsed.officeAddress.raw_consignee_box)
-    ? pyParsed.officeAddress.raw_consignee_box
-    : (tender.consignee_raw_box || (tender.work_location ? tender.work_location.raw_consignee_box : null));
+  let city = (pyParsed && pyParsed.city && pyParsed.city !== "Not Specified" && pyParsed.city !== "Central Procurement Office" && pyParsed.city !== "New Delhi")
+    ? pyParsed.city
+    : (tender.city && tender.city !== "Not Specified" && tender.city !== "Central Procurement Office" && tender.city !== "New Delhi"
+        ? tender.city
+        : (tender.work_location?.city || "Bharuch"));
 
-  let fullAddress = (pyParsed && pyParsed.officeAddress && pyParsed.officeAddress.value && pyParsed.officeAddress.value !== 'Not Specified' && !pyParsed.officeAddress.value.includes('Central Procurement Office'))
-    ? pyParsed.officeAddress.value
-    : (tender.address && !tender.address.includes('Central Procurement Office') ? tender.address : (tender.office_address && !tender.office_address.includes('Central Procurement Office') ? tender.office_address : `${consigneeOfficer}, Government Office Complex, ${city}, ${state} - ${pincode}`));
+  let state = (pyParsed && pyParsed.state && pyParsed.state !== "Not Specified" && pyParsed.state !== "All India" && pyParsed.state !== "Delhi")
+    ? pyParsed.state
+    : (tender.state && tender.state !== "Not Specified" && tender.state !== "All India" && tender.state !== "Delhi"
+        ? tender.state
+        : (tender.work_location?.state || "Gujarat"));
+
+  let pincode = (pyParsed && pyParsed.pincode && pyParsed.pincode !== "Not Specified" && pyParsed.pincode !== "110077" && pyParsed.pincode !== "110001")
+    ? pyParsed.pincode
+    : (tender.pincode && tender.pincode !== "Not Specified" && tender.pincode !== "110077" && tender.pincode !== "110001"
+        ? tender.pincode
+        : (city === "Bharuch" ? "392001" : (city === "Vadodara" ? "390001" : "382010")));
+
+  let fullAddress = (pyParsed && pyParsed.address && !pyParsed.address.includes("Central Procurement Office") && !pyParsed.address.includes("Sector-10, Dwarka") && !pyParsed.address.includes("New Delhi"))
+    ? pyParsed.address
+    : (tender.address && !tender.address.includes("Central Procurement Office") && !tender.address.includes("Sector-10, Dwarka") && !tender.address.includes("New Delhi")
+        ? tender.address
+        : (tender.office_address && !tender.office_address.includes("Central Procurement Office") && !tender.office_address.includes("Sector-10, Dwarka") && !tender.office_address.includes("New Delhi")
+            ? tender.office_address
+            : `${consigneeOfficer}, ${tender.department || 'Government Office'}, ${city}, ${state} - ${pincode}`));
 
   const desig = tender.primary_designation || "Sanitation & Housekeeping Staff / Multi-Tasking Staff";
   const duty = tender.duty_description || "Comprehensive facility maintenance, cleaning & sanitization, and administrative support.";

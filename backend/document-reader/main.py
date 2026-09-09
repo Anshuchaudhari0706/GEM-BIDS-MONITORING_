@@ -19,6 +19,15 @@ class ParseRequest(BaseModel):
     document_url: Optional[str] = None
     tender_id: Optional[str] = None
     sample_text: Optional[str] = None
+    consignee_box: Optional[str] = None
+    existing_consignee: Optional[str] = None
+    existing_city: Optional[str] = None
+    existing_state: Optional[str] = None
+    existing_pincode: Optional[str] = None
+    existing_address: Optional[str] = None
+    existing_department: Optional[str] = None
+    existing_value: Optional[float] = None
+    existing_emd: Optional[float] = None
 
 class ScanRequest(BaseModel):
     date: Optional[str] = None
@@ -109,21 +118,50 @@ def parse_document(req: ParseRequest):
     if req.tender_id or req.document_url:
         pdf_text = fetch_pdf_text_from_gem(req.tender_id, req.document_url)
 
-    raw_text = req.sample_text or pdf_text or f"""
-    Bid Number: {req.tender_id or 'GEM/2026/B/8015751'}
-    Estimated Bid Value: ₹95,39,607.53 (₹95.40 Lakhs)
-    EMD Amount: ₹4,76,980
-    Tender Fee: ₹5,000
-    Performance Security: ₹2,86,188
-    
-    Work Location:
-    The Superintending Engineer's Office, National Highway Circle, Kuber Bhavan, Vadodara, Gujarat - 390001
-    
-    Manpower Requirements:
-    31 - Outsourced Manpower Staff
-    """
-    
+    raw_text = req.sample_text or pdf_text
+    if not raw_text:
+        box_str = req.consignee_box or f"{req.existing_consignee or 'Consignee Officer'}, {req.existing_address or 'Government Office'}"
+        raw_text = f"""
+        Bid Number: {req.tender_id or 'GEM/2026/B/8015751'}
+        Estimated Bid Value: {req.existing_value or 'As per Minimum Wages'}
+        EMD Amount: {req.existing_emd or 'As per GeM Portal Rules'}
+        Consignee Reporting/Officer: {req.existing_consignee or 'Consignee Officer'}
+        Address: {req.existing_pincode or '382010'},{req.existing_address or 'Government Office'}
+        {box_str}
+        """
+
     parsed_json = parse_tender_document(raw_text, req.tender_id)
+
+    # Preserve high-confidence verified existing tender fields if not present in partial parse
+    if req.existing_consignee and req.existing_consignee != 'Consignee / Reporting Officer' and (not parsed_json.get('consignee_officer') or parsed_json.get('consignee_officer') == 'Consignee / Reporting Officer'):
+        parsed_json['consignee_officer'] = req.existing_consignee
+        if parsed_json.get('officeAddress'): parsed_json['officeAddress']['consignee_officer'] = req.existing_consignee
+        if parsed_json.get('workLocation'): parsed_json['workLocation']['consignee_officer'] = req.existing_consignee
+
+    if req.existing_city and (not parsed_json.get('city') or parsed_json.get('city') in ('Gandhinagar', 'New Delhi')):
+        parsed_json['city'] = req.existing_city
+        if parsed_json.get('officeAddress'): parsed_json['officeAddress']['city'] = req.existing_city
+        if parsed_json.get('workLocation'): parsed_json['workLocation']['city'] = req.existing_city
+
+    if req.existing_state and (not parsed_json.get('state') or parsed_json.get('state') in ('Gujarat', 'Delhi')):
+        parsed_json['state'] = req.existing_state
+        if parsed_json.get('officeAddress'): parsed_json['officeAddress']['state'] = req.existing_state
+        if parsed_json.get('workLocation'): parsed_json['workLocation']['state'] = req.existing_state
+
+    if req.existing_pincode and (not parsed_json.get('pincode') or parsed_json.get('pincode') == 'Not Specified'):
+        parsed_json['pincode'] = req.existing_pincode
+        if parsed_json.get('officeAddress'): parsed_json['officeAddress']['pincode'] = req.existing_pincode
+        if parsed_json.get('workLocation'): parsed_json['workLocation']['pincode'] = req.existing_pincode
+
+    if req.existing_address and (not parsed_json.get('address') or 'Central Procurement' in str(parsed_json.get('address'))):
+        parsed_json['address'] = req.existing_address
+        if parsed_json.get('officeAddress'): parsed_json['officeAddress']['value'] = req.existing_address
+        if parsed_json.get('workLocation'): parsed_json['workLocation']['address'] = req.existing_address
+
+    if req.consignee_box:
+        if parsed_json.get('officeAddress'): parsed_json['officeAddress']['raw_consignee_box'] = req.consignee_box
+        if parsed_json.get('workLocation'): parsed_json['workLocation']['raw_consignee_box'] = req.consignee_box
+
     return parsed_json
 
 if __name__ == "__main__":
