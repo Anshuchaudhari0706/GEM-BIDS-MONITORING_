@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 
 export default function LandingPage({ onNavigate }) {
-  const { pricing } = useAuth();
+  const { user, pricing } = useAuth();
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-dark)', color: 'var(--text-main)', overflowX: 'hidden' }}>
@@ -75,12 +75,20 @@ export default function LandingPage({ onNavigate }) {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <button onClick={() => onNavigate('login')} className="btn-secondary" style={{ padding: '8px 18px' }}>
-            Login
-          </button>
-          <button onClick={() => onNavigate('register')} className="btn-cyan" style={{ padding: '8px 20px' }}>
-            Register
-          </button>
+          {user ? (
+            <button onClick={() => onNavigate('dashboard')} className="btn-cyan" style={{ padding: '8px 20px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Sparkles style={{ width: '15px', height: '15px' }} /> Open Dashboard
+            </button>
+          ) : (
+            <>
+              <button onClick={() => onNavigate('login')} className="btn-secondary" style={{ padding: '8px 18px' }}>
+                Login
+              </button>
+              <button onClick={() => onNavigate('register')} className="btn-cyan" style={{ padding: '8px 20px' }}>
+                Register
+              </button>
+            </>
+          )}
         </div>
       </nav>
 
@@ -130,12 +138,20 @@ export default function LandingPage({ onNavigate }) {
           </p>
 
           <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '50px' }}>
-            <button onClick={() => onNavigate('register')} className="btn-primary" style={{ padding: '14px 32px', fontSize: '1.1rem' }}>
-              Get Started <ArrowRight style={{ width: '20px', height: '20px' }} />
-            </button>
-            <button onClick={() => onNavigate('login')} className="btn-secondary" style={{ padding: '14px 28px', fontSize: '1.1rem' }}>
-              Login to Dashboard
-            </button>
+            {user ? (
+              <button onClick={() => onNavigate('dashboard')} className="btn-primary" style={{ padding: '14px 32px', fontSize: '1.1rem' }}>
+                Open Tender Dashboard <ArrowRight style={{ width: '20px', height: '20px' }} />
+              </button>
+            ) : (
+              <>
+                <button onClick={() => onNavigate('register')} className="btn-primary" style={{ padding: '14px 32px', fontSize: '1.1rem' }}>
+                  Get Started <ArrowRight style={{ width: '20px', height: '20px' }} />
+                </button>
+                <button onClick={() => onNavigate('login')} className="btn-secondary" style={{ padding: '14px 28px', fontSize: '1.1rem' }}>
+                  Login to Dashboard
+                </button>
+              </>
+            )}
           </div>
 
           {/* Visual Preview / Dashboard Mockup Card */}

@@ -3,12 +3,11 @@ import { useAuth } from '../context/AuthContext';
 import { Sparkles, Mail, Lock, ArrowRight, ShieldAlert, Key } from 'lucide-react';
 
 export default function LoginPage({ onNavigate }) {
-  const { login, isLicenseActive, license, setShowPaymentModal, setSelectedPlanForPayment } = useAuth();
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-  const [loggedInState, setLoggedInState] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -16,12 +15,8 @@ export default function LoginPage({ onNavigate }) {
     setLoading(true);
 
     try {
-      const res = await login(email, password);
-      setLoggedInState(res);
-      // Check subscription
-      if (res.license && res.license.status === 'ACTIVE' && new Date(res.license.expiryDate) > new Date()) {
-        onNavigate('dashboard');
-      }
+      await login(email, password);
+      onNavigate('dashboard');
     } catch (err) {
       setErrorMsg(err.message || 'Invalid email or password');
     } finally {
@@ -54,6 +49,7 @@ export default function LoginPage({ onNavigate }) {
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: '28px' }}>
           <div
+            onClick={() => onNavigate('landing')}
             style={{
               width: '50px',
               height: '50px',
@@ -63,7 +59,8 @@ export default function LoginPage({ onNavigate }) {
               alignItems: 'center',
               justifyContent: 'center',
               margin: '0 auto 12px auto',
-              boxShadow: '0 0 20px rgba(59, 130, 246, 0.5)'
+              boxShadow: '0 0 20px rgba(59, 130, 246, 0.5)',
+              cursor: 'pointer'
             }}
           >
             <Sparkles style={{ color: '#fff', width: '28px', height: '28px' }} />
@@ -92,116 +89,55 @@ export default function LoginPage({ onNavigate }) {
           </div>
         )}
 
-        {/* If logged in but subscription issues exist */}
-        {loggedInState && !isLicenseActive() ? (
-          <div style={{ textAlign: 'center', padding: '10px 0' }}>
-            <div
-              style={{
-                width: '50px',
-                height: '50px',
-                borderRadius: '50%',
-                background: 'rgba(245, 158, 11, 0.15)',
-                border: '1px solid #f59e0b',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto 14px auto'
-              }}
-            >
-              <ShieldAlert style={{ width: '28px', height: '28px', color: '#f59e0b' }} />
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: '18px' }}>
+            <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '6px' }}>
+              Email Address
+            </label>
+            <div style={{ position: 'relative' }}>
+              <Mail style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', width: '18px', color: 'var(--text-muted)' }} />
+              <input
+                type="email"
+                required
+                placeholder="name@company.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="input-control"
+                style={{ paddingLeft: '42px' }}
+              />
             </div>
-
-            {loggedInState.license ? (
-              <div>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff', marginBottom: '8px' }}>
-                  Subscription Expired
-                </h3>
-                <p style={{ fontSize: '0.88rem', color: 'var(--text-muted)', marginBottom: '20px', lineHeight: 1.5 }}>
-                  Your subscription has expired. Please renew your subscription to continue using GeMIntel.
-                </p>
-                <button
-                  onClick={() => {
-                    setSelectedPlanForPayment('monthly');
-                    setShowPaymentModal(true);
-                  }}
-                  className="btn-cyan"
-                  style={{ width: '100%', justifyContent: 'center' }}
-                >
-                  Renew Subscription
-                </button>
-              </div>
-            ) : (
-              <div>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff', marginBottom: '8px' }}>
-                  Subscription Required
-                </h3>
-                <p style={{ fontSize: '0.88rem', color: 'var(--text-muted)', marginBottom: '20px', lineHeight: 1.5 }}>
-                  An active subscription is required to access the dashboard.
-                </p>
-                <button
-                  onClick={() => {
-                    setSelectedPlanForPayment('monthly');
-                    setShowPaymentModal(true);
-                  }}
-                  className="btn-primary"
-                  style={{ width: '100%', justifyContent: 'center' }}
-                >
-                  Subscribe Now & Get License Key
-                </button>
-              </div>
-            )}
           </div>
-        ) : (
-          <form onSubmit={handleSubmit}>
-            <div style={{ marginBottom: '18px' }}>
-              <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '6px' }}>
-                Email Address
-              </label>
-              <div style={{ position: 'relative' }}>
-                <Mail style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', width: '18px', color: 'var(--text-muted)' }} />
-                <input
-                  type="email"
-                  required
-                  placeholder="name@company.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="input-control"
-                  style={{ paddingLeft: '42px' }}
-                />
-              </div>
-            </div>
 
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Password</label>
-                <a href="#forgot" onClick={(e) => { e.preventDefault(); alert('Password reset link sent to email'); }} style={{ fontSize: '0.8rem', color: 'var(--primary-cyan)', textDecoration: 'none' }}>
-                  Forgot Password?
-                </a>
-              </div>
-              <div style={{ position: 'relative' }}>
-                <Lock style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', width: '18px', color: 'var(--text-muted)' }} />
-                <input
-                  type="password"
-                  required
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="input-control"
-                  style={{ paddingLeft: '42px' }}
-                />
-              </div>
+          <div style={{ marginBottom: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+              <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Password</label>
+              <a href="#forgot" onClick={(e) => { e.preventDefault(); alert('Password reset instructions sent to your email.'); }} style={{ fontSize: '0.8rem', color: 'var(--primary-cyan)', textDecoration: 'none' }}>
+                Forgot Password?
+              </a>
             </div>
+            <div style={{ position: 'relative' }}>
+              <Lock style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', width: '18px', color: 'var(--text-muted)' }} />
+              <input
+                type="password"
+                required
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="input-control"
+                style={{ paddingLeft: '42px' }}
+              />
+            </div>
+          </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="btn-primary"
-              style={{ width: '100%', justifyContent: 'center', padding: '12px', fontSize: '1rem' }}
-            >
-              {loading ? 'Authenticating...' : 'Login to Dashboard'}
-            </button>
-          </form>
-        )}
+          <button
+            type="submit"
+            disabled={loading}
+            className="btn-primary"
+            style={{ width: '100%', justifyContent: 'center', padding: '12px', fontSize: '1rem' }}
+          >
+            {loading ? 'Authenticating...' : 'Login to Dashboard'}
+          </button>
+        </form>
 
         <div style={{ borderTop: '1px solid var(--border-color)', margin: '24px 0 18px 0' }} />
 

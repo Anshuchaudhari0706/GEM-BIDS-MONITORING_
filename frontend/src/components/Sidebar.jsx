@@ -21,8 +21,8 @@ export default function Sidebar({ currentTab, setCurrentTab }) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const mainItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'scanner', label: 'Scan Bids', icon: Radar, highlight: true }
+    { id: 'dashboard', label: 'Tender Intelligence', icon: LayoutDashboard },
+    { id: 'billing', label: 'License & Subscription', icon: CreditCard }
   ];
 
   const adminItems = [

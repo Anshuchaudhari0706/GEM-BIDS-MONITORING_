@@ -5,6 +5,7 @@ import {
   registerUser as apiRegister,
   verifyPaymentAndGenerateKey,
   activateLicenseKey as apiActivateKey,
+  generateLicenseKey as apiGenerateKey,
   fetchPricingConfig
 } from '../services/api';
 
@@ -148,12 +149,29 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const generateKey = async (options = {}) => {
+    try {
+      const data = await apiGenerateKey(token, options);
+      if (data.license && (!data.license.userId || data.license.userId === user?.id)) {
+        setLicense(data.license);
+      }
+      showToast(`Key generated: ${data.key}`, 'success');
+      return data;
+    } catch (err) {
+      showToast(err.message, 'error');
+      throw err;
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem('gemintel_token');
+    localStorage.removeItem('gemintel_current_page');
+    localStorage.removeItem('gemintel_current_tab');
     setToken(null);
     setUser(null);
     setLicense(null);
     showToast('Logged out safely', 'info');
+    window.location.hash = '#landing';
   };
 
   const isLicenseActive = () => {
@@ -182,6 +200,7 @@ export function AuthProvider({ children }) {
         logout,
         handlePaymentSuccess,
         activateKey,
+        generateKey,
         isLicenseActive,
         showToast,
         refreshUser: () => loadUser(token),

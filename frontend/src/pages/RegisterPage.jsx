@@ -67,6 +67,7 @@ export default function RegisterPage({ onNavigate }) {
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '28px' }}>
           <div
+            onClick={() => onNavigate('landing')}
             style={{
               width: '50px',
               height: '50px',
@@ -76,7 +77,8 @@ export default function RegisterPage({ onNavigate }) {
               alignItems: 'center',
               justifyContent: 'center',
               margin: '0 auto 12px auto',
-              boxShadow: '0 0 20px rgba(6, 182, 212, 0.5)'
+              boxShadow: '0 0 20px rgba(6, 182, 212, 0.5)',
+              cursor: 'pointer'
             }}
           >
             <Sparkles style={{ color: '#fff', width: '28px', height: '28px' }} />

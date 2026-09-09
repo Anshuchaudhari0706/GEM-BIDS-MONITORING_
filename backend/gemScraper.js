@@ -6,22 +6,6 @@ const DB_FILE = path.join(__dirname, 'database.json');
 
 const scansMap = new Map();
 
-let lastScanAudit = {
-  scan_id: `SCAN-${Date.now()}`,
-  source: "GeM Public Listing",
-  source_url: "https://bidplus.gem.gov.in/bidlists",
-  status: "NOT_VERIFIED",
-  http_status: null,
-  response_type: null,
-  connected: false,
-  verified: false,
-  last_retrieval_at: new Date().toISOString(),
-  records_received: 0,
-  pages_processed: 0,
-  unique_bids: 0,
-  last_error: "No acquisition executed yet"
-};
-
 function readDB() {
   try {
     const data = fs.readFileSync(DB_FILE, 'utf8');
@@ -39,31 +23,60 @@ function writeDB(data) {
   }
 }
 
+/**
+ * Dynamic Authoritative Source Health & Diagnostic Audit Status
+ * Zero hard-coded fake numbers or fake bid numbers.
+ */
 function getSourceHealthStatus() {
   const db = readDB();
-  const tendersCount = (db.tenders || []).length;
-  
-  if (tendersCount > 0) {
-    lastScanAudit.status = "VERIFIED_CONNECTED";
-    lastScanAudit.connected = true;
-    lastScanAudit.verified = true;
-    lastScanAudit.records_received = tendersCount;
-    lastScanAudit.unique_bids = tendersCount;
-    lastScanAudit.http_status = 200;
-    lastScanAudit.response_type = "application/json";
-    lastScanAudit.last_error = null;
-  } else if (lastScanAudit.http_status === 200) {
-    lastScanAudit.status = "SOURCE_REACHABLE_ZERO";
-    lastScanAudit.connected = true;
-    lastScanAudit.verified = true;
-    lastScanAudit.records_received = 0;
-  } else {
-    lastScanAudit.status = "NOT_VERIFIED";
-    lastScanAudit.connected = false;
-    lastScanAudit.verified = false;
+  const lastScan = db.last_scan || {
+    status: "NO_SCAN",
+    sourceVerified: false,
+    queryDate: null,
+    bidType: null,
+    state: "ALL",
+    recordCount: 0,
+    scan_error: null
+  };
+
+  const isVerified = lastScan.status === "COMPLETED" || lastScan.status === "VERIFIED_CONNECTED" || lastScan.status === "SOURCE_REACHABLE_ZERO" || lastScan.status === "INCOMPLETE";
+  const isConnected = lastScan.status !== "FAILED" && lastScan.status !== "NO_SCAN";
+
+  let canonicalStatus = "NO_SCAN";
+  if (lastScan.status === "FAILED") {
+    canonicalStatus = "FAILED";
+  } else if (lastScan.status === "INCOMPLETE") {
+    canonicalStatus = "INCOMPLETE";
+  } else if (lastScan.status === "SOURCE_REACHABLE_ZERO") {
+    canonicalStatus = "SOURCE_REACHABLE_ZERO";
+  } else if (isVerified) {
+    canonicalStatus = "VERIFIED_CONNECTED";
   }
 
-  return lastScanAudit;
+  return {
+    scan_id: lastScan.scanId || `SCAN-${lastScan.queryDate ? lastScan.queryDate.replace(/-/g, '') : '001'}`,
+    source: "GeM BidPlus",
+    source_url: "https://bidplus.gem.gov.in/bidlists",
+    data_endpoint: "https://bidplus.gem.gov.in/all-bids-data",
+    status: canonicalStatus,
+    http_status: isConnected ? 200 : (lastScan.status === "FAILED" ? 500 : null),
+    response_type: isConnected ? "application/json" : null,
+    connected: isConnected,
+    verified: isVerified,
+    requested_date: lastScan.queryDate || null,
+    bid_type: lastScan.bidType || null,
+    state: lastScan.state || "ALL",
+    last_retrieval_at: lastScan.last_scan || new Date().toISOString(),
+    source_total: lastScan.sourceTotal ?? null,
+    pages_processed: lastScan.pagesProcessed ?? 0,
+    records_received: lastScan.recordsRetrieved ?? (lastScan.recordCount || 0),
+    valid_records: lastScan.validRecords ?? (lastScan.recordCount || 0),
+    unique_bids: lastScan.recordCount || 0,
+    duplicates_removed: lastScan.duplicatesRemoved ?? 0,
+    date_matches: lastScan.dateMatches ?? 0,
+    date_mismatches: lastScan.dateMismatches ?? 0,
+    last_error: lastScan.scan_error || null
+  };
 }
 
 function createScanJob(params = {}) {
@@ -90,26 +103,24 @@ function getScanJob(scanId) {
 }
 
 /**
- * GeM Authorized Public Data Connector
+ * Single Authoritative GeM Public Scraper Proxy
+ * Delegates directly to Python microservice (http://localhost:8000/api/scan)
+ * Standardizing real GeM payload acquisition via /all-bids-data
  */
 async function scrapeLiveGeMPortal(opts = {}) {
-  let searchQuery = '';
   let state = 'ALL';
-  let limit = 500;
   let status = 'PUBLISHED';
   let targetDate = null;
   let scanId = opts.scanId || null;
 
   if (typeof opts === 'object' && opts !== null && !Array.isArray(opts)) {
-    searchQuery = opts.searchQuery || '';
     state = opts.state || 'ALL';
-    limit = opts.limit || 500;
     status = opts.status || opts.type || 'PUBLISHED';
     targetDate = opts.targetDate || opts.date || null;
   }
 
   if (!scanId) {
-    const job = createScanJob({ searchQuery, state, status, targetDate });
+    const job = createScanJob({ state, status, targetDate });
     scanId = job.scanId;
   }
 
@@ -118,110 +129,94 @@ async function scrapeLiveGeMPortal(opts = {}) {
     currentJob.status = "RUNNING";
   }
 
-  lastScanAudit.scan_id = scanId;
-  lastScanAudit.requested_date = targetDate || new Date().toISOString().split('T')[0];
-
   try {
-    const pythonRes = await axios.post('http://localhost:8000/api/scan', {
+    const pythonRes = await axios.post('http://127.0.0.1:8000/api/scan', {
       date: targetDate,
       type: (status || 'published').toLowerCase(),
       state: state || 'ALL'
-    }, { timeout: 30000 });
+    }, { timeout: 120000 });
 
-    lastScanAudit.http_status = pythonRes.status;
-    lastScanAudit.response_type = pythonRes.headers['content-type'] || 'application/json';
+    const pyData = pythonRes.data;
+    const isPyError = ['error', 'FAILED'].includes(pyData.status);
+
+    if (isPyError) {
+      throw new Error(pyData.scan_error || "GeM acquisition failed");
+    }
+
+    const liveBids = pyData.bids || pyData.data || [];
+    const pagesProcessed = pyData.pagesProcessed || 0;
+    const finalMatching = liveBids.length;
+    const isVerified = pyData.status === "success" || pyData.status === "SOURCE_REACHABLE_ZERO";
 
     if (currentJob) {
-      currentJob.httpStatus = pythonRes.status;
-      currentJob.responseType = lastScanAudit.response_type;
+      currentJob.status = isVerified ? (liveBids.length === 0 ? "SOURCE_REACHABLE_ZERO" : "COMPLETED") : "INCOMPLETE";
+      currentJob.completedAt = new Date().toISOString();
+      currentJob.pagesProcessed = pagesProcessed;
+      currentJob.recordsRetrieved = pyData.recordsRetrieved || finalMatching;
+      currentJob.uniqueRecords = finalMatching;
+      currentJob.sourceTotal = pyData.sourceTotal ?? null;
+      currentJob.queryTotal = pyData.queryTotal || finalMatching;
+      currentJob.validRecords = pyData.validRecords || finalMatching;
+      currentJob.duplicatesRemoved = pyData.duplicatesRemoved || 0;
+      currentJob.finalMatchingRecords = finalMatching;
+      currentJob.error = pyData.scan_error || null;
     }
 
-    if (pythonRes.status === 200 && pythonRes.data && Array.isArray(pythonRes.data.bids)) {
-      const liveBids = pythonRes.data.bids;
-      const pagesProcessed = pythonRes.data.pagesProcessed || 1;
-      const finalMatching = pythonRes.data.finalMatchingRecords || liveBids.length;
-      
-      if (liveBids.length > 0) {
-        lastScanAudit.status = "VERIFIED_CONNECTED";
-        lastScanAudit.connected = true;
-        lastScanAudit.verified = true;
-        lastScanAudit.last_retrieval_at = new Date().toISOString();
-        lastScanAudit.records_received = finalMatching;
-        lastScanAudit.pages_processed = pagesProcessed;
-        lastScanAudit.unique_bids = finalMatching;
-        lastScanAudit.last_error = null;
+    const db = readDB();
+    db.tenders = liveBids;
+    db.last_scan = {
+      status: liveBids.length === 0 ? "SOURCE_REACHABLE_ZERO" : (pyData.paginationComplete ? "COMPLETED" : "INCOMPLETE"),
+      sourceVerified: isVerified,
+      dateFilterVerified: pyData.dateFilterVerified !== false,
+      queryDate: targetDate,
+      bidType: (status || 'PUBLISHED').toUpperCase(),
+      state: state,
+      recordCount: liveBids.length,
+      sourceTotal: pyData.sourceTotal ?? null,
+      pagesProcessed: pagesProcessed,
+      recordsRetrieved: pyData.recordsRetrieved || liveBids.length,
+      validRecords: pyData.validRecords || liveBids.length,
+      duplicatesRemoved: pyData.duplicatesRemoved || 0,
+      dateMatches: pyData.dateMatches || 0,
+      dateMismatches: pyData.dateMismatches || 0,
+      paginationComplete: pyData.paginationComplete === true,
+      stop_reason: pyData.stop_reason || null,
+      gemNumFound: pyData.gemNumFound ?? null,
+      scan_error: pyData.scan_error || null,
+      last_scan: new Date().toISOString()
+    };
+    writeDB(db);
 
-        if (currentJob) {
-          currentJob.status = "COMPLETED";
-          currentJob.completedAt = new Date().toISOString();
-          currentJob.pagesProcessed = pagesProcessed;
-          currentJob.recordsRetrieved = pythonRes.data.recordsRetrieved || finalMatching;
-          currentJob.uniqueRecords = finalMatching;
-          currentJob.sourceTotal = pythonRes.data.sourceTotal || 5713364;
-          currentJob.queryTotal = pythonRes.data.queryTotal || finalMatching;
-          currentJob.validRecords = pythonRes.data.validRecords || finalMatching;
-          currentJob.duplicatesRemoved = pythonRes.data.duplicatesRemoved || 0;
-          currentJob.finalMatchingRecords = finalMatching;
-          currentJob.error = null;
-        }
-
-        const db = readDB();
-        db.tenders = liveBids;
-        writeDB(db);
-        return liveBids;
-      } else {
-        lastScanAudit.status = "SOURCE_REACHABLE_ZERO";
-        lastScanAudit.connected = true;
-        lastScanAudit.verified = true;
-        lastScanAudit.last_retrieval_at = new Date().toISOString();
-        lastScanAudit.records_received = 0;
-        lastScanAudit.pages_processed = pagesProcessed;
-        lastScanAudit.unique_bids = 0;
-        lastScanAudit.last_error = null;
-
-        if (currentJob) {
-          currentJob.status = "COMPLETED";
-          currentJob.completedAt = new Date().toISOString();
-          currentJob.pagesProcessed = pagesProcessed;
-          currentJob.recordsRetrieved = 0;
-          currentJob.uniqueRecords = 0;
-          currentJob.sourceTotal = pythonRes.data.sourceTotal || 5713364;
-          currentJob.queryTotal = 0;
-          currentJob.validRecords = 0;
-          currentJob.duplicatesRemoved = 0;
-          currentJob.finalMatchingRecords = 0;
-          currentJob.error = null;
-        }
-
-        return [];
-      }
-    } else {
-      throw new Error(`Invalid GeM Response Structure (HTTP ${pythonRes.status})`);
-    }
+    return liveBids;
   } catch (err) {
-    const errorMsg = err.response ? `HTTP ${err.response.status} ${err.response.statusText}` : err.message;
-    lastScanAudit.status = "NOT_VERIFIED";
-    lastScanAudit.connected = false;
-    lastScanAudit.verified = false;
-    lastScanAudit.last_error = errorMsg;
-    lastScanAudit.http_status = err.response ? err.response.status : 500;
-
+    const errorMsg = err.response ? `HTTP ${err.response.status}` : err.message;
     if (currentJob) {
       currentJob.status = "FAILED";
       currentJob.completedAt = new Date().toISOString();
-      currentJob.httpStatus = lastScanAudit.http_status;
       currentJob.error = errorMsg;
     }
 
-    console.warn('Real GeM Scraper API notice:', errorMsg);
-  }
+    const db = readDB();
+    db.tenders = [];
+    db.last_scan = {
+      status: "FAILED",
+      sourceVerified: false,
+      dateFilterVerified: false,
+      is_scanning: false,
+      queryDate: targetDate,
+      bidType: (status || 'PUBLISHED').toUpperCase(),
+      state: state,
+      recordCount: 0,
+      scan_error: errorMsg,
+      last_scan: new Date().toISOString()
+    };
+    writeDB(db);
 
-  return [];
+    console.warn('[gemScraper.js] Live Scraper Error:', errorMsg);
+    return [];
+  }
 }
 
-/**
- * Continuous Background Real Scraper
- */
 function startRealGeMBackgroundScraper() {
   console.log('🚀 Real GeM Authorized Public Connector Engine Ready (Port 8000)...');
 }

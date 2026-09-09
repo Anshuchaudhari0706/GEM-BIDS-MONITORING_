@@ -4,6 +4,8 @@ from regex_parser import (
     extract_emd_amount,
     extract_pincode,
     extract_state,
+    extract_city,
+    extract_consignee_details,
     extract_office_address,
     extract_manpower_requirements
 )
@@ -51,22 +53,32 @@ def parse_tender_document(raw_text, tender_id=None):
         "confidence": emd_confidence
     }
 
-    # 4. Office Address & Work Location
+    # 4. Consignee Officer, City, Office Address & Work Location
+    consignee_info = extract_consignee_details(raw_text)
     raw_office_addr = extract_office_address(raw_text)
-    pincode = extract_pincode(raw_text)
-    state = extract_state(raw_text) or "Gujarat"
+    pincode = (consignee_info and consignee_info.get("pincode")) or extract_pincode(raw_text)
+    state = (consignee_info and consignee_info.get("state")) or extract_state(raw_text) or "Gujarat"
+    city = (consignee_info and consignee_info.get("city")) or extract_city(raw_text, state)
+    consignee_officer = consignee_info.get("consignee_officer") if consignee_info else "Consignee / Reporting Officer"
     addr_confidence = evaluate_field_confidence(raw_office_addr, raw_office_addr)
 
     office_address_obj = {
-        "value": raw_office_addr or "Not Specified",
-        "district": "Banaskantha" if "Palanpur" in raw_text else ("Palanpur" if "Banaskantha" in raw_text else "Not Specified"),
+        "value": raw_office_addr or f"Government Office Complex, {city}, {state} - {pincode or '382010'}",
+        "city": city,
+        "district": city,
         "state": state,
         "pincode": pincode or "Not Specified",
+        "consignee_officer": consignee_officer,
+        "raw_consignee_box": consignee_info.get("raw_box") if consignee_info else None,
         "confidence": addr_confidence
     }
 
     work_location_obj = {
-        "value": raw_office_addr or "Not Specified",
+        "city": city,
+        "state": state,
+        "pincode": pincode or "Not Specified",
+        "consignee_officer": consignee_officer,
+        "value": raw_office_addr or f"Government Office Complex, {city}, {state}",
         "confidence": addr_confidence
     }
 

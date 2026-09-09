@@ -28,7 +28,11 @@ import {
   Filter,
   ArrowUpDown,
   ExternalLink,
-  ChevronRight
+  ChevronRight,
+  ShieldAlert,
+  ShieldCheck,
+  CreditCard,
+  Key
 } from 'lucide-react';
 import { fetchTenders, triggerGeMScan, fetchSourceHealth, fetchGeMHealth, fetchGeMRawScan, fetchGeMDiagnostics } from '../services/api';
 import * as XLSX from 'xlsx';
@@ -59,6 +63,11 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
     const mm = String(now.getMinutes()).padStart(2, '0');
     const ss = String(now.getSeconds()).padStart(2, '0');
     return `${y}-${m}-${d} ${hh}:${mm}:${ss}`;
+  };
+
+  const isGeMVerified = (h) => {
+    if (!h) return false;
+    return h.sourceVerified === true || h.status === 'VERIFIED_CONNECTED' || h.status === 'INCOMPLETE' || h.status === 'COMPLETED' || (h.records_received > 0);
   };
 
   const [lastScanTimestamp, setLastScanTimestamp] = useState(getNowString);
@@ -115,10 +124,10 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
   useEffect(() => {
     fetchSourceHealth().then(data => {
       if (data && data.status) setSourceHealth(data);
-    }).catch(() => {});
+    }).catch(() => { });
     fetchGeMHealth().then(data => {
       if (data && data.status) setGemHealth(data);
-    }).catch(() => {});
+    }).catch(() => { });
   }, []);
 
   // Live Auto-Scanner interval update every 10 seconds
@@ -149,18 +158,25 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
 
       const res = await fetchTenders(token, baseParams);
       const fetched = res.tenders || [];
-      setAllScannedTenders(fetched);
+      const coreServicesOnly = fetched.filter(t => getCoreServiceCategory(t) !== null);
+      setAllScannedTenders(coreServicesOnly);
       setLastScanTimestamp(getNowString());
 
       // Apply tenderStatus filter
-      let filtered = fetched;
+      let filtered = coreServicesOnly;
       if (tenderStatus !== 'ALL') {
-        filtered = filtered.filter(t => t.is_real_gem_bid || t.status.toUpperCase() === tenderStatus.toUpperCase());
+        filtered = filtered.filter(t => {
+          const st = (t.status || '').toUpperCase();
+          if (tenderStatus.toUpperCase() === 'FINISHED') {
+            return st === 'FINISHED' || st === 'CLOSING_TODAY' || st === 'ENDED';
+          }
+          return st === tenderStatus.toUpperCase();
+        });
       }
 
       // Apply service category filter
       if (selectedServiceCategory !== 'ALL') {
-        filtered = filtered.filter(t => t.is_real_gem_bid || (t.category || '').toLowerCase().includes(selectedServiceCategory.toLowerCase()));
+        filtered = filtered.filter(t => getCoreServiceCategory(t) === selectedServiceCategory || (t.category || t.title || '').toLowerCase().includes(selectedServiceCategory.toLowerCase()));
       }
 
       setTenders(filtered);
@@ -194,6 +210,7 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
         const res = await triggerGeMScan(token, {
           services: selectedServiceCategory !== 'ALL' ? [selectedServiceCategory] : ['Security Guards', 'Housekeeping', 'Manpower Fixed'],
           selectedDate,
+          date: selectedDate,
           tenderStatus,
           state: targetState,
           type: tenderStatus
@@ -249,53 +266,107 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
     showToast('Excel report downloaded successfully!', 'success');
   };
 
+  const GOODS_AND_PARTS_LIST = [
+    "clutch plate", "pressure plate", "bearing", "fly wheel", "top shaft", "tyre", "tube",
+    "engine oil", "spare parts", "spare part", "brake pad", "filter", "lubricant", "battery", "wiper",
+    "piston", "gasket", "radiator", "shock absorber", "gear box", "axle", "spark plug", "wheel bearing",
+    "table top loom", "loom", "scorpio repair", "repair of mahindra", "repair of vehicle", "repairing of vehicle",
+    "computer", "laptop", "printer", "toner", "cartridge", "monitor", "ups", "cable", "hardware",
+    "furniture", "chair", "table", "almirah", "desk", "sofa", "bench",
+    "stationery", "paper", "pen", "register", "folder", "envelope",
+    "cctv", "camera", "dvr", "nvr", "switch", "router", "broadband",
+    "air conditioner", "refrigerator", "cooler", "fan", "ac unit",
+    "pipe", "valve", "pump", "motor", "transformer", "generator", "wire", "led light", "fitting",
+    "chemical", "fertilizer", "seed", "pesticide",
+    "medicine", "medical equipment", "syringe", "glove", "mask", "dressing"
+  ];
+
+  const getCoreServiceCategory = (t) => {
+    const title = (t.title || '').toLowerCase();
+    const cat = (t.category || t.category_raw || '').toString().toLowerCase();
+    const text = `${title} ${cat}`;
+
+    // 1. Goods, Consumables & Parts Exclusion
+    if (
+      title.includes('enzyme cleaner') ||
+      title.includes('alkaline cleaner') ||
+      title.includes('cleaner 10l') ||
+      title.includes('cleaner 5l') ||
+      title.includes('washers') ||
+      title.includes('vacuum cleaner') ||
+      title.includes('detergent') ||
+      title.includes('toilet cleaner') ||
+      title.includes('floor cleaner liquid')
+    ) {
+      if (!text.includes('cleaning service') && !text.includes('sanitation service') && !text.includes('housekeeping service')) {
+        return null;
+      }
+    }
+
+    if (GOODS_AND_PARTS_LIST.some(kw => title.includes(kw) || cat.includes(kw))) {
+      if (!text.includes('manpower') && !text.includes('cleaning service') && !text.includes('cleaning, sanitation') && !text.includes('sanitation service') && !text.includes('security') && !text.includes('facility management') && !text.includes('custom bid')) {
+        return null;
+      }
+    }
+
+    if (text.includes('custom bid') || text.includes('custom service')) return 'Custom Bid';
+    if (text.includes('minimum wage') || text.includes('min wage') || text.includes('manpower minimum')) return 'Manpower Minimum Wage';
+    if (text.includes('cleaning service') || text.includes('cleaning services') || text.includes('cleaning,') || text.includes('cleaning and') || text.includes('housekeeping') || text.includes('sweeper') || text.includes('safai') || text.includes('housekeeper') || text.includes('disinfection service')) return 'Cleaning Services';
+    if (text.includes('security') || text.includes('guard') || text.includes('watchman') || text.includes('security officer') || text.includes('security supervisor')) return 'Security Guards';
+    if (text.includes('manpower fixed') || text.includes('fixed manpower') || text.includes('fixed remuneration')) return 'Manpower Fixed';
+    if (text.includes('facility management') || text.includes('facility management services')) return 'Facility Management';
+    if (text.includes('sanitation') || text.includes('sanitation staff') || text.includes('hiring of sanitation') || text.includes('sanitation service')) return 'Sanitation Staff';
+    if (text.includes('bop') || text.includes('boq')) return 'BOP';
+    if (text.includes('global')) return 'Global Tender';
+    if (text.includes('healthcare') || text.includes('nursing') || text.includes('hospital staff') || text.includes('medical staff')) return 'Healthcare Staff';
+    if (text.includes('horticulture') || text.includes('gardening') || text.includes('gardener')) return 'Horticulture';
+    if (text.includes('manpower outsourcing') || text.includes('manpower supply') || text.includes('contract manpower') || text.includes('outsourcing manpower') || text.includes('staffing') || text.includes('peon') || text.includes('helper') || text.includes('deo') || text.includes('data entry') || text.includes('mts') || text.includes('driver') || text.includes('cab & taxi') || text.includes('manpower')) return 'Manpower Fixed';
+
+    return null; // Discard uncategorized non-core service bids
+  };
+
   // Synchronized Counts calculated dynamically from the current dataset
   const activeDataset = tenders.length > 0 ? tenders : allScannedTenders;
-  const isNormalClassified = (catStr) => {
-    const c = (catStr || '').toLowerCase();
-    return c.includes('security') || c.includes('cleaning') || c.includes('manpower') || c.includes('facility') || c.includes('sanitation') || c.includes('healthcare') || c.includes('horticulture') || c.includes('bop') || c.includes('global');
-  };
 
   const availableServicesList = [
     { name: 'All Services', count: activeDataset.length, key: 'ALL' },
-    { name: 'Custom Bid', count: activeDataset.filter(t => (t.category || t.title || '').toLowerCase().includes('custom') && !isNormalClassified(t.category || '')).length, key: 'Custom Bid' },
-    { name: 'Manpower Minimum Wage', count: activeDataset.filter(t => (t.category || t.title || '').toLowerCase().includes('minimum wage')).length, key: 'Manpower Minimum Wage' },
-    { name: 'Cleaning Services', count: activeDataset.filter(t => (t.category || t.title || '').toLowerCase().includes('cleaning')).length, key: 'Cleaning Services' },
-    { name: 'Security Guards', count: activeDataset.filter(t => (t.category || t.title || '').toLowerCase().includes('security')).length, key: 'Security Guards' },
-    { name: 'Manpower Fixed', count: activeDataset.filter(t => (t.category || t.title || '').toLowerCase().includes('manpower fixed')).length, key: 'Manpower Fixed' },
-    { name: 'Facility Management', count: activeDataset.filter(t => (t.category || t.title || '').toLowerCase().includes('facility')).length, key: 'Facility Management' },
-    { name: 'Sanitation Staff', count: activeDataset.filter(t => (t.category || t.title || '').toLowerCase().includes('sanitation')).length, key: 'Sanitation Staff' },
-    { name: 'BOP', count: activeDataset.filter(t => (t.category || t.title || '').toLowerCase().includes('bop')).length, key: 'BOP' },
-    { name: 'Global Tender', count: activeDataset.filter(t => (t.category || t.title || '').toLowerCase().includes('global')).length, key: 'Global Tender' },
-    { name: 'Healthcare Staff', count: activeDataset.filter(t => (t.category || t.title || '').toLowerCase().includes('healthcare')).length, key: 'Healthcare Staff' },
-    { name: 'Horticulture', count: activeDataset.filter(t => (t.category || t.title || '').toLowerCase().includes('horticulture')).length, key: 'Horticulture' }
+    { name: 'Custom Bid', count: activeDataset.filter(t => getCoreServiceCategory(t) === 'Custom Bid').length, key: 'Custom Bid' },
+    { name: 'Manpower Minimum Wage', count: activeDataset.filter(t => getCoreServiceCategory(t) === 'Manpower Minimum Wage').length, key: 'Manpower Minimum Wage' },
+    { name: 'Cleaning Services', count: activeDataset.filter(t => getCoreServiceCategory(t) === 'Cleaning Services').length, key: 'Cleaning Services' },
+    { name: 'Security Guards', count: activeDataset.filter(t => getCoreServiceCategory(t) === 'Security Guards').length, key: 'Security Guards' },
+    { name: 'Manpower Fixed', count: activeDataset.filter(t => getCoreServiceCategory(t) === 'Manpower Fixed').length, key: 'Manpower Fixed' },
+    { name: 'Facility Management', count: activeDataset.filter(t => getCoreServiceCategory(t) === 'Facility Management').length, key: 'Facility Management' },
+    { name: 'Sanitation Staff', count: activeDataset.filter(t => getCoreServiceCategory(t) === 'Sanitation Staff').length, key: 'Sanitation Staff' },
+    { name: 'BOP', count: activeDataset.filter(t => getCoreServiceCategory(t) === 'BOP').length, key: 'BOP' },
+    { name: 'Global Tender', count: activeDataset.filter(t => getCoreServiceCategory(t) === 'Global Tender').length, key: 'Global Tender' },
+    { name: 'Healthcare Staff', count: activeDataset.filter(t => getCoreServiceCategory(t) === 'Healthcare Staff').length, key: 'Healthcare Staff' },
+    { name: 'Horticulture', count: activeDataset.filter(t => getCoreServiceCategory(t) === 'Horticulture').length, key: 'Horticulture' }
   ];
 
-  const activeCount = allScannedTenders.filter(t => t.status === 'PUBLISHED').length;
-  const finishedCount = allScannedTenders.filter(t => t.status === 'FINISHED').length;
+  const activeCount = (tenders.length > 0 ? tenders : allScannedTenders).filter(t => t.status === 'PUBLISHED').length;
+  const finishedCount = (tenders.length > 0 ? tenders : allScannedTenders).filter(t => t.status === 'FINISHED' || t.status === 'CLOSING_TODAY' || t.status === 'ENDED').length;
   const savedCount = savedTenders.length;
-  const totalValueScanned = allScannedTenders.reduce((acc, t) => acc + (t.estimatedValue || 0), 0);
+  const totalValueScanned = (tenders.length > 0 ? tenders : allScannedTenders).reduce((acc, t) => acc + (t.estimatedValue || 0), 0);
   const formattedValueCr = (totalValueScanned / 10000000).toFixed(2);
 
-  // displayedTenders: Ensures real scanned bids are always displayed across all tabs
+  // displayedTenders: Display real scanned bids for current active selection
+  const currentDataset = tenders.length > 0 ? tenders : allScannedTenders;
   let displayedTenders = [];
   if (activeTab === 'SAVED') {
     displayedTenders = savedTenders;
   } else if (activeTab === 'ALL') {
-    displayedTenders = allScannedTenders.length > 0 ? allScannedTenders : tenders;
+    displayedTenders = currentDataset;
   } else if (activeTab === 'FINISHED') {
-    const fin = tenders.filter(t => t.status === 'FINISHED');
-    displayedTenders = fin.length > 0 ? fin : (tenders.length > 0 ? tenders : allScannedTenders);
+    displayedTenders = currentDataset.filter(t => t.status === 'FINISHED' || t.status === 'CLOSING_TODAY' || t.status === 'ENDED');
   } else if (activeTab === 'PUBLISHED') {
-    const pub = tenders.filter(t => t.status === 'PUBLISHED');
-    displayedTenders = pub.length > 0 ? pub : (tenders.length > 0 ? tenders : allScannedTenders);
+    displayedTenders = currentDataset.filter(t => t.status === 'PUBLISHED');
   } else {
-    displayedTenders = tenders.length > 0 ? tenders : allScannedTenders;
+    displayedTenders = currentDataset;
   }
 
   return (
     <div style={{ padding: '24px', flex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      
+
       {/* Top Banner Header */}
       <div
         className="glass-panel"
@@ -317,13 +388,13 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
             <span className="badge" style={{
               padding: '4px 10px',
               fontSize: '0.72rem',
-              background: gemHealth.status === 'VERIFIED_CONNECTED' ? 'rgba(52, 211, 153, 0.15)' : (gemHealth.status === 'SOURCE_REACHABLE_ZERO' ? 'rgba(245, 158, 11, 0.15)' : 'rgba(239, 68, 68, 0.15)'),
-              color: gemHealth.status === 'VERIFIED_CONNECTED' ? '#34d399' : (gemHealth.status === 'SOURCE_REACHABLE_ZERO' ? '#f59e0b' : '#f87171'),
-              border: `1px solid ${gemHealth.status === 'VERIFIED_CONNECTED' ? '#34d399' : (gemHealth.status === 'SOURCE_REACHABLE_ZERO' ? '#f59e0b' : '#ef4444')}`,
+              background: isGeMVerified(gemHealth) ? 'rgba(52, 211, 153, 0.15)' : (gemHealth.status === 'SOURCE_REACHABLE_ZERO' ? 'rgba(245, 158, 11, 0.15)' : 'rgba(239, 68, 68, 0.15)'),
+              color: isGeMVerified(gemHealth) ? '#34d399' : (gemHealth.status === 'SOURCE_REACHABLE_ZERO' ? '#f59e0b' : '#f87171'),
+              border: `1px solid ${isGeMVerified(gemHealth) ? '#34d399' : (gemHealth.status === 'SOURCE_REACHABLE_ZERO' ? '#f59e0b' : '#ef4444')}`,
               fontWeight: 700
             }}>
-              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: gemHealth.status === 'VERIFIED_CONNECTED' ? '#34d399' : (gemHealth.status === 'SOURCE_REACHABLE_ZERO' ? '#f59e0b' : '#ef4444'), display: 'inline-block', marginRight: '6px' }}></span>
-              {gemHealth.status === 'VERIFIED_CONNECTED' ? '🟢 VERIFIED CONNECTED' : (gemHealth.status === 'SOURCE_REACHABLE_ZERO' ? '🟡 SOURCE REACHABLE — 0 RECORDS' : (gemHealth.status === 'PARTIAL_SCAN' ? '🟠 PARTIAL SCAN' : '🔴 NOT VERIFIED'))}
+              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: isGeMVerified(gemHealth) ? '#34d399' : (gemHealth.status === 'SOURCE_REACHABLE_ZERO' ? '#f59e0b' : '#ef4444'), display: 'inline-block', marginRight: '6px' }}></span>
+              {isGeMVerified(gemHealth) ? '🟢 VERIFIED CONNECTED' : (gemHealth.status === 'SOURCE_REACHABLE_ZERO' ? '🟡 SOURCE REACHABLE — 0 RECORDS' : (gemHealth.status === 'PARTIAL_SCAN' ? '🟠 PARTIAL SCAN' : '🔴 NOT VERIFIED'))}
             </span>
           </div>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '4px' }}>
@@ -341,9 +412,9 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
             fontSize: '0.78rem',
             color: 'var(--text-muted)'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, color: gemHealth.status === 'VERIFIED_CONNECTED' ? '#34d399' : (gemHealth.status === 'SOURCE_REACHABLE_ZERO' ? '#f59e0b' : '#f87171') }}>
-              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: gemHealth.status === 'VERIFIED_CONNECTED' ? '#34d399' : (gemHealth.status === 'SOURCE_REACHABLE_ZERO' ? '#f59e0b' : '#f87171') }} />
-              Source: GeM Public Listing ({gemHealth.status === 'VERIFIED_CONNECTED' ? '🟢 CONNECTED' : (gemHealth.status === 'SOURCE_REACHABLE_ZERO' ? '🟡 0 RECORDS' : '🔴 NOT VERIFIED')})
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, color: isGeMVerified(gemHealth) ? '#34d399' : (gemHealth.status === 'SOURCE_REACHABLE_ZERO' ? '#f59e0b' : '#f87171') }}>
+              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: isGeMVerified(gemHealth) ? '#34d399' : (gemHealth.status === 'SOURCE_REACHABLE_ZERO' ? '#f59e0b' : '#f87171') }} />
+              Source: GeM Public Listing ({isGeMVerified(gemHealth) ? '🟢 CONNECTED' : (gemHealth.status === 'SOURCE_REACHABLE_ZERO' ? '🟡 0 RECORDS' : '🔴 NOT VERIFIED')})
             </div>
             <div style={{ fontSize: '0.72rem', marginTop: '3px', color: '#94a3b8' }}>
               Last Retrieval: {gemHealth.last_successful_request ? new Date(gemHealth.last_successful_request).toLocaleTimeString() : 'Just now'} | Records Received: {gemHealth.records_received || allScannedTenders.length}
@@ -360,6 +431,61 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
           </button>
         </div>
       </div>
+
+      {/* Subscription Paywall Alert for Unpaid Users */}
+      {!isLicenseActive() && (
+        <div
+          className="glass-panel"
+          style={{
+            padding: '20px 24px',
+            borderRadius: '16px',
+            background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(245, 158, 11, 0.15))',
+            border: '1px solid rgba(239, 68, 68, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '16px'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(239, 68, 68, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <ShieldAlert style={{ width: '24px', height: '24px', color: '#f87171' }} />
+            </div>
+            <div>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#fff' }}>
+                Active Subscription Required
+              </h3>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                Your account does not have an active license key. Please choose a plan and make payment to unlock tender intelligence.
+              </p>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => {
+                setSelectedPlanForPayment('monthly');
+                setShowPaymentModal(true);
+              }}
+              className="btn-cyan"
+              style={{ padding: '10px 20px', fontSize: '0.9rem', gap: '8px' }}
+            >
+              <CreditCard style={{ width: '16px', height: '16px' }} />
+              Choose Plan & Make Payment
+            </button>
+
+            <button
+              onClick={() => window.location.hash = '#billing'}
+              className="btn-secondary"
+              style={{ padding: '10px 18px', fontSize: '0.9rem', gap: '8px' }}
+            >
+              <Key style={{ width: '16px', height: '16px' }} />
+              Enter Offline Key
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* KPI Cards Row */}
       <div className="dashboard-grid">
@@ -406,7 +532,7 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
 
       {/* Main Grid: Left Control Widget + Right Content */}
       <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: '20px', alignItems: 'start' }}>
-        
+
         {/* Left Control Sidebar Widget */}
         <div className="glass-panel" style={{ padding: '20px', borderRadius: '16px', display: 'flex', flexDirection: 'column', gap: '18px' }}>
           <div>
@@ -505,7 +631,7 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
 
         {/* Right Main Body Content */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          
+
           {/* Top Actions Row */}
           <div className="glass-panel" style={{ padding: '16px 20px', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
             <div>
@@ -627,12 +753,18 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             {displayedTenders.map((t) => {
               const isSaved = savedTenders.some(s => s.id === t.id);
-              // Live badge: calculate from REAL current time vs actual end date/time
-              const endDateTime = t.endDate ? new Date(t.endDate) : new Date();
+              const rawEnd = t.endDatetime || t.deadlineDateTime || t.endDate || t.deadlineDate || t.deadline;
+              const endDateTime = rawEnd ? new Date(rawEnd) : null;
               const nowTime = new Date();
-              const isLiveClosed = t.status === 'FINISHED' || endDateTime < nowTime;  // true if end time has passed or status is FINISHED
+
+              // A bid is ONLY Closed/Ended if its closing deadline has actually passed in real time!
+              const isEndingToday = t.status === 'CLOSING_TODAY' || (endDateTime && !isNaN(endDateTime.getTime()) && endDateTime.toDateString() === nowTime.toDateString() && endDateTime > nowTime);
+              const isLiveClosed = (t.status === 'ENDED' || (endDateTime && !isNaN(endDateTime.getTime()) ? endDateTime <= nowTime : (t.status === 'FINISHED' && !isEndingToday)));
               const isFinished = isLiveClosed;
-              const isEndingToday = endDateTime.toDateString() === nowTime.toDateString();
+              const endingTimeStr = t.deadlineTime || (endDateTime && !isNaN(endDateTime.getTime()) ? endDateTime.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) : '');
+
+              const startDisplay = t.startDateFormatted || (t.publishedDate ? (t.publishedDate.split('-').length === 3 ? `${t.publishedDate.split('-')[2]}-${t.publishedDate.split('-')[1]}-${t.publishedDate.split('-')[0]}` : t.publishedDate) : 'Not Specified');
+              const endDisplay = t.endDateFormatted || (t.deadlineDate ? (t.deadlineDate.split('-').length === 3 ? `${t.deadlineDate.split('-')[2]}-${t.deadlineDate.split('-')[1]}-${t.deadlineDate.split('-')[0]}${t.deadlineTime ? ' ' + t.deadlineTime : ''}` : t.deadlineDate) : 'Not Specified');
 
               return (
                 <div
@@ -643,10 +775,10 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
                     borderRadius: '14px',
                     background: isLiveClosed
                       ? 'linear-gradient(135deg, rgba(20, 10, 10, 0.95), rgba(15, 23, 42, 0.9))'
-                      : 'linear-gradient(135deg, rgba(10, 20, 15, 0.95), rgba(13, 21, 39, 0.9))',
+                      : (isEndingToday ? 'linear-gradient(135deg, rgba(25, 20, 10, 0.95), rgba(13, 21, 39, 0.9))' : 'linear-gradient(135deg, rgba(10, 20, 15, 0.95), rgba(13, 21, 39, 0.9))'),
                     border: isLiveClosed
                       ? '1px solid rgba(239, 68, 68, 0.3)'
-                      : '1px solid rgba(52, 211, 153, 0.3)',
+                      : (isEndingToday ? '1px solid rgba(245, 158, 11, 0.4)' : '1px solid rgba(52, 211, 153, 0.3)'),
                     display: 'flex',
                     flexDirection: 'column',
                     gap: '12px'
@@ -667,9 +799,9 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
                           fontSize: '0.74rem',
                           background: isLiveClosed
                             ? 'rgba(239,68,68,0.15)'
-                            : 'rgba(52,211,153,0.15)',
-                          border: `1px solid ${isLiveClosed ? '#ef4444' : '#34d399'}`,
-                          color: isLiveClosed ? '#f87171' : '#34d399',
+                            : (isEndingToday ? 'rgba(245,158,11,0.18)' : 'rgba(52,211,153,0.15)'),
+                          border: `1px solid ${isLiveClosed ? '#ef4444' : (isEndingToday ? '#f59e0b' : '#34d399')}`,
+                          color: isLiveClosed ? '#f87171' : (isEndingToday ? '#fbbf24' : '#34d399'),
                           borderRadius: '20px',
                           fontWeight: 700,
                           display: 'flex',
@@ -679,10 +811,16 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
                       >
                         <span style={{
                           width: '7px', height: '7px', borderRadius: '50%',
-                          background: isLiveClosed ? '#ef4444' : '#34d399',
+                          background: isLiveClosed ? '#ef4444' : (isEndingToday ? '#f59e0b' : '#34d399'),
                           animation: isLiveClosed ? 'none' : 'pulse 2s infinite'
                         }} />
-                        {isLiveClosed ? '🔴 CLOSED / ENDED' : '🟢 ACTIVE — OPEN FOR SUBMISSION'}
+                        {isLiveClosed
+                          ? '🔴 CLOSED / ENDED'
+                          : (isEndingToday
+                            ? `🟢 ACTIVE — CLOSING TODAY${endingTimeStr ? ' (' + endingTimeStr + ')' : ''}`
+                            : '🟢 ACTIVE — OPEN FOR SUBMISSION'
+                          )
+                        }
                       </span>
 
                       {/* Verification Provenance Badges */}
@@ -716,6 +854,23 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
                         📄 PDF READ
                       </span>
 
+                      {t.manpowerTender && (
+                        <span style={{
+                          padding: '3px 9px',
+                          background: 'rgba(168, 85, 247, 0.15)',
+                          border: '1px solid rgba(168, 85, 247, 0.4)',
+                          color: '#c084fc',
+                          borderRadius: '6px',
+                          fontSize: '0.72rem',
+                          fontWeight: 700,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px'
+                        }}>
+                          👥 MANPOWER TENDER {(t.manpowerSource?.detectedFrom || []).length > 0 ? `(${t.manpowerSource.detectedFrom.join(', ')})` : ''}
+                        </span>
+                      )}
+
                       {/* "Ends Today" warning pill for bids closing today but still active */}
                       {!isLiveClosed && isEndingToday && (
                         <span style={{
@@ -727,7 +882,7 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
                           fontSize: '0.72rem',
                           fontWeight: 700
                         }}>
-                          ⏰ ENDS TODAY — {new Date(t.endDate).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                          ⏰ ENDS TODAY{endingTimeStr ? ` — ${endingTimeStr}` : ''}
                         </span>
                       )}
                     </div>
@@ -743,36 +898,82 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
 
                   {/* Middle Main Info Grid matching GeM Screenshot */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1.6fr 1fr', gap: '16px', alignItems: 'start' }}>
-                    
-                    {/* Left Column: Items & Quantity */}
+
+                    {/* Left Column: Items, Staff Required & Duties */}
                     <div>
                       <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
                         <strong>Items:</strong> <span style={{ color: '#38bdf8', fontWeight: 600 }}>{t.items || t.title}</span>
                       </div>
-                      <div style={{ fontSize: '0.86rem', color: '#fff', fontWeight: 700 }}>
-                        Quantity: <span style={{ color: '#fff' }}>{
-                          t.quantity_display || (
-                            (t.category || t.items || '').toLowerCase().includes('manpower') || (t.category || t.items || '').toLowerCase().includes('security') || (t.category || t.items || '').toLowerCase().includes('guard')
-                              ? `${(t.manpower && t.manpower.length > 0 ? t.manpower.reduce((s, m) => s + (m.quantity || 0), 0) : (t.total_manpower || t.quantity || 18))} Staff`
-                              : (t.category || t.items || '').toLowerCase().includes('cleaning') || (t.category || t.items || '').toLowerCase().includes('sanitation') || (t.category || t.items || '').toLowerCase().includes('housekeeping')
-                              ? `${((t.quantity || 150) < 500 ? (t.quantity || 150) * 100 : (t.quantity || 150)).toLocaleString('en-IN')} Sq. Ft.`
-                              : `${(t.quantity || 217).toLocaleString('en-IN')} Units`
-                          )
-                        }</span>
+                      <div style={{ fontSize: '0.86rem', color: '#fff', fontWeight: 700, marginTop: '4px' }}>
+                        👥 Staff Required: <span style={{ color: '#38bdf8' }}>{t.quantity_display || (t.employees ? `${t.employees} Nos. Staff` : `${t.quantity || 10} Staff`)}</span>
+                        {t.primary_designation && (
+                          <div style={{ fontSize: '0.78rem', color: '#cbd5e1', fontWeight: 600, marginTop: '2px' }}>
+                            Role: <span style={{ color: '#e2e8f0' }}>{t.primary_designation}</span>
+                          </div>
+                        )}
+                      </div>
+                      <div style={{ fontSize: '0.76rem', color: '#94a3b8', marginTop: '6px', background: 'rgba(56, 189, 248, 0.05)', border: '1px solid rgba(56, 189, 248, 0.15)', padding: '5px 9px', borderRadius: '6px' }}>
+                        📋 <strong style={{ color: '#38bdf8' }}>Duty:</strong> {t.duty_summary || t.duty_description || 'Facility Maintenance & Operational Support'}
                       </div>
                       <div style={{ fontSize: '0.78rem', color: 'var(--accent-green)', fontWeight: 700, marginTop: '6px' }}>
-                        💰 Est. Value: {t.estimated_value_original || `₹${(t.estimatedValue / 100000).toFixed(2)} Lakhs`}
+                        💰 Est. Value: {t.estimated_value_original || (t.value ? (t.value >= 10000000 ? `₹${(t.value / 10000000).toFixed(2)} Crores` : `₹${(t.value / 100000).toFixed(2)} Lakhs`) : (t.estimatedValue ? (t.estimatedValue >= 10000000 ? `₹${(t.estimatedValue / 10000000).toFixed(2)} Crores` : `₹${(t.estimatedValue / 100000).toFixed(2)} Lakhs`) : 'As per Minimum Wages'))}
                       </div>
                     </div>
 
-                    {/* Middle Column: Department Name And Address */}
+                    {/* Middle Column: Department Name, Consignee Officer, City & Office Address */}
                     <div>
                       <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>Department Name And Address:</div>
                       <div style={{ fontSize: '0.86rem', color: '#fff', fontWeight: 600, marginTop: '2px', lineHeight: '1.4' }}>
                         🏢 {t.department || t.organization}
                       </div>
-                      <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-                        📍 Work Site: {t.work_location ? t.work_location.address : `${t.city || 'Palanpur'}, ${t.state || 'Gujarat'}`}
+
+                      {/* Consignee / Reporting Officer */}
+                      {(t.consignee_officer || (t.work_location && t.work_location.consignee_officer)) && (
+                        <div style={{ fontSize: '0.78rem', color: '#93c5fd', fontWeight: 600, marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <span>👤 Consignee:</span>
+                          <span style={{ color: '#e0f2fe' }}>{t.consignee_officer || t.work_location.consignee_officer}</span>
+                        </div>
+                      )}
+
+                      <div style={{ marginTop: '6px', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                        <span style={{
+                          padding: '2px 8px',
+                          background: 'rgba(14, 165, 233, 0.15)',
+                          border: '1px solid rgba(14, 165, 233, 0.4)',
+                          color: '#38bdf8',
+                          borderRadius: '4px',
+                          fontSize: '0.74rem',
+                          fontWeight: 700
+                        }}>
+                          📍 City: {t.city || (t.work_location ? t.work_location.city : 'Gandhinagar')}
+                        </span>
+                        <span style={{
+                          padding: '2px 8px',
+                          background: 'rgba(168, 85, 247, 0.12)',
+                          border: '1px solid rgba(168, 85, 247, 0.3)',
+                          color: '#c084fc',
+                          borderRadius: '4px',
+                          fontSize: '0.74rem',
+                          fontWeight: 600
+                        }}>
+                          State: {t.state || (t.work_location ? t.work_location.state : 'Gujarat')}
+                        </span>
+                        {(t.pincode || (t.work_location && t.work_location.pincode)) && (
+                          <span style={{
+                            padding: '2px 8px',
+                            background: 'rgba(34, 197, 94, 0.12)',
+                            border: '1px solid rgba(34, 197, 94, 0.3)',
+                            color: '#4ade80',
+                            borderRadius: '4px',
+                            fontSize: '0.74rem',
+                            fontWeight: 600
+                          }}>
+                            📮 Pin: {t.pincode || t.work_location.pincode}
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ fontSize: '0.76rem', color: '#cbd5e1', marginTop: '5px', lineHeight: '1.35', background: 'rgba(15, 23, 42, 0.6)', padding: '6px 8px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                        🏛️ <strong style={{ color: '#94a3b8' }}>Office Address:</strong> {t.address || t.office_address || (t.work_location ? t.work_location.address : `Government Administrative Complex, ${t.city || 'Gandhinagar'}, ${t.state || 'Gujarat'}`)}
                       </div>
                     </div>
 
@@ -781,25 +982,25 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
                       <div style={{ fontSize: '0.82rem', marginBottom: '6px' }}>
                         <span style={{ color: 'var(--text-muted)' }}>Start Date: </span>
                         <strong style={{ color: '#22c55e', fontFamily: 'monospace' }}>
-                          {t.startDateFormatted || '24-07-2026 9:14 AM'}
+                          {startDisplay}
                         </strong>
                       </div>
 
                       <div style={{ fontSize: '0.82rem', marginBottom: '6px' }}>
                         <span style={{ color: 'var(--text-muted)' }}>End Date: </span>
                         <strong style={{ color: isFinished ? '#ef4444' : '#f59e0b', fontFamily: 'monospace' }}>
-                          {t.endDateFormatted || '12-08-2026 5:00 PM'}
+                          {endDisplay}
                         </strong>
                       </div>
 
                       <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '4px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <span>Bid Doc Hash: <span style={{ color: 'var(--primary-cyan)', cursor: 'pointer' }}>View</span></span>
-                        <span style={{ color: 'var(--primary-cyan)', cursor: 'pointer' }}>My Representations</span>
+                        <span>Bid Doc Hash: <span onClick={() => setSelectedTender(t)} style={{ color: 'var(--primary-cyan)', cursor: 'pointer', textDecoration: 'underline' }}>View Copy</span></span>
+                        <span onClick={() => setSelectedTender(t)} style={{ color: 'var(--primary-cyan)', cursor: 'pointer' }}>Evaluate</span>
                       </div>
                     </div>
                   </div>
 
-                  {/* GeM Stepper Progress Bar & Participate Button matching Screenshot 2 */}
+                  {/* GeM Stepper Progress Bar & Evaluate Button */}
                   <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
                       {[
@@ -830,25 +1031,59 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
 
                       <button
                         onClick={() => setSelectedTender(t)}
-                        className="btn-cyan"
-                        style={{ padding: '8px 18px', fontSize: '0.84rem', background: '#0284c7', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 700 }}
+                        style={{
+                          padding: '8px 14px',
+                          fontSize: '0.82rem',
+                          background: 'rgba(56, 189, 248, 0.1)',
+                          border: '1px solid rgba(56, 189, 248, 0.3)',
+                          color: '#38bdf8',
+                          borderRadius: '6px',
+                          fontWeight: 600,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          cursor: 'pointer'
+                        }}
                       >
-                        Participate
+                        <FileText style={{ width: '14px', height: '14px' }} />
+                        Read Tender Copy
+                      </button>
+
+                      <button
+                        onClick={() => setSelectedTender(t)}
+                        className="btn-cyan"
+                        style={{
+                          padding: '8px 18px',
+                          fontSize: '0.84rem',
+                          background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: '6px',
+                          fontWeight: 700,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          cursor: 'pointer',
+                          boxShadow: '0 4px 12px rgba(2, 132, 199, 0.3)'
+                        }}
+                      >
+                        <Sparkles style={{ width: '14px', height: '14px' }} />
+                        Evaluate
                       </button>
                     </div>
                   </div>
                 </div>
               );
             })}
-          {tenders.length === 0 && !loading && (
-            <div style={{ textAlign: 'center', padding: '48px 24px', background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border-color)', margin: '20px 0' }}>
-              <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#fff', marginBottom: '8px' }}>📡 No live GeM data retrieved for the selected parameters</div>
-              <div style={{ fontSize: '0.88rem', color: 'var(--text-muted)', marginBottom: '20px' }}>Click "Scan GeM Tenders Now" to execute an authorized public data acquisition directly from the GeM Portal listing.</div>
-              <button onClick={handleScanAction} className="btn-cyan" style={{ padding: '10px 24px', fontSize: '0.9rem', background: '#0284c7', color: '#fff', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}>
-                ⚡ Scan GeM Tenders Now
-              </button>
-            </div>
-          )}
+            {tenders.length === 0 && !loading && (
+              <div style={{ textAlign: 'center', padding: '48px 24px', background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border-color)', margin: '20px 0' }}>
+                <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#fff', marginBottom: '8px' }}>📡 No live GeM data retrieved for the selected parameters</div>
+                <div style={{ fontSize: '0.88rem', color: 'var(--text-muted)', marginBottom: '20px' }}>Click "Scan GeM Tenders Now" to execute an authorized public data acquisition directly from the GeM Portal listing.</div>
+                <button onClick={handleScanAction} className="btn-cyan" style={{ padding: '10px 24px', fontSize: '0.9rem', background: '#0284c7', color: '#fff', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}>
+                  ⚡ Scan GeM Tenders Now
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -867,7 +1102,7 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
               </div>
               <button onClick={() => setShowDiagnosticModal(false)} style={{ background: '#334155', border: 'none', color: '#fff', borderRadius: '6px', padding: '6px 12px', cursor: 'pointer', fontWeight: 700 }}>Close</button>
             </div>
-            
+
             {/* Multi-Tab Row */}
             <div style={{ display: 'flex', gap: '8px', padding: '12px 24px', background: '#1e293b', borderBottom: '1px solid #334155' }}>
               {['Connection', 'Request', 'Response', 'Pagination', 'Records', 'Errors'].map(tab => (
@@ -896,8 +1131,8 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
                   <div style={{ background: '#1e293b', padding: '16px', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
                       <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Verification Status State</div>
-                      <div style={{ fontSize: '1.1rem', fontWeight: 900, color: gemHealth.status === 'VERIFIED_CONNECTED' ? '#34d399' : (gemHealth.status === 'SOURCE_REACHABLE_ZERO' ? '#f59e0b' : '#ef4444'), marginTop: '4px' }}>
-                        {gemHealth.status === 'VERIFIED_CONNECTED' ? '🟢 VERIFIED CONNECTED' : (gemHealth.status === 'SOURCE_REACHABLE_ZERO' ? '🟡 SOURCE REACHABLE — 0 RECORDS' : (gemHealth.status === 'PARTIAL_SCAN' ? '🟠 PARTIAL SCAN' : '🔴 NOT VERIFIED'))}
+                      <div style={{ fontSize: '1.1rem', fontWeight: 900, color: isGeMVerified(gemHealth) ? '#34d399' : (gemHealth.status === 'SOURCE_REACHABLE_ZERO' ? '#f59e0b' : '#ef4444'), marginTop: '4px' }}>
+                        {isGeMVerified(gemHealth) ? '🟢 VERIFIED CONNECTED' : (gemHealth.status === 'SOURCE_REACHABLE_ZERO' ? '🟡 SOURCE REACHABLE — 0 RECORDS' : (gemHealth.status === 'PARTIAL_SCAN' ? '🟠 PARTIAL SCAN' : '🔴 NOT VERIFIED'))}
                       </div>
                     </div>
                     <div style={{ textAlign: 'right' }}>

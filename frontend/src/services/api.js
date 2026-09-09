@@ -133,6 +133,27 @@ export async function activateLicenseKey(token, key) {
   return data;
 }
 
+export async function generateLicenseKey(token, options = {}) {
+  const { ok, data } = await safeJsonFetch(`${API_BASE}/license/generate`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify(options)
+  });
+  if (!ok) throw new Error(data.error || 'License generation failed');
+  return data;
+}
+
+export async function fetchMyLicenses(token) {
+  const { ok, data } = await safeJsonFetch(`${API_BASE}/license/my-keys`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!ok) throw new Error(data.error || 'Failed to fetch licenses');
+  return data;
+}
+
 export async function fetchTenders(token, filters = {}) {
   const query = new URLSearchParams(filters).toString();
   const { ok, data } = await safeJsonFetch(`${API_BASE}/tenders?${query}`, {
