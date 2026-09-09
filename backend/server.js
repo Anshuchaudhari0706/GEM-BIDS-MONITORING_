@@ -1097,6 +1097,8 @@ const handleTenderEvaluation = async (req, res) => {
     ? pyParsed.emdAmount.display
     : (tender.emd_original || `₹${emdVal.toLocaleString('en-IN')}`);
 
+  let advisoryBank = (pyParsed && pyParsed.advisoryBank) || tender.advisoryBank || tender.advisory_bank || "Bank Of Baroda";
+
   // Update in database cache
   const dbIndex = (db.tenders || []).findIndex(t => (t.id || t.bid_number) === tender.id);
   if (dbIndex !== -1) {
@@ -1105,6 +1107,8 @@ const handleTenderEvaluation = async (req, res) => {
     db.tenders[dbIndex].estimated_value_original = formattedVal;
     db.tenders[dbIndex].emdAmount = emdVal;
     db.tenders[dbIndex].emd_original = emdStr;
+    db.tenders[dbIndex].advisoryBank = advisoryBank;
+    db.tenders[dbIndex].advisory_bank = advisoryBank;
     db.tenders[dbIndex].city = city;
     db.tenders[dbIndex].state = state;
     db.tenders[dbIndex].pincode = pincode;
@@ -1143,6 +1147,8 @@ const handleTenderEvaluation = async (req, res) => {
     estimated_value_original: formattedVal,
     emdAmount: emdVal,
     emd_original: tender.emd_original || `₹${emdVal.toLocaleString('en-IN')}`,
+    advisoryBank: advisoryBank,
+    advisory_bank: advisoryBank,
     epbgAmount: epbgVal,
     epbg_original: tender.epbg_original || `₹${epbgVal.toLocaleString('en-IN')} (3% of Bid Value)`,
     manpower_count: staffCount,
