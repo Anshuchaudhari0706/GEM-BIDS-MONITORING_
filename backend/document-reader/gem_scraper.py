@@ -49,6 +49,20 @@ CATEGORY_MAP = {
     "it": "IT"
 }
 
+def extract_advisory_bank(text):
+    if not text:
+        return "Bank Of Baroda"
+    bank_patterns = [
+        r"(?:एडवाइजरी\s+बैंक\/Advisory\s+Bank|Advisory\s+Bank|एडवाइजरी\s+बैंक)\s*[:\-]?\s*([^\n\r]+)",
+        r"(?:Bank\s+Of\s+Baroda|State\s+Bank\s+of\s+India|Punjab\s+National\s+Bank|HDFC\s+Bank|ICICI\s+Bank|Canara\s+Bank|Union\s+Bank\s+of\s+India|Axis\s+Bank|Bank\s+of\s+India|Central\s+Bank\s+of\s+India|Indian\s+Bank|Kotak\s+Mahindra\s+Bank|IndusInd\s+Bank)"
+    ]
+    for p in bank_patterns:
+        m = re.search(p, str(text), re.IGNORECASE)
+        if m:
+            clean = m.group(1).strip() if len(m.groups()) > 0 else m.group(0).strip()
+            return clean
+    return "Bank Of Baroda"
+
 def normalize_gem_date(value):
     """
     Convert GeM date formats to YYYY-MM-DD.
@@ -1569,6 +1583,8 @@ class GeMLiveScraper:
                 "formattedValue": formatted_val,
                 "emdAmount": emd_num,
                 "emd_original": emd_str,
+                "advisoryBank": extract_advisory_bank(full_text),
+                "advisory_bank": extract_advisory_bank(full_text),
                 "epbgAmount": epbg_num,
                 "epbg_original": epbg_str,
                 "isHighValue": is_high_val,

@@ -324,11 +324,57 @@ def extract_consignee_details(text, dept_name="", default_state=None):
             "raw_box": None
         }
 
-    # Pattern 0: Direct Official GeM Consignee Table (परेषिती/रिपोर्टिंग अधिकारी / Consignee Reporting Officer)
-    table_officer_m = re.search(r"(?:परेषिती|Consignee)[^\n\r]*\n+(?:[^\n\r]+\n+){1,8}?\s*1\s*\n+([^\n\r]+)\n+([1-9][0-9]{5}\s*,[^\n\r]+)", text, re.IGNORECASE)
+    # Pattern 0A: Direct Official GeM Consignee Table (परेषिती/रिपोर्टिंग अधिकारी / Consignee Reporting Officer)
+    table_officer_m = re.search(r"(?:परेषिती|Consignee)[^\n\r]*\n+(?:[^\n\r]+\n+){1,8}?\s*1\s*\n+\s*([^\n\r]+)\n+\s*([1-9][0-9]{5}\s*,[^\n\r]+)", text, re.IGNORECASE)
     if table_officer_m:
         officer_name = table_officer_m.group(1).strip()
         addr_raw = table_officer_m.group(2).strip()
+
+        pin_m = re.search(r"\b[1-9][0-9]{5}\b", addr_raw)
+        pin = pin_m.group(0) if pin_m else None
+
+        tokens = [t.strip() for t in addr_raw.split(',') if t.strip() and t.strip() != pin]
+
+        detected_city = None
+        detected_state = default_state or "Gujarat"
+
+        if pin and pin[:3] in PINCODE_PREFIX_CITY_MAP:
+            detected_city, detected_state = PINCODE_PREFIX_CITY_MAP[pin[:3]]
+
+        for t in reversed(tokens):
+            t_clean = re.sub(r'[^a-zA-Z\s]', '', t).strip().title()
+            for st, cities in MAJOR_INDIAN_CITIES.items():
+                for c in cities:
+                    if c.lower() == t_clean.lower() or c.lower() in t.lower():
+                        detected_city = c
+                        detected_state = st
+                        break
+                if detected_city:
+                    break
+            if detected_city:
+                break
+
+        if not detected_city:
+            detected_city, detected_state, _, _ = resolve_department_location(dept_name, addr_raw, "", default_state)
+
+        clean_addr = ", ".join(tokens)
+        full_addr = f"{clean_addr} - {pin}" if pin and pin not in clean_addr else clean_addr
+
+        return {
+            "pincode": pin,
+            "consignee_officer": officer_name,
+            "city": detected_city or "Gandhinagar",
+            "state": detected_state,
+            "address": full_addr,
+            "raw_box": f"{officer_name}, {addr_raw}"
+        }
+
+    # Pattern 0B: Key-Value Format "Consignee Reporting/Officer: ... Address: ..."
+    kv_officer_m = re.search(r"(?:Consignee\s*(?:\/)?\s*Reporting\s*(?:\/)?\s*Officer|परेषिती\s*(?:\/)?\s*रिपोर्टिंग\s*अधिकारी)\s*[:\-]\s*([^\n\r]+)", text, re.IGNORECASE)
+    kv_addr_m = re.search(r"(?:Official\s*Office\s*Address|Office\s*Address|Address|पता)\s*[:\-]\s*([^\n\r]+)", text, re.IGNORECASE)
+    if kv_officer_m and kv_addr_m:
+        officer_name = kv_officer_m.group(1).strip()
+        addr_raw = kv_addr_m.group(1).strip()
 
         pin_m = re.search(r"\b[1-9][0-9]{5}\b", addr_raw)
         pin = pin_m.group(0) if pin_m else None
