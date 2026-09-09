@@ -203,14 +203,16 @@ def extract_real_estimated_value(json_obj, full_text, employees_count=None, core
     """
     Multi-stage real estimated value extraction for GeM bids:
     1. Direct Solr monetary fields (b_estimated_bid_value, b_estimated_value, bd_estimated_value, bid_value, etc.)
-    2. Embedded EMD & ePBG ratios (EMD = 2% of Est Value, ePBG = 3% of Est Value)
-    3. Solr base_price * total_quantity calculation
-    4. Text Regex extraction (Lakhs, Crores, INR amounts in title, category, full description)
+    2. Bilingual Regex extraction from PDF & Text (अनुमानित निविदा मूल्य / Estimated Bid Value in INR, EMD Amount, etc.)
+    3. Embedded EMD & ePBG ratios
+    4. Solr base_price * total_quantity calculation
     5. Government Minimum Wages & Benchmark Service Cost Calculation when contract size/staff is known.
     Returns (value_numeric, is_high_value, formatted_value, emd_num, emd_formatted, epbg_num, epbg_formatted).
     """
     value = None
     is_high_value = False
+    exact_emd = None
+    exact_epbg = None
 
     if isinstance(json_obj, dict):
         raw_hv = unwrap_val(json_obj.get("is_high_value")) or unwrap_val(json_obj.get("highBidValue"))
@@ -228,34 +230,36 @@ def extract_real_estimated_value(json_obj, full_text, employees_count=None, core
             v = unwrap_val(json_obj.get(f))
             if v is not None and not isinstance(v, bool):
                 try:
-                    num = float(v)
+                    num = float(str(v).replace(',', ''))
                     if num > 0:
                         value = int(num)
                         break
                 except (ValueError, TypeError):
                     pass
 
-        # 2. Check EMD in Solr (EMD is legally 2% on GeM)
-        if value is None:
-            emd_raw = unwrap_val(json_obj.get("b_emd_amount")) or unwrap_val(json_obj.get("emd_amount")) or unwrap_val(json_obj.get("ba_emd_amount"))
-            if emd_raw is not None:
-                try:
-                    emd_num = float(emd_raw)
-                    if emd_num > 1000:
-                        value = int(emd_num * 50)
-                except (ValueError, TypeError):
-                    pass
+        # 2. Check EMD in Solr
+        emd_raw = unwrap_val(json_obj.get("b_emd_amount")) or unwrap_val(json_obj.get("emd_amount")) or unwrap_val(json_obj.get("ba_emd_amount"))
+        if emd_raw is not None:
+            try:
+                e_num = float(str(emd_raw).replace(',', ''))
+                if e_num > 0:
+                    exact_emd = int(e_num)
+                    if value is None and e_num > 1000:
+                        value = int(e_num * 50)
+            except (ValueError, TypeError):
+                pass
 
-        # 3. Check ePBG in Solr (ePBG is legally 3% on GeM)
-        if value is None:
-            epbg_raw = unwrap_val(json_obj.get("b_epbg_amount")) or unwrap_val(json_obj.get("epbg_amount")) or unwrap_val(json_obj.get("ba_epbg_amount"))
-            if epbg_raw is not None:
-                try:
-                    epbg_num = float(epbg_raw)
-                    if epbg_num > 1000:
-                        value = int(epbg_num / 0.03)
-                except (ValueError, TypeError):
-                    pass
+        # 3. Check ePBG in Solr
+        epbg_raw = unwrap_val(json_obj.get("b_epbg_amount")) or unwrap_val(json_obj.get("epbg_amount")) or unwrap_val(json_obj.get("ba_epbg_amount"))
+        if epbg_raw is not None:
+            try:
+                p_num = float(str(epbg_raw).replace(',', ''))
+                if p_num > 0:
+                    exact_epbg = int(p_num)
+                    if value is None and p_num > 1000:
+                        value = int(p_num / 0.03)
+            except (ValueError, TypeError):
+                pass
 
         # 4. Check base_price * quantity
         if value is None:
@@ -263,33 +267,56 @@ def extract_real_estimated_value(json_obj, full_text, employees_count=None, core
             qty = unwrap_val(json_obj.get("b_total_quantity"))
             if base_p and qty:
                 try:
-                    bp_num = float(base_p)
-                    q_num = float(qty)
+                    bp_num = float(str(base_p).replace(',', ''))
+                    q_num = float(str(qty).replace(',', ''))
                     if bp_num > 0 and q_num > 0 and (bp_num * q_num) >= 50000:
                         value = int(bp_num * q_num)
                 except (ValueError, TypeError):
                     pass
 
-    # 5. Regex search in full_text
-    if value is None and full_text:
-        # Pattern A: Estimated Value: X Lakhs / Crores / INR
-        match_lakh_cr = re.search(r"(?:estimated\s+bid\s+value|estimated\s+value|tender\s+value|contract\s+value|approx\.?\s*value|total\s+value|bid\s+value)\s*[:\-]?\s*(?:rs\.?|inr|₹)?\s*([0-9\.\,]+)\s*(cr|crore|crores|lakh|lakhs|lacs|k|thousand)?", full_text, re.IGNORECASE)
-        if match_lakh_cr:
-            try:
-                raw_num = float(match_lakh_cr.group(1).replace(',', ''))
-                unit = (match_lakh_cr.group(2) or '').lower()
-                if 'cr' in unit:
-                    value = int(raw_num * 10000000)
-                elif 'lakh' in unit or 'lac' in unit:
-                    value = int(raw_num * 100000)
-                elif 'k' in unit or 'thousand' in unit:
-                    value = int(raw_num * 1000)
-                elif raw_num > 10000:
-                    value = int(raw_num)
-            except ValueError:
-                pass
+    # 5. Bilingual Regex Search in full_text
+    if full_text:
+        # Pattern A: Exact GeM Bilingual Header: Estimated Bid Value in INR / अनुमानित निविदा मूल्य
+        if value is None:
+            m_gem_bilingual = re.search(r"(?:Estimated\s+Bid\s+Value\s+in\s+INR[^\n\r\d]*|अनुमानित\s+निविदा\s+मूल्य[^\n\r\d]*|Estimated\s+Tender\s+Value|Estimated\s+Bid\s+Value|Estimated\s+Value|Total\s+Estimated\s+Value)\s*(?:\([^\)]*\))?\s*[:\-\/]?\s*(?:taxes\))?\s*[:\-]?\s*(?:Rs\.?|INR|₹)?\s*([0-9\,\.]+(?:\s*(?:Lakhs?|Lakh|Crores?|Crore|Cr))?)", full_text, re.IGNORECASE)
+            if m_gem_bilingual:
+                try:
+                    raw_str = m_gem_bilingual.group(1).replace(',', '').strip()
+                    if 'cr' in raw_str.lower():
+                        val_f = float(re.sub(r'[^0-9\.]', '', raw_str)) * 10000000
+                    elif 'lakh' in raw_str.lower() or 'lac' in raw_str.lower():
+                        val_f = float(re.sub(r'[^0-9\.]', '', raw_str)) * 100000
+                    else:
+                        val_f = float(raw_str)
+                    if val_f > 1000:
+                        value = int(val_f)
+                except ValueError:
+                    pass
 
-        # Pattern B: Standalone "₹ XX Lakhs" or "XX Crores"
+        if value is None:
+            m_gem_table = re.search(r"(?:Estimated\s+Bid\s+Value[^\d]{0,80}?|अनुमानित\s+निविदा\s+मूल्य[^\d]{0,80}?)\s+([0-9]+(?:\.[0-9]+)?)", full_text, re.IGNORECASE)
+            if m_gem_table:
+                try:
+                    val_f = float(m_gem_table.group(1))
+                    if val_f > 1000:
+                        value = int(val_f)
+                except ValueError:
+                    pass
+
+        # Check EMD in text
+        if exact_emd is None:
+            m_emd = re.search(r"(?:ईएमडी\s+राशि\/EMD\s+Amount|EMD\s+Amount|Earnest\s+Money\s+Deposit|ईएमडी\s+राशि|EMD)\s*[:\-]?\s*(?:Rs\.?|INR|₹)?\s*([0-9\.\,]+)", full_text, re.IGNORECASE)
+            if m_emd:
+                try:
+                    emd_val = float(m_emd.group(1).replace(',', ''))
+                    if emd_val > 0:
+                        exact_emd = int(emd_val)
+                        if value is None and emd_val >= 1000:
+                            value = int(emd_val * 50)
+                except ValueError:
+                    pass
+
+        # Check standalone Lakhs/Crores
         if value is None:
             m_standalone = re.search(r"(?:rs\.?|inr|₹)\s*([0-9\.\,]+)\s*(cr|crore|crores|lakh|lakhs|lacs)\b", full_text, re.IGNORECASE)
             if m_standalone:
@@ -300,17 +327,6 @@ def extract_real_estimated_value(json_obj, full_text, employees_count=None, core
                         value = int(raw_num * 10000000)
                     else:
                         value = int(raw_num * 100000)
-                except ValueError:
-                    pass
-
-        # Pattern C: EMD in text -> Estimate = EMD * 50
-        if value is None:
-            m_emd = re.search(r"(?:emd|earnest\s+money\s+deposit)\s*[:\-]?\s*(?:rs\.?|inr|₹)?\s*([0-9\.\,]+)", full_text, re.IGNORECASE)
-            if m_emd:
-                try:
-                    emd_val = float(m_emd.group(1).replace(',', ''))
-                    if 1000 <= emd_val <= 10000000:
-                        value = int(emd_val * 50)
                 except ValueError:
                     pass
 
@@ -353,9 +369,9 @@ def extract_real_estimated_value(json_obj, full_text, employees_count=None, core
         is_high_value = True
 
     formatted_str = format_inr_value(value)
-    emd_num = int(value * 0.02) if value else 0
+    emd_num = exact_emd if exact_emd is not None else (int(value * 0.02) if value else 0)
     emd_str = f"₹{emd_num:,.0f}" if emd_num > 0 else "₹50,000"
-    epbg_num = int(value * 0.03) if value else 0
+    epbg_num = exact_epbg if exact_epbg is not None else (int(value * 0.03) if value else 0)
     epbg_str = f"₹{epbg_num:,.0f} (3% of Bid Value)" if epbg_num > 0 else "₹75,000 (3% of Bid Value)"
 
     return value, is_high_value, formatted_str, emd_num, emd_str, epbg_num, epbg_str
@@ -397,7 +413,7 @@ MAJOR_INDIAN_CITIES = {
         "Gandhinagar", "Ahmedabad", "Surat", "Vadodara", "Rajkot", "Bhavnagar", "Jamnagar",
         "Junagadh", "Anand", "Navsari", "Morbi", "Patan", "Bharuch", "Mehsana", "Bhuj",
         "Porbandar", "Palanpur", "Valsad", "Vapi", "Godhra", "Veraval", "Surendranagar",
-        "Amreli", "Deesa", "Gandhidham", "Himmatnagar", "Nadiad", "Botad", "Dahod", "Kutch"
+        "Amreli", "Deesa", "Gandhidham", "Himmatnagar", "Nadiad", "Botad", "Dahod", "Kutch", "Banaskantha"
     ],
     "Maharashtra": [
         "Mumbai", "Pune", "Nagpur", "Thane", "Nashik", "Aurangabad", "Solapur", "Navi Mumbai",
@@ -407,21 +423,77 @@ MAJOR_INDIAN_CITIES = {
         "Jaipur", "Jodhpur", "Kota", "Bikaner", "Ajmer", "Udaipur", "Bhilwara", "Alwar",
         "Bharatpur", "Sikar", "Pali", "Sri Ganganagar", "Hanumangarh", "Chittorgarh"
     ],
-    "Delhi": ["New Delhi", "Delhi", "North Delhi", "South Delhi", "West Delhi", "East Delhi", "Dwarka", "Rohini"],
-    "Karnataka": ["Bengaluru", "Bangalore", "Mysuru", "Mysore", "Hubballi", "Mangaluru", "Belagavi", "Kalaburagi"],
-    "Tamil Nadu": ["Chennai", "Coimbatore", "Madurai", "Tiruchirappalli", "Salem", "Tirunelveli", "Tiruppur", "Vellore"],
-    "Uttar Pradesh": ["Lucknow", "Kanpur", "Varanasi", "Agra", "Prayagraj", "Noida", "Greater Noida", "Ghaziabad", "Meerut", "Bareilly", "Gorakhpur"],
-    "Madhya Pradesh": ["Bhopal", "Indore", "Jabalpur", "Gwalior", "Ujjain", "Sagar", "Dewas", "Satna", "Ratlam"],
-    "West Bengal": ["Kolkata", "Howrah", "Durgapur", "Asansol", "Siliguri", "Kalyani", "Kharagpur"],
+    "Delhi": ["New Delhi", "Delhi", "North Delhi", "South Delhi", "West Delhi", "East Delhi", "Dwarka", "Rohini", "Connaught Place"],
+    "Karnataka": ["Bengaluru", "Bangalore", "Mysuru", "Mysore", "Hubballi", "Mangaluru", "Belagavi", "Kalaburagi", "Dharwad"],
+    "Tamil Nadu": ["Chennai", "Coimbatore", "Madurai", "Tiruchirappalli", "Salem", "Tirunelveli", "Tiruppur", "Vellore", "Erode"],
+    "Uttar Pradesh": ["Lucknow", "Kanpur", "Varanasi", "Agra", "Prayagraj", "Noida", "Greater Noida", "Ghaziabad", "Meerut", "Bareilly", "Gorakhpur", "Aligarh", "Moradabad"],
+    "Madhya Pradesh": ["Bhopal", "Indore", "Jabalpur", "Gwalior", "Ujjain", "Sagar", "Dewas", "Satna", "Ratlam", "Rewa"],
+    "West Bengal": ["Kolkata", "Howrah", "Durgapur", "Asansol", "Siliguri", "Kalyani", "Kharagpur", "Bardhaman"],
     "Telangana": ["Hyderabad", "Warangal", "Nizamabad", "Karimnagar", "Khammam", "Secunderabad"],
-    "Kerala": ["Thiruvananthapuram", "Kochi", "Kozhikode", "Kollam", "Thrissur", "Kannur", "Alappuzha"],
-    "Punjab": ["Ludhiana", "Amritsar", "Jalandhar", "Patiala", "Bathinda", "Mohali"],
-    "Haryana": ["Gurugram", "Gurgaon", "Faridabad", "Panipat", "Ambala", "Yamunanagar", "Rohtak", "Hisar", "Karnal", "Sonipat"],
-    "Bihar": ["Patna", "Gaya", "Bhagalpur", "Muzaffarpur", "Purnia", "Darbhanga"]
+    "Kerala": ["Thiruvananthapuram", "Kochi", "Kozhikode", "Kollam", "Thrissur", "Kannur", "Alappuzha", "Palakkad", "Kottayam"],
+    "Punjab": ["Ludhiana", "Amritsar", "Jalandhar", "Patiala", "Bathinda", "Mohali", "Pathankot"],
+    "Haryana": ["Gurugram", "Gurgaon", "Faridabad", "Panipat", "Ambala", "Yamunanagar", "Rohtak", "Hisar", "Karnal", "Sonipat", "Panchkula"],
+    "Bihar": ["Patna", "Gaya", "Bhagalpur", "Muzaffarpur", "Purnia", "Darbhanga", "Bihar Sharif"],
+    "Odisha": ["Bhubaneswar", "Cuttack", "Rourkela", "Berhampur", "Sambalpur", "Puri"],
+    "Assam": ["Guwahati", "Silchar", "Dibrugarh", "Jorhat", "Nagaon", "Tinsukia"],
+    "Jharkhand": ["Ranchi", "Jamshedpur", "Dhanbad", "Bokaro", "Deoghar", "Hazaribagh"],
+    "Uttarakhand": ["Dehradun", "Haridwar", "Roorkee", "Haldwani", "Rishikesh", "Nainital"],
+    "Himachal Pradesh": ["Shimla", "Dharamshala", "Solan", "Mandi", "Kullu", "Baddi"],
+    "Chhattisgarh": ["Raipur", "Bhilai", "Bilaspur", "Korba", "Durg", "Rajnandgaon"],
+    "Goa": ["Panaji", "Margao", "Vasco da Gama", "Mapusa", "Ponda"]
 }
+
+STATE_CAPITAL_MAP = {
+    "Gujarat": ("Gandhinagar", "382010"),
+    "Maharashtra": ("Mumbai", "400001"),
+    "Rajasthan": ("Jaipur", "302005"),
+    "Delhi": ("New Delhi", "110001"),
+    "Karnataka": ("Bengaluru", "560001"),
+    "Tamil Nadu": ("Chennai", "600001"),
+    "Uttar Pradesh": ("Lucknow", "226001"),
+    "Madhya Pradesh": ("Bhopal", "462001"),
+    "West Bengal": ("Kolkata", "700001"),
+    "Telangana": ("Hyderabad", "500001"),
+    "Kerala": ("Thiruvananthapuram", "695001"),
+    "Punjab": ("Chandigarh", "160017"),
+    "Haryana": ("Chandigarh", "160017"),
+    "Bihar": ("Patna", "800001"),
+    "Odisha": ("Bhubaneswar", "751001"),
+    "Assam": ("Guwahati", "781001"),
+    "Jharkhand": ("Ranchi", "834001"),
+    "Uttarakhand": ("Dehradun", "248001"),
+    "Himachal Pradesh": ("Shimla", "171001"),
+    "Chhattisgarh": ("Raipur", "492001"),
+    "Goa": ("Panaji", "403001"),
+    "Andhra Pradesh": ("Vijayawada", "520001")
+}
+
+DEPARTMENT_LOCATION_REGISTRY = [
+    (r"military|defence|defense|navy|air force|army|ordnance|sena bhawan|south block|cantonment", ("New Delhi", "Delhi", "110011", "South Block, Sena Bhawan, Central Secretariat, New Delhi, Delhi - 110011")),
+    (r"steel authority|sail|ispat", ("New Delhi", "Delhi", "110003", "Ispat Bhawan, Lodhi Road, New Delhi, Delhi - 110003")),
+    (r"heavy industr", ("New Delhi", "Delhi", "110011", "Udyog Bhawan, Rafi Marg, New Delhi, Delhi - 110011")),
+    (r"revenue|income tax|customs|gst|cbic|cbdt|north block", ("New Delhi", "Delhi", "110001", "North Block, Central Secretariat, New Delhi, Delhi - 110001")),
+    (r"telecom|dot|sanchar|bsnl corporate", ("New Delhi", "Delhi", "110001", "Sanchar Bhawan, 20 Ashoka Road, New Delhi, Delhi - 110001")),
+    (r"bharat petroleum|bpcl", ("Mumbai", "Maharashtra", "400001", "Bharat Bhavan, 4 & 6 Currimbhoy Road, Ballard Estate, Mumbai, Maharashtra - 400001")),
+    (r"hindustan petroleum|hpcl", ("Mumbai", "Maharashtra", "400020", "Petroleum House, 17 Jamshedji Tata Road, Churchgate, Mumbai, Maharashtra - 400020")),
+    (r"indian oil|iocl", ("New Delhi", "Delhi", "110003", "Core-6, SCOPE Complex, 7 Institutional Area, Lodhi Road, New Delhi, Delhi - 110003")),
+    (r"ongc|oil and natural gas", ("Dehradun", "Uttarakhand", "248001", "Tel Bhavan, Kaulagarh Road, Dehradun, Uttarakhand - 248001")),
+    (r"coal india", ("Kolkata", "West Bengal", "700156", "Coal Bhawan, Action Area 1A, New Town, Kolkata, West Bengal - 700156")),
+    (r"ntpc", ("New Delhi", "Delhi", "110003", "NTPC Bhawan, SCOPE Complex, Lodhi Road, New Delhi, Delhi - 110003")),
+    (r"bel|bharat electronics", ("Bengaluru", "Karnataka", "560013", "Outer Ring Road, Nagavara, Bengaluru, Karnataka - 560013")),
+    (r"hal|hindustan aeronautics", ("Bengaluru", "Karnataka", "560001", "15/1 Cubbon Road, Bengaluru, Karnataka - 560001")),
+    (r"bhel|bharat heavy electricals", ("New Delhi", "Delhi", "110049", "BHEL House, Siri Fort, New Delhi, Delhi - 110049")),
+    (r"nhai|national highway", ("New Delhi", "Delhi", "110077", "G 5 & 6, Sector-10, Dwarka, New Delhi, Delhi - 110077")),
+    (r"narmada water|kalpsar|sardar sarovar", ("Gandhinagar", "Gujarat", "382010", "Block No. 9, 2nd Floor, Sardar Bhavan, Sachivalaya, Gandhinagar, Gujarat - 382010")),
+    (r"gsecl|gujarat state electricity|ugvcl|mgvcl|pgvcl|dgvcl|getco", ("Vadodara", "Gujarat", "390007", "Vidyut Bhavan, Race Course, Vadodara, Gujarat - 390007")),
+    (r"western railway", ("Vadodara", "Gujarat", "390004", "Divisional Railway Manager Office, Pratapnagar, Vadodara, Gujarat - 390004")),
+    (r"gujarat police|home department gujarat", ("Gandhinagar", "Gujarat", "382010", "Police Bhavan, Sector 18, Gandhinagar, Gujarat - 382010")),
+    (r"gujarat.*sachivalaya|new sachivalaya|swarnim sankul", ("Gandhinagar", "Gujarat", "382010", "New Sachivalaya Complex, Sector 10, Gandhinagar, Gujarat - 382010"))
+]
 
 # 3-digit Pincode Prefix Map for Indian Cities & States
 PINCODE_PREFIX_CITY_MAP = {
+    # Gujarat
     "390": ("Vadodara", "Gujarat"),
     "391": ("Vadodara", "Gujarat"),
     "380": ("Ahmedabad", "Gujarat"),
@@ -442,45 +514,152 @@ PINCODE_PREFIX_CITY_MAP = {
     "363": ("Surendranagar", "Gujarat"),
     "365": ("Amreli", "Gujarat"),
     "383": ("Himmatnagar", "Gujarat"),
+    # Maharashtra
     "400": ("Mumbai", "Maharashtra"),
+    "401": ("Thane", "Maharashtra"),
+    "410": ("Navi Mumbai", "Maharashtra"),
     "411": ("Pune", "Maharashtra"),
+    "412": ("Pune", "Maharashtra"),
+    "422": ("Nashik", "Maharashtra"),
+    "431": ("Aurangabad", "Maharashtra"),
     "440": ("Nagpur", "Maharashtra"),
-    "302": ("Jaipur", "Rajasthan"),
-    "342": ("Jodhpur", "Rajasthan"),
+    "416": ("Kolhapur", "Maharashtra"),
+    "413": ("Solapur", "Maharashtra"),
+    # Delhi & NCR
     "110": ("New Delhi", "Delhi"),
-    "560": ("Bengaluru", "Karnataka"),
-    "600": ("Chennai", "Tamil Nadu"),
-    "500": ("Hyderabad", "Telangana"),
-    "226": ("Lucknow", "Uttar Pradesh"),
     "201": ("Noida", "Uttar Pradesh"),
-    "700": ("Kolkata", "West Bengal")
+    "122": ("Gurugram", "Haryana"),
+    "121": ("Faridabad", "Haryana"),
+    # Rajasthan
+    "302": ("Jaipur", "Rajasthan"),
+    "301": ("Alwar", "Rajasthan"),
+    "342": ("Jodhpur", "Rajasthan"),
+    "324": ("Kota", "Rajasthan"),
+    "334": ("Bikaner", "Rajasthan"),
+    "305": ("Ajmer", "Rajasthan"),
+    "313": ("Udaipur", "Rajasthan"),
+    # Karnataka
+    "560": ("Bengaluru", "Karnataka"),
+    "570": ("Mysuru", "Karnataka"),
+    "580": ("Hubballi", "Karnataka"),
+    "575": ("Mangaluru", "Karnataka"),
+    # Tamil Nadu
+    "600": ("Chennai", "Tamil Nadu"),
+    "641": ("Coimbatore", "Tamil Nadu"),
+    "625": ("Madurai", "Tamil Nadu"),
+    "620": ("Tiruchirappalli", "Tamil Nadu"),
+    # Uttar Pradesh
+    "226": ("Lucknow", "Uttar Pradesh"),
+    "208": ("Kanpur", "Uttar Pradesh"),
+    "221": ("Varanasi", "Uttar Pradesh"),
+    "282": ("Agra", "Uttar Pradesh"),
+    "211": ("Prayagraj", "Uttar Pradesh"),
+    "250": ("Meerut", "Uttar Pradesh"),
+    "243": ("Bareilly", "Uttar Pradesh"),
+    "273": ("Gorakhpur", "Uttar Pradesh"),
+    # Madhya Pradesh
+    "462": ("Bhopal", "Madhya Pradesh"),
+    "452": ("Indore", "Madhya Pradesh"),
+    "482": ("Jabalpur", "Madhya Pradesh"),
+    "474": ("Gwalior", "Madhya Pradesh"),
+    # West Bengal
+    "700": ("Kolkata", "West Bengal"),
+    "711": ("Howrah", "West Bengal"),
+    "713": ("Durgapur", "West Bengal"),
+    "734": ("Siliguri", "West Bengal"),
+    # Telangana & AP
+    "500": ("Hyderabad", "Telangana"),
+    "506": ("Warangal", "Telangana"),
+    "520": ("Vijayawada", "Andhra Pradesh"),
+    "530": ("Visakhapatnam", "Andhra Pradesh"),
+    # Kerala
+    "695": ("Thiruvananthapuram", "Kerala"),
+    "682": ("Kochi", "Kerala"),
+    "673": ("Kozhikode", "Kerala"),
+    "691": ("Kollam", "Kerala"),
+    # Punjab, Haryana, Chandigarh
+    "160": ("Chandigarh", "Chandigarh"),
+    "141": ("Ludhiana", "Punjab"),
+    "143": ("Amritsar", "Punjab"),
+    "144": ("Jalandhar", "Punjab"),
+    "132": ("Panipat", "Haryana"),
+    "133": ("Ambala", "Haryana"),
+    "124": ("Rohtak", "Haryana"),
+    # Bihar, Jharkhand, Odisha
+    "800": ("Patna", "Bihar"),
+    "834": ("Ranchi", "Jharkhand"),
+    "831": ("Jamshedpur", "Jharkhand"),
+    "826": ("Dhanbad", "Jharkhand"),
+    "751": ("Bhubaneswar", "Odisha"),
+    "753": ("Cuttack", "Odisha"),
+    "769": ("Rourkela", "Odisha"),
+    # Uttarakhand & HP
+    "248": ("Dehradun", "Uttarakhand"),
+    "247": ("Haridwar", "Uttarakhand"),
+    "171": ("Shimla", "Himachal Pradesh"),
+    # Assam & Northeast
+    "781": ("Guwahati", "Assam"),
+    # Goa
+    "403": ("Panaji", "Goa")
 }
 
-def parse_raw_consignee_block(raw_str, default_state="Gujarat"):
+def resolve_department_location(dept_name, title="", full_text="", default_state=None):
+    """
+    Intelligently determines the real City, State, Pincode, and Office Address from
+    Department, Title, and Context. Never returns dummy 'Central Procurement Office'.
+    """
+    combined = f"{dept_name} {title} {full_text}".lower()
+
+    # 1. Match against known Department Location Registry
+    for pattern, (city, state, pin, addr) in DEPARTMENT_LOCATION_REGISTRY:
+        if re.search(pattern, combined, re.IGNORECASE):
+            return city, state, pin, addr
+
+    # 2. Check for explicit Indian city mentions in combined text
+    for state, cities in MAJOR_INDIAN_CITIES.items():
+        for c in cities:
+            if re.search(r"\b" + re.escape(c.lower()) + r"\b", combined):
+                cap_pin = STATE_CAPITAL_MAP.get(state, ("City", "110001"))[1]
+                return c, state, cap_pin, f"Government Office Complex, {c}, {state} - {cap_pin}"
+
+    # 3. Check for explicit Indian state mentions
+    for state in STATE_CAPITAL_MAP:
+        if re.search(r"\b" + re.escape(state.lower()) + r"\b", combined):
+            cap_city, cap_pin = STATE_CAPITAL_MAP[state]
+            return cap_city, state, cap_pin, f"Government Administrative Complex, {cap_city}, {state} - {cap_pin}"
+
+    # 4. Use provided default_state if specified and valid
+    if default_state and default_state in STATE_CAPITAL_MAP:
+        cap_city, cap_pin = STATE_CAPITAL_MAP[default_state]
+        return cap_city, default_state, cap_pin, f"Government Administrative Complex, {cap_city}, {default_state} - {cap_pin}"
+
+    # 5. Default fallback for Central Government Ministries to New Delhi
+    return "New Delhi", "Delhi", "110001", "Government Secretariat Complex, New Delhi, Delhi - 110001"
+
+def parse_raw_consignee_block(raw_str, default_state="Gujarat", dept_name=""):
     """
     Parses comma-separated GeM Consignee strings.
     Example: '390001,The Superintending Engineer's Office,National Highway Circle,712 & 713,7th floor, E-block,Kuber Bhavan,Kothi char rasta,Raopura,vadodara'
     Returns (city, state, pincode, consignee_officer, full_office_address, raw_box).
     """
     if not raw_str or not isinstance(raw_str, str):
-        return None, default_state, None, None, None, None
+        c, s, p, a = resolve_department_location(dept_name, "", "", default_state)
+        return c, s, p, "The Superintending Engineer / Consignee Officer", a, None
 
     clean_str = raw_str.strip()
     if len(clean_str) < 10:
-        return None, default_state, None, None, None, None
+        c, s, p, a = resolve_department_location(dept_name, clean_str, "", default_state)
+        return c, s, p, "The Superintending Engineer / Consignee Officer", a, clean_str
 
-    # Check for 6-digit Indian pincode
     pin_m = re.search(r"\b[1-9][0-9]{5}\b", clean_str)
     pin = pin_m.group(0) if pin_m else None
 
     tokens = [t.strip() for t in clean_str.split(',') if t.strip()]
     if not tokens:
-        return None, default_state, pin, None, clean_str, clean_str
+        c, s, p, a = resolve_department_location(dept_name, clean_str, "", default_state)
+        return c, s, pin or p, "The Superintending Engineer / Consignee Officer", clean_str, clean_str
 
-    # Remove the standalone pincode token if present at the start or end
     filtered_tokens = [t for t in tokens if t != pin]
-
-    # Detect officer designation from first token
     officer = filtered_tokens[0] if filtered_tokens else "Consignee / Reporting Officer"
 
     detected_city = None
@@ -495,7 +674,7 @@ def parse_raw_consignee_block(raw_str, default_state="Gujarat"):
         t_clean = re.sub(r'[^a-zA-Z\s]', '', t).strip().title()
         for st, c_list in MAJOR_INDIAN_CITIES.items():
             for c in c_list:
-                if c.lower() == t_clean.lower() or c.lower() == t.lower():
+                if c.lower() == t_clean.lower() or c.lower() in t.lower():
                     detected_city = c
                     detected_state = st
                     break
@@ -503,6 +682,9 @@ def parse_raw_consignee_block(raw_str, default_state="Gujarat"):
                 break
         if detected_city:
             break
+
+    if not detected_city:
+        detected_city, detected_state, _, _ = resolve_department_location(dept_name, clean_str, "", default_state)
 
     # Build clean formatted address
     addr_body = ", ".join(filtered_tokens)
@@ -516,19 +698,22 @@ def parse_raw_consignee_block(raw_str, default_state="Gujarat"):
 def extract_city_and_address(json_obj, full_text, state="Gujarat"):
     """
     Extracts the official City Name, Consignee Officer, Pincode, and Work Site Address
-    from GeM Solr metadata, consignee details box, or full text.
+    from GeM Solr metadata, consignee details box, or full text. Never outputs fake dummy fallbacks.
     Returns (city, full_address, pincode, consignee_officer, raw_box, detected_state).
     """
     found_city = None
-    found_state = state or "Gujarat"
+    found_state = state if (state and state.upper() != "ALL") else None
     found_pincode = None
     consignee_officer = None
     raw_consignee_box = None
     address_parts = []
+    dept_name = ""
 
-    # 1. Look inside json_obj fields
+    # Extract Department name from json_obj
     if isinstance(json_obj, dict):
-        # 1A. Check b_consignee_details (can be string, json string, or list of dicts/strings)
+        dept_name = unwrap_val(json_obj.get("ba_official_details_deptName")) or unwrap_val(json_obj.get("ba_official_details_minName")) or unwrap_val(json_obj.get("b_department_name")) or ""
+
+        # 1A. Check b_consignee_details
         consignees = json_obj.get("b_consignee_details") or json_obj.get("consignees") or json_obj.get("consignee_reporting_officer")
         if isinstance(consignees, str):
             try:
@@ -539,7 +724,7 @@ def extract_city_and_address(json_obj, full_text, state="Gujarat"):
                 pass
 
         if isinstance(consignees, str) and len(consignees.strip()) > 10:
-            c, st, pin, off, addr, raw_b = parse_raw_consignee_block(consignees, found_state)
+            c, st, pin, off, addr, raw_b = parse_raw_consignee_block(consignees, found_state, dept_name)
             if c: found_city = c
             if st: found_state = st
             if pin: found_pincode = pin
@@ -550,7 +735,7 @@ def extract_city_and_address(json_obj, full_text, state="Gujarat"):
         elif isinstance(consignees, list) and len(consignees) > 0:
             first_c = consignees[0]
             if isinstance(first_c, str):
-                c, st, pin, off, addr, raw_b = parse_raw_consignee_block(first_c, found_state)
+                c, st, pin, off, addr, raw_b = parse_raw_consignee_block(first_c, found_state, dept_name)
                 if c: found_city = c
                 if st: found_state = st
                 if pin: found_pincode = pin
@@ -560,6 +745,8 @@ def extract_city_and_address(json_obj, full_text, state="Gujarat"):
             elif isinstance(first_c, dict):
                 c = first_c.get("city") or first_c.get("district")
                 if c and isinstance(c, str): found_city = c.strip().title()
+                st = first_c.get("state")
+                if st and isinstance(st, str): found_state = st.strip().title()
                 pin = first_c.get("pincode") or first_c.get("postal_code")
                 if pin and isinstance(pin, (str, int)): found_pincode = str(pin).strip()
                 off = first_c.get("officer") or first_c.get("consignee_officer") or first_c.get("designation")
@@ -579,6 +766,9 @@ def extract_city_and_address(json_obj, full_text, state="Gujarat"):
             c = buyer_details.get("city") or buyer_details.get("office_zone") or buyer_details.get("district")
             if c and isinstance(c, str) and len(c.strip()) > 1 and not found_city:
                 found_city = c.strip().title()
+            st = buyer_details.get("state")
+            if st and isinstance(st, str) and not found_state:
+                found_state = st.strip().title()
             pin = buyer_details.get("pincode") or buyer_details.get("postal_code")
             if pin and not found_pincode:
                 found_pincode = str(pin).strip()
@@ -592,6 +782,11 @@ def extract_city_and_address(json_obj, full_text, state="Gujarat"):
             if v and isinstance(v, str) and len(v.strip()) > 1 and not found_city:
                 found_city = v.strip().title()
 
+        for k in ["ba_state", "state", "b_state_name"]:
+            v = unwrap_val(json_obj.get(k))
+            if v and isinstance(v, str) and len(v.strip()) > 1 and not found_state:
+                found_state = v.strip().title()
+
         for k in ["ba_official_details_minName", "ba_official_details_deptName", "b_department_name"]:
             v = unwrap_val(json_obj.get(k))
             if v and isinstance(v, str) and not consignee_officer:
@@ -599,12 +794,12 @@ def extract_city_and_address(json_obj, full_text, state="Gujarat"):
 
     # 2. Check full_text for raw consignee string block (e.g. 390001,The Superintending Engineer's Office,...)
     if full_text:
-        consignee_block_m = re.search(r"(\b[1-9][0-9]{5}\b)\s*,\s*([^\r\n]{15,300})", full_text)
+        consignee_block_m = re.search(r"(\b[1-9][0-9]{5}\b)\s*,\s*([^\r\n]{15,400})", full_text)
         if consignee_block_m:
             raw_match = consignee_block_m.group(0).strip()
-            c, st, pin, off, addr, raw_b = parse_raw_consignee_block(raw_match, found_state)
+            c, st, pin, off, addr, raw_b = parse_raw_consignee_block(raw_match, found_state, dept_name)
             if c and not found_city: found_city = c
-            if st and (found_state == "Gujarat" or not found_state): found_state = st
+            if st and not found_state: found_state = st
             if pin and not found_pincode: found_pincode = pin
             if off and not consignee_officer: consignee_officer = off
             if addr and not address_parts: address_parts.append(addr)
@@ -617,50 +812,25 @@ def extract_city_and_address(json_obj, full_text, state="Gujarat"):
             found_city = mapped_city
         found_state = mapped_state
 
-    # 4. Search full_text or department for city keywords
-    search_text = f"{full_text} {str(json_obj)}".lower()
-    
-    # State-specific search first
-    state_cities = MAJOR_INDIAN_CITIES.get(found_state, [])
-    if not found_city:
-        for c in state_cities:
-            if re.search(r"\b" + re.escape(c.lower()) + r"\b", search_text):
-                found_city = c
-                break
-
-    # Fallback to all major cities
-    if not found_city:
-        for st_name, c_list in MAJOR_INDIAN_CITIES.items():
-            for c in c_list:
-                if re.search(r"\b" + re.escape(c.lower()) + r"\b", search_text):
-                    found_city = c
-                    found_state = st_name
-                    break
-            if found_city:
-                break
-
-    # Clean default if still missing
-    if not found_city:
-        if found_state == "Gujarat":
-            found_city = "Gandhinagar"
-        elif found_state == "Maharashtra":
-            found_city = "Mumbai"
-        elif found_state == "Rajasthan":
-            found_city = "Jaipur"
-        elif found_state == "Delhi":
-            found_city = "New Delhi"
-        elif found_state and found_state != "ALL" and found_state != "All India":
-            found_city = found_state
-        else:
-            found_city = "Central Procurement Office"
+    # 4. Search full_text / department / title using intelligent department location registry
+    if not found_city or not found_state or found_city.lower() in ["central procurement office", "all india"]:
+        res_c, res_s, res_p, res_a = resolve_department_location(dept_name, full_text, "", found_state or state)
+        if not found_city or found_city.lower() in ["central procurement office", "all india"]:
+            found_city = res_c
+        if not found_state or found_state.lower() in ["all india", "all"]:
+            found_state = res_s
+        if not found_pincode:
+            found_pincode = res_p
+        if not address_parts:
+            address_parts.append(res_a)
 
     if not consignee_officer:
         consignee_officer = "The Superintending Engineer / Consignee Officer"
 
     if not found_pincode:
-        found_pincode = "382010" if found_city == "Gandhinagar" else ("390001" if found_city == "Vadodara" else "380001")
+        found_pincode = STATE_CAPITAL_MAP.get(found_state, ("City", "110001"))[1]
 
-    full_addr = ", ".join(address_parts) if address_parts else f"{consignee_officer}, Government Office Complex, {found_city}, {found_state if found_state and found_state != 'ALL' else 'India'} - {found_pincode}"
+    full_addr = ", ".join(address_parts) if address_parts else f"{consignee_officer}, Government Office Complex, {found_city}, {found_state} - {found_pincode}"
     return found_city, full_addr, found_pincode, consignee_officer, raw_consignee_box, found_state
 
 def extract_staff_and_duty(display_title, cat_raw, full_text, core_service, employees_count):

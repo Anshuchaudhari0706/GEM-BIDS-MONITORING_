@@ -82,27 +82,45 @@ def scan_tenders_endpoint(req: ScanRequest):
         "scan_error": res.get("scan_error")
     }
 
+def fetch_pdf_text_from_gem(tender_id, document_url=None):
+    """
+    Downloads and extracts all text from the official GeM Tender PDF copy.
+    """
+    try:
+        raw_id = (tender_id or "").split("/")[-1].strip()
+        url = document_url or f"https://bidplus.gem.gov.in/showbidDocument/{raw_id}"
+        import requests, fitz
+        res = requests.get(url, verify=False, timeout=12)
+        if res.status_code == 200 and len(res.content) > 500:
+            doc = fitz.open(stream=res.content, filetype="pdf")
+            text = ""
+            for p in doc:
+                text += p.get_text() + "\n"
+            if len(text.strip()) > 50:
+                return text
+    except Exception as ex:
+        print(f"[PDF Fetcher Error] {ex}")
+    return None
+
 @app.post("/parse")
 @app.post("/api/documents/parse")
 def parse_document(req: ParseRequest):
-    raw_text = req.sample_text or f"""
-    Bid Number: {req.tender_id or 'GEM/2026/B/7821202'}
-    Estimated Bid Value: ₹25,00,000 (₹25 Lakhs)
-    EMD Amount: ₹50,000
+    pdf_text = None
+    if req.tender_id or req.document_url:
+        pdf_text = fetch_pdf_text_from_gem(req.tender_id, req.document_url)
+
+    raw_text = req.sample_text or pdf_text or f"""
+    Bid Number: {req.tender_id or 'GEM/2026/B/8015751'}
+    Estimated Bid Value: ₹95,39,607.53 (₹95.40 Lakhs)
+    EMD Amount: ₹4,76,980
     Tender Fee: ₹5,000
-    Performance Security: ₹1,25,000
+    Performance Security: ₹2,86,188
     
     Work Location:
-    District Collector Office, Station Road, Palanpur, Banaskantha, Gujarat - 385001
+    The Superintending Engineer's Office, National Highway Circle, Kuber Bhavan, Vadodara, Gujarat - 390001
     
     Manpower Requirements:
-    10 - Security Guard (3 Shift, 8 Hours)
-    2 - Security Supervisor (General, 8 Hours)
-    3 - Peon (General, 8 Hours)
-    5 - Housekeeping Staff (2 Shift, 8 Hours)
-    
-    Closing Date: 10/08/2026
-    Closing Time: 18:00
+    31 - Outsourced Manpower Staff
     """
     
     parsed_json = parse_tender_document(raw_text, req.tender_id)

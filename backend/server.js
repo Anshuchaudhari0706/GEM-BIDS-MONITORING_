@@ -1029,20 +1029,91 @@ const handleTenderEvaluation = async (req, res) => {
     };
   }
 
-  const staffCount = tender.employees || 10;
-  const estVal = tender.value || (tender.estimatedValue ? tender.estimatedValue : (staffCount * 22000 * 12));
-  const emdVal = tender.emdAmount || Math.round(estVal * 0.02);
+  // Live Extraction from Official GeM PDF Document via Python Microservice
+  let pyParsed = null;
+  try {
+    const rawNumId = (tenderId || '').split('/').pop();
+    const docUrl = tender.gemLink || `https://bidplus.gem.gov.in/showbidDocument/${rawNumId}`;
+    const pyResp = await axios.post('http://localhost:8000/parse', {
+      tender_id: tenderId,
+      document_url: docUrl
+    }, { timeout: 10000 });
+    if (pyResp.data && pyResp.data.parserStatus === 'SUCCESS') {
+      pyParsed = pyResp.data;
+    }
+  } catch (err) {
+    console.log('[Evaluation Document Reader Notice]:', err.message);
+  }
+
+  let staffCount = tender.employees || 10;
+  if (pyParsed && pyParsed.totalStaffCount && pyParsed.totalStaffCount > 0) {
+    staffCount = pyParsed.totalStaffCount;
+  }
+
+  let estVal = tender.value || (tender.estimatedValue ? tender.estimatedValue : (staffCount * 22000 * 12));
+  if (pyParsed && pyParsed.estimatedValue && pyParsed.estimatedValue.value && pyParsed.estimatedValue.value > 1000) {
+    estVal = pyParsed.estimatedValue.value;
+  }
+
+  let emdVal = tender.emdAmount || Math.round(estVal * 0.02);
+  if (pyParsed && pyParsed.emdAmount && pyParsed.emdAmount.value && pyParsed.emdAmount.value > 0) {
+    emdVal = pyParsed.emdAmount.value;
+  }
+
   const epbgVal = tender.epbgAmount || Math.round(estVal * 0.03);
-  const city = tender.city || (tender.work_location ? tender.work_location.city : "Gandhinagar");
-  const state = tender.state || (tender.work_location ? tender.work_location.state : "Gujarat");
-  const pincode = tender.pincode || (tender.work_location ? tender.work_location.pincode : (city === "Vadodara" ? "390001" : "382010"));
-  const consigneeOfficer = tender.consignee_officer || (tender.work_location ? tender.work_location.consignee_officer : "The Superintending Engineer / Consignee Officer");
-  const consigneeRawBox = tender.consignee_raw_box || (tender.work_location ? tender.work_location.raw_consignee_box : null);
-  const fullAddress = tender.address || tender.office_address || (tender.work_location ? tender.work_location.address : `${consigneeOfficer}, Government Office Complex, ${city}, ${state} - ${pincode}`);
+  let city = (pyParsed && pyParsed.officeAddress && pyParsed.officeAddress.city && pyParsed.officeAddress.city !== 'Not Specified' && pyParsed.officeAddress.city !== 'Central Procurement Office')
+    ? pyParsed.officeAddress.city
+    : (tender.city && tender.city !== 'Central Procurement Office' ? tender.city : (tender.work_location?.city && tender.work_location.city !== 'Central Procurement Office' ? tender.work_location.city : "New Delhi"));
+  
+  let state = (pyParsed && pyParsed.officeAddress && pyParsed.officeAddress.state && pyParsed.officeAddress.state !== 'Not Specified' && pyParsed.officeAddress.state !== 'All India')
+    ? pyParsed.officeAddress.state
+    : (tender.state && tender.state !== 'All India' ? tender.state : (tender.work_location?.state && tender.work_location.state !== 'All India' ? tender.work_location.state : "Delhi"));
+
+  let pincode = (pyParsed && pyParsed.officeAddress && pyParsed.officeAddress.pincode && pyParsed.officeAddress.pincode !== 'Not Specified')
+    ? pyParsed.officeAddress.pincode
+    : (tender.pincode || (tender.work_location ? tender.work_location.pincode : (city === "Vadodara" ? "390001" : (city === "Gandhinagar" ? "382010" : "110001"))));
+
+  let consigneeOfficer = (pyParsed && pyParsed.officeAddress && pyParsed.officeAddress.consignee_officer && pyParsed.officeAddress.consignee_officer !== 'Not Specified')
+    ? pyParsed.officeAddress.consignee_officer
+    : (tender.consignee_officer || (tender.work_location ? tender.work_location.consignee_officer : "The Superintending Engineer / Consignee Officer"));
+
+  let consigneeRawBox = (pyParsed && pyParsed.officeAddress && pyParsed.officeAddress.raw_consignee_box)
+    ? pyParsed.officeAddress.raw_consignee_box
+    : (tender.consignee_raw_box || (tender.work_location ? tender.work_location.raw_consignee_box : null));
+
+  let fullAddress = (pyParsed && pyParsed.officeAddress && pyParsed.officeAddress.value && pyParsed.officeAddress.value !== 'Not Specified' && !pyParsed.officeAddress.value.includes('Central Procurement Office'))
+    ? pyParsed.officeAddress.value
+    : (tender.address && !tender.address.includes('Central Procurement Office') ? tender.address : (tender.office_address && !tender.office_address.includes('Central Procurement Office') ? tender.office_address : `${consigneeOfficer}, Government Office Complex, ${city}, ${state} - ${pincode}`));
+
   const desig = tender.primary_designation || "Sanitation & Housekeeping Staff / Multi-Tasking Staff";
   const duty = tender.duty_description || "Comprehensive facility maintenance, cleaning & sanitization, and administrative support.";
   const dutySum = tender.duty_summary || "Facility Upkeep & Daily Operations";
-  const formattedVal = tender.estimated_value_original || (estVal >= 10000000 ? `₹${(estVal / 10000000).toFixed(2)} Crores` : `₹${(estVal / 100000).toFixed(2)} Lakhs`);
+
+  let formattedVal = (pyParsed && pyParsed.estimatedValue && pyParsed.estimatedValue.display && pyParsed.estimatedValue.display !== 'Not Specified')
+    ? pyParsed.estimatedValue.display
+    : (tender.estimated_value_original || (estVal >= 10000000 ? `₹${(estVal / 10000000).toFixed(2)} Crores` : `₹${(estVal / 100000).toFixed(2)} Lakhs`));
+
+  let emdStr = (pyParsed && pyParsed.emdAmount && pyParsed.emdAmount.display && pyParsed.emdAmount.display !== 'Not Specified')
+    ? pyParsed.emdAmount.display
+    : (tender.emd_original || `₹${emdVal.toLocaleString('en-IN')}`);
+
+  // Update in database cache
+  const dbIndex = (db.tenders || []).findIndex(t => (t.id || t.bid_number) === tender.id);
+  if (dbIndex !== -1) {
+    db.tenders[dbIndex].value = estVal;
+    db.tenders[dbIndex].estimatedValue = estVal;
+    db.tenders[dbIndex].estimated_value_original = formattedVal;
+    db.tenders[dbIndex].emdAmount = emdVal;
+    db.tenders[dbIndex].emd_original = emdStr;
+    db.tenders[dbIndex].city = city;
+    db.tenders[dbIndex].state = state;
+    db.tenders[dbIndex].pincode = pincode;
+    db.tenders[dbIndex].consignee_officer = consigneeOfficer;
+    db.tenders[dbIndex].consignee_raw_box = consigneeRawBox;
+    db.tenders[dbIndex].address = fullAddress;
+    db.tenders[dbIndex].office_address = fullAddress;
+    writeDB(db);
+  }
 
   const evaluatedData = {
     ...tender,
