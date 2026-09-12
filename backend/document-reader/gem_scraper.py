@@ -1342,8 +1342,11 @@ class GeMLiveScraper:
                     )
                     continue
                 date_matches += 1
-            else:
-                date_matches += 1
+            # STRICT SERVICE-ONLY GUARD:
+            # We ONLY provide SERVICES. Exclude all Product / Goods / Hardware / Production tenders (b_type == 0).
+            b_type_val = unwrap_val(doc.get('b_type'))
+            if b_type_val == 0 or b_type_val == [0] or b_type_val == '0':
+                continue
 
             cat_raw = str(unwrap_val(doc.get('b_category_name')) or unwrap_val(doc.get('bd_category_name')) or '')
             classification_text = full_text
@@ -1361,6 +1364,9 @@ class GeMLiveScraper:
                 or 'GeM Tender'
             )
             display_title = str(display_title)[:300]
+
+            if is_goods_or_parts_tender(display_title, cat_raw):
+                continue
 
             dept_raw = str(unwrap_val(doc.get('ba_official_details_deptName')) or unwrap_val(doc.get('ba_official_details_minName')) or unwrap_val(doc.get('b_department_name')) or 'Government Department')
             employees = extract_manpower_count_from_json(doc, full_text)

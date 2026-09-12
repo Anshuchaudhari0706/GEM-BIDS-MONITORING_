@@ -27,7 +27,7 @@ import {
 } from 'lucide-react';
 import { parseTenderDocument } from '../services/api';
 
-export default function TenderDetailsModal({ tender, onClose }) {
+export default function TenderDetailsModal({ tender, onClose, onUpdate }) {
   const { token, savedTenders, toggleSaveTender, showToast } = useAuth();
   const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'manpower', 'financials', 'location', 'document'
   const [parsing, setParsing] = useState(false);
@@ -51,6 +51,7 @@ export default function TenderDetailsModal({ tender, onClose }) {
       const res = await parseTenderDocument(token, tender.id);
       if (res && res.data) {
         setExtractedData(res.data);
+        if (onUpdate) onUpdate(res.data);
       }
     } catch (err) {
       console.log('Evaluation notice:', err.message);
@@ -72,7 +73,10 @@ export default function TenderDetailsModal({ tender, onClose }) {
     setTimeout(async () => {
       try {
         const res = await parseTenderDocument(token, tender.id);
-        setExtractedData(res.data);
+        if (res && res.data) {
+          setExtractedData(res.data);
+          if (onUpdate) onUpdate(res.data);
+        }
         showToast('✓ 47 fields evaluated & tender copy specifications parsed successfully!', 'success');
       } catch (err) {
         showToast('Failed to evaluate document: ' + err.message, 'error');

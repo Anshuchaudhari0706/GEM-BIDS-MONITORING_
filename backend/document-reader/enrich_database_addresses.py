@@ -310,8 +310,11 @@ def process_single_tender(t):
             pass
     return t_id, None
 
+import os
+db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'database.json'))
+
 # Load DB and process all tenders
-with open("../database.json", "r", encoding="utf-8") as f:
+with open(db_path, "r", encoding="utf-8") as f:
     db = json.load(f)
 
 tenders = db.get("tenders", [])
@@ -350,7 +353,7 @@ print(f"\n=======================================================")
 print(f"Successfully enriched {updated_count}/{len(tenders)} tenders with REAL GeM PDF Addresses!")
 print(f"=======================================================")
 
-with open("../database.json", "w", encoding="utf-8") as f:
+with open(db_path, "w", encoding="utf-8") as f:
     json.dump(db, f, indent=2, ensure_ascii=False)
 
 print("Saved updated database.json successfully!")

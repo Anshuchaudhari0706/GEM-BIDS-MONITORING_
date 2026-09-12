@@ -710,6 +710,14 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
   let results = [...(db.tenders || [])];
   const now = new Date();
 
+  // Strict Service-Only Guard: Exclude all product/goods tenders (b_type == 0)
+  results = results.filter(t => {
+    const rawDoc = t.raw_doc || {};
+    const bType = rawDoc.b_type;
+    if (bType === 0 || bType === '0' || (Array.isArray(bType) && bType[0] === 0)) return false;
+    return true;
+  });
+
   // Filter Manpower Tenders Only when explicitly requested
   if (manpowerOnly === 'true') {
     results = results.filter(t => t.manpowerTender === true);

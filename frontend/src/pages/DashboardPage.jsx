@@ -1345,7 +1345,37 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
       </div>
 
       {selectedTender && (
-        <TenderDetailsModal tender={selectedTender} onClose={() => setSelectedTender(null)} />
+        <TenderDetailsModal
+          tender={selectedTender}
+          onClose={() => setSelectedTender(null)}
+          onUpdate={(updatedData) => {
+            if (!updatedData) return;
+            const patchTender = (t) => {
+              const matchId = updatedData.id || updatedData.bid_number;
+              if (t.id === matchId || t.bid_number === matchId) {
+                return {
+                  ...t,
+                  ...updatedData,
+                  address: updatedData.address || t.address,
+                  office_address: updatedData.office_address || updatedData.address || t.office_address,
+                  city: updatedData.city || t.city,
+                  state: updatedData.state || t.state,
+                  pincode: updatedData.pincode || t.pincode,
+                  consignee_officer: updatedData.consignee_officer || t.consignee_officer,
+                  estimatedValue: updatedData.estimatedValue || t.estimatedValue,
+                  estimated_value_original: updatedData.estimated_value_original || t.estimated_value_original,
+                  formattedValue: updatedData.formattedValue || t.formattedValue,
+                  required_documents: updatedData.required_documents || t.required_documents,
+                  annual_turnover_required: updatedData.annual_turnover_required || t.annual_turnover_required,
+                  work_location: updatedData.work_location || t.work_location
+                };
+              }
+              return t;
+            };
+            setTenders(prev => prev.map(patchTender));
+            setAllScannedTenders(prev => prev.map(patchTender));
+          }}
+        />
       )}
 
       {showDiagnosticModal && (
