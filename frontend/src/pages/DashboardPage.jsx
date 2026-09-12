@@ -184,8 +184,7 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
       if (selectedServiceCategory !== 'ALL') {
         filtered = filtered.filter(t => {
           const coreCat = getCoreServiceCategory(t);
-          const fullText = `${t.category || ''} ${t.title || ''} ${t.category_raw || ''}`.toLowerCase();
-          return coreCat === selectedServiceCategory || fullText.includes(selectedServiceCategory.toLowerCase());
+          return coreCat === selectedServiceCategory;
         });
       }
 
@@ -239,7 +238,7 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
     setTimeout(async () => {
       try {
         const res = await triggerGeMScan(token, {
-          services: selectedServiceCategory !== 'ALL' ? [selectedServiceCategory] : ['Security Guards', 'Housekeeping', 'Manpower Fixed'],
+          services: selectedServiceCategory !== 'ALL' ? [selectedServiceCategory] : ['Custom Bid', 'Manpower Minimum Wage', 'Cleaning Services', 'Security Guards', 'Manpower Fixed', 'Sanitation Staff', 'Healthcare Staff', 'Horticulture'],
           selectedDate,
           date: selectedDate,
           tenderStatus,
@@ -314,7 +313,7 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
   ];
 
   const getCoreServiceCategory = (t) => {
-    if (!t) return 'Other Services';
+    if (!t) return 'Custom Bid';
     const cat = (t.category || t.category_raw || t.category_code || '').toString().trim();
     const title = (t.title || '').toLowerCase();
     const text = `${title} ${cat.toLowerCase()}`;
@@ -325,43 +324,37 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
     if (text.includes('sanitation') || text.includes('conservancy')) return 'Sanitation Staff';
     if (text.includes('horticulture') || text.includes('gardening') || text.includes('tree trimming')) return 'Horticulture';
     if (text.includes('healthcare') || text.includes('hospital') || text.includes('nursing') || text.includes('medical')) return 'Healthcare Staff';
-    if (text.includes('cab') || text.includes('taxi') || text.includes('transport') || text.includes('vehicle hiring') || text.includes('driver')) return 'Transport & Vehicle Hiring';
-    if (text.includes('custom bid') || text.includes('custom service')) return 'Custom Bid for Services';
+    if (text.includes('custom bid') || text.includes('custom service')) return 'Custom Bid';
     if (text.includes('manpower') || text.includes('outsourcing') || text.includes('staff') || text.includes('helper') || text.includes('peon') || text.includes('mts') || text.includes('deo') || text.includes('data entry')) return 'Manpower Fixed';
-    if (text.includes('repair') || text.includes('maintenance') || text.includes('amc') || text.includes('installation') || text.includes('operation')) return 'Maintenance & Operations';
-    if (text.includes('it') || text.includes('software') || text.includes('bandwidth') || text.includes('lan') || text.includes('cctv')) return 'IT & Networking Services';
 
-    return cat || 'Other Services';
+    return 'Custom Bid';
   };
 
   // Synchronized Counts calculated dynamically from the current dataset
   const activeDataset = tenders.length > 0 ? tenders : allScannedTenders;
 
-  // Collect all unique service categories dynamically
-  const dynamicCategories = Array.from(new Set(allScannedTenders.map(t => getCoreServiceCategory(t)).filter(Boolean)));
-  const baseServiceKeys = [
-    'Custom Bid for Services',
-    'Manpower Minimum Wage',
-    'Manpower Fixed',
-    'Security Guards',
-    'Cleaning Services',
-    'Sanitation Staff',
-    'Transport & Vehicle Hiring',
-    'Healthcare Staff',
-    'Horticulture',
-    'Maintenance & Operations',
-    'IT & Networking Services'
+  // Strict 8 Core Services + All Services list (No dynamic or extra categories)
+  const CORE_SERVICES = [
+    { name: 'All Services', key: 'ALL' },
+    { name: 'Custom Bid', key: 'Custom Bid' },
+    { name: 'Manpower Minimum Wage', key: 'Manpower Minimum Wage' },
+    { name: 'Cleaning Services', key: 'Cleaning Services' },
+    { name: 'Security Guards', key: 'Security Guards' },
+    { name: 'Manpower Fixed', key: 'Manpower Fixed' },
+    { name: 'Sanitation Staff', key: 'Sanitation Staff' },
+    { name: 'Healthcare Staff', key: 'Healthcare Staff' },
+    { name: 'Horticulture', key: 'Horticulture' }
   ];
-  const allServiceKeys = Array.from(new Set([...baseServiceKeys, ...dynamicCategories]));
 
-  const availableServicesList = [
-    { name: 'All Services', count: activeDataset.length, key: 'ALL' },
-    ...allServiceKeys.map(k => ({
-      name: k,
-      count: activeDataset.filter(t => getCoreServiceCategory(t) === k || (t.category || t.title || '').toLowerCase().includes(k.toLowerCase())).length,
-      key: k
-    })).filter(s => s.count > 0 || baseServiceKeys.includes(s.key))
-  ];
+  const availableServicesList = CORE_SERVICES.map(srv => {
+    if (srv.key === 'ALL') {
+      return { ...srv, count: activeDataset.length };
+    }
+    return {
+      ...srv,
+      count: activeDataset.filter(t => getCoreServiceCategory(t) === srv.key).length
+    };
+  });
 
   const activeCount = (tenders.length > 0 ? tenders : allScannedTenders).filter(t => t.status === 'PUBLISHED' || t.status === 'CLOSING_TODAY' || t.status === 'ACTIVE').length;
   const finishedCount = (tenders.length > 0 ? tenders : allScannedTenders).filter(t => t.status === 'FINISHED' || t.status === 'CLOSING_TODAY' || t.status === 'ENDED').length;

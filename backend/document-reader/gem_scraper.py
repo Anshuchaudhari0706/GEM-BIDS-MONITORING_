@@ -979,7 +979,7 @@ def classify_core_service_category(display_title, cat_code, cat_raw, full_text="
     if any(k in text for k in ["manpower outsourcing", "manpower supply", "contract manpower", "outsourcing manpower", "staffing", "peon", "helper", "deo", "data entry", "mts", "driver", "cab & taxi", "manpower"]):
         return "Manpower Fixed"
 
-    return None
+    return "Custom Bid"
 
 def detect_manpower_signals(doc, full_text, display_title, cat_code, cat_raw, employees):
     """

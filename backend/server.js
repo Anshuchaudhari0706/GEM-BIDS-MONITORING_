@@ -1736,20 +1736,15 @@ app.post('/api/admin/regex-rules', authenticateToken, requireAdmin, (req, res) =
 // GET /api/services (Public - Returns all service categories for multi-select)
 app.get('/api/services', (req, res) => {
   const db = readDB();
-  // Return admin-configured services, or defaults if none set
   const defaultServices = [
-    'Security Guards',
-    'Cleaning Services',
-    'Sanitation Staff',
     'Custom Bid',
-    'Manpower Fixed',
     'Manpower Minimum Wage',
-    'Healthcare Services',
-    'Horticulture',
-    'Housekeeping',
-    'Data Entry',
-    'IT Services',
-    'Other Services'
+    'Cleaning Services',
+    'Security Guards',
+    'Manpower Fixed',
+    'Sanitation Staff',
+    'Healthcare Staff',
+    'Horticulture'
   ];
   const services = (db.services && db.services.length > 0)
     ? db.services.map(s => s.name || s)
