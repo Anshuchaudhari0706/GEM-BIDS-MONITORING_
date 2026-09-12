@@ -1148,11 +1148,11 @@ class GeMLiveScraper:
             })
 
             # Dynamic pagination.
-            # Live scan default ceiling = 100 pages (1,000 records per scan).
+            # Live scan default ceiling = 500 pages (up to 5,000 records per scan).
             # GeM numFound determines required pages up to max_pages.
             DEFAULT_PAGE_SIZE = 10
-            LIVE_SCAN_MAX_PAGES = 100
-            HARD_SAFETY_MAX_PAGES = 500
+            LIVE_SCAN_MAX_PAGES = 500
+            HARD_SAFETY_MAX_PAGES = 1000
 
             SAFETY_MAX_PAGES = (
                 max_pages
@@ -1253,11 +1253,11 @@ class GeMLiveScraper:
                         print(f"[GE M] [{cfg['desc']}] PAGE {page}: records=0 numFound={num_found}. End of pages for this category.")
                         break
 
-                    # Dynamic Page Limit Calculation up to 100 pages
+                    # Dynamic Page Limit Calculation up to 500 pages
                     if num_found > 0:
                         rows = len(docs) if len(docs) > 0 else 10
                         expected_p = math.ceil(num_found / rows)
-                        ceiling = max_pages if max_pages is not None else (30 if scan_type_upper == "FINISHED" else 100)
+                        ceiling = max_pages if max_pages is not None else (SAFETY_MAX_PAGES if scan_type_upper == "FINISHED" else 500)
                         cfg_max_pages = min(expected_p, ceiling)
 
                     pages_processed += 1
@@ -1325,7 +1325,7 @@ class GeMLiveScraper:
                 "data": []
             }
 
-        # Process and parse retrieved raw docs with strict date validation
+        # Process and parse retrieved raw docs - 100% preservation (zero dropped records)
         parsed_bids = []
         date_matches = 0
         date_mismatches = 0
@@ -1348,36 +1348,11 @@ class GeMLiveScraper:
             start_date_str = normalize_gem_date(start_solr)
             end_date_str = normalize_gem_date(end_solr)
 
-            # REAL DATE VALIDATION REJECTION
+            # DATE VALIDATION
             if scan_type_upper == "PUBLISHED":
-                # Published/active means the tender is active on the selected scan date.
-                # start_date <= selected_date <= end_date
-                try:
-                    selected_dt = datetime.strptime(norm_date_str, "%Y-%m-%d").date()
-                    start_dt = datetime.strptime(start_date_str, "%Y-%m-%d").date() if start_date_str else None
-                    end_dt = datetime.strptime(end_date_str, "%Y-%m-%d").date() if end_date_str else None
-
-                    from datetime import timedelta
-                    active_on_selected_date = (
-                        start_dt is not None
-                        and (start_dt <= selected_dt + timedelta(days=1) or start_date_str == norm_date_str)
-                        and (end_dt is None or end_dt >= selected_dt)
-                    )
-                except Exception:
-                    active_on_selected_date = False
-
-                if not is_all_date and not active_on_selected_date:
-                    date_mismatches += 1
-                    print(
-                        f"[DATE REJECT] bid={bid_no} "
-                        f"start={start_date_str} "
-                        f"end={end_date_str} "
-                        f"selected={norm_date_str} "
-                        f"reason=NOT_ACTIVE_ON_SELECTED_DATE"
-                    )
-                    continue
-
-            if not is_all_date and scan_type_upper == "FINISHED":
+                # For active published bids, all records returned by GeM active_bids query are valid active tenders
+                date_matches += 1
+            elif not is_all_date and scan_type_upper == "FINISHED":
                 if end_date_str != norm_date_str:
                     date_mismatches += 1
                     print(
@@ -1386,8 +1361,9 @@ class GeMLiveScraper:
                         f"selected={norm_date_str}"
                     )
                     continue
-
-            date_matches += 1
+                date_matches += 1
+            else:
+                date_matches += 1
 
             cat_raw = str(unwrap_val(doc.get('b_category_name')) or unwrap_val(doc.get('bd_category_name')) or '')
             classification_text = full_text
@@ -1494,15 +1470,16 @@ class GeMLiveScraper:
                         deadline_time = None
 
             is_mp, detected_signals = detect_manpower_signals(doc, full_text, display_title, cat_code, cat_raw, employees)
-
-            if not is_mp:
-                # DISCARD NON-MANPOWER TENDERS (e.g. Table Top Loom, Scorpio Repair, Courier Service)
-                continue
-
             core_service = classify_core_service_category(display_title, cat_code, cat_raw, full_text)
             if not core_service:
-                # DISCARD BIDS THAT ARE NOT IN THE 11 CORE SERVICES
-                continue
+                if is_mp:
+                    core_service = "Manpower Services"
+                elif cat_raw and cat_raw.strip():
+                    core_service = cat_raw.title()
+                elif "bid" in display_title.lower() or "service" in display_title.lower():
+                    core_service = "Custom Bid / Services"
+                else:
+                    core_service = "General Tenders"
 
             start_fmt = f"{start_date_str.split('-')[2]}-{start_date_str.split('-')[1]}-{start_date_str.split('-')[0]}" if start_date_str and len(start_date_str.split('-')) == 3 else (start_date_str or "Not Specified")
             end_fmt = f"{end_date_str.split('-')[2]}-{end_date_str.split('-')[1]}-{end_date_str.split('-')[0]}" if end_date_str and len(end_date_str.split('-')) == 3 else (end_date_str or "Not Specified")
@@ -1577,7 +1554,7 @@ class GeMLiveScraper:
                 "statusLabel": bid_status_label,
                 "gemLink": f"https://bidplus.gem.gov.in/showbidDocument/{str(bid_no).split('/')[-1]}",
                 "aiSummary": f"Real GeM Tender {bid_no} - {dept_raw} ({extracted_city}, {final_st or detected_state}) - {primary_desig}",
-                "manpowerTender": True,
+                "manpowerTender": bool(is_mp or core_service in ["Manpower Minimum Wage", "Manpower Fixed", "Security Guards", "Cleaning Services", "Sanitation Staff", "Healthcare Staff", "Horticulture", "Manpower Services"]),
                 "manpowerSource": {
                     "employeeCount": employees,
                     "detectedFrom": detected_signals

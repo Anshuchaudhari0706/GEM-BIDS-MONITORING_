@@ -85,6 +85,10 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
   const [maxStaff, setMaxStaff] = useState('');
   const [sortBy, setSortBy] = useState('newest');
 
+  // Pagination State for high performance rendering of 1,000+ bids
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState('50');
+
   const [activeTab, setActiveTab] = useState('PUBLISHED');
   const [viewMode, setViewMode] = useState('table');
   const [selectedTender, setSelectedTender] = useState(null);
@@ -379,6 +383,15 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
   } else {
     displayedTenders = currentDataset;
   }
+
+  // Fast dynamic pagination calculation
+  const totalMatching = displayedTenders.length;
+  const actualPageSize = pageSize === 'ALL' ? totalMatching : (parseInt(pageSize, 10) || 50);
+  const totalPages = Math.max(1, Math.ceil(totalMatching / (actualPageSize || 1)));
+  const validCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
+  const startIndex = (validCurrentPage - 1) * actualPageSize;
+  const endIndex = Math.min(startIndex + actualPageSize, totalMatching);
+  const paginatedTenders = pageSize === 'ALL' ? displayedTenders : displayedTenders.slice(startIndex, endIndex);
 
   return (
     <div style={{ padding: '24px', flex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -782,9 +795,95 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
             ))}
           </div>
 
+          {/* Pagination & Results Header Toolbar */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            background: '#0d1527',
+            border: '1px solid #1e293b',
+            borderRadius: '12px',
+            padding: '10px 18px',
+            flexWrap: 'wrap',
+            gap: '12px'
+          }}>
+            <div style={{ fontSize: '0.84rem', color: '#94a3b8' }}>
+              Showing <strong style={{ color: '#38bdf8' }}>{totalMatching > 0 ? startIndex + 1 : 0} – {endIndex}</strong> of <strong style={{ color: '#fff' }}>{totalMatching}</strong> Verified GeM Tenders
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: '#94a3b8' }}>
+                <span>Page Size:</span>
+                <select
+                  value={pageSize}
+                  onChange={(e) => { setPageSize(e.target.value); setCurrentPage(1); }}
+                  style={{
+                    background: '#1e293b',
+                    color: '#38bdf8',
+                    border: '1px solid #334155',
+                    borderRadius: '6px',
+                    padding: '4px 8px',
+                    fontSize: '0.78rem',
+                    cursor: 'pointer',
+                    fontWeight: 700
+                  }}
+                >
+                  <option value="25">25 per page</option>
+                  <option value="50">50 per page</option>
+                  <option value="100">100 per page</option>
+                  <option value="200">200 per page</option>
+                  <option value="500">500 per page</option>
+                  <option value="ALL">Show All ({totalMatching})</option>
+                </select>
+              </div>
+
+              {pageSize !== 'ALL' && totalPages > 1 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <button
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={validCurrentPage <= 1}
+                    style={{
+                      padding: '4px 10px',
+                      fontSize: '0.78rem',
+                      background: validCurrentPage <= 1 ? '#1e293b' : '#0284c7',
+                      color: validCurrentPage <= 1 ? '#64748b' : '#fff',
+                      border: 'none',
+                      borderRadius: '6px',
+                      cursor: validCurrentPage <= 1 ? 'not-allowed' : 'pointer',
+                      fontWeight: 700
+                    }}
+                  >
+                    ◀ Prev
+                  </button>
+
+                  <span style={{ fontSize: '0.8rem', color: '#fff', padding: '0 6px', fontWeight: 600 }}>
+                    Page {validCurrentPage} of {totalPages}
+                  </span>
+
+                  <button
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={validCurrentPage >= totalPages}
+                    style={{
+                      padding: '4px 10px',
+                      fontSize: '0.78rem',
+                      background: validCurrentPage >= totalPages ? '#1e293b' : '#0284c7',
+                      color: validCurrentPage >= totalPages ? '#64748b' : '#fff',
+                      border: 'none',
+                      borderRadius: '6px',
+                      cursor: validCurrentPage >= totalPages ? 'not-allowed' : 'pointer',
+                      fontWeight: 700
+                    }}
+                  >
+                    Next ▶
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Exact GeM Portal Format List View matching User Screenshots 1 & 2 */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            {displayedTenders.map((t) => {
+            {paginatedTenders.map((t) => {
               const isSaved = savedTenders.some(s => s.id === t.id);
               const rawEnd = t.endDatetime || t.deadlineDateTime || t.endDate || t.deadlineDate || t.deadline;
               const endDateTime = rawEnd ? new Date(rawEnd) : null;
@@ -1168,6 +1267,77 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
                 </div>
               );
             })}
+
+            {/* Bottom Pagination Controls Bar */}
+            {totalMatching > 0 && (
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                background: '#0d1527',
+                border: '1px solid #1e293b',
+                borderRadius: '12px',
+                padding: '12px 18px',
+                marginTop: '10px',
+                flexWrap: 'wrap',
+                gap: '12px'
+              }}>
+                <div style={{ fontSize: '0.84rem', color: '#94a3b8' }}>
+                  Showing <strong style={{ color: '#38bdf8' }}>{startIndex + 1} – {endIndex}</strong> of <strong style={{ color: '#fff' }}>{totalMatching}</strong> tenders
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  {pageSize !== 'ALL' && totalPages > 1 && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <button
+                        onClick={() => {
+                          setCurrentPage(p => Math.max(1, p - 1));
+                          window.scrollTo({ top: 400, behavior: 'smooth' });
+                        }}
+                        disabled={validCurrentPage <= 1}
+                        style={{
+                          padding: '6px 14px',
+                          fontSize: '0.8rem',
+                          background: validCurrentPage <= 1 ? '#1e293b' : '#0284c7',
+                          color: validCurrentPage <= 1 ? '#64748b' : '#fff',
+                          border: 'none',
+                          borderRadius: '6px',
+                          cursor: validCurrentPage <= 1 ? 'not-allowed' : 'pointer',
+                          fontWeight: 700
+                        }}
+                      >
+                        ◀ Previous Page
+                      </button>
+
+                      <span style={{ fontSize: '0.82rem', color: '#fff', padding: '0 8px', fontWeight: 700 }}>
+                        Page {validCurrentPage} of {totalPages}
+                      </span>
+
+                      <button
+                        onClick={() => {
+                          setCurrentPage(p => Math.min(totalPages, p + 1));
+                          window.scrollTo({ top: 400, behavior: 'smooth' });
+                        }}
+                        disabled={validCurrentPage >= totalPages}
+                        style={{
+                          padding: '6px 14px',
+                          fontSize: '0.8rem',
+                          background: validCurrentPage >= totalPages ? '#1e293b' : '#0284c7',
+                          color: validCurrentPage >= totalPages ? '#64748b' : '#fff',
+                          border: 'none',
+                          borderRadius: '6px',
+                          cursor: validCurrentPage >= totalPages ? 'not-allowed' : 'pointer',
+                          fontWeight: 700
+                        }}
+                      >
+                        Next Page ▶
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {tenders.length === 0 && !loading && (
               <div style={{ textAlign: 'center', padding: '48px 24px', background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border-color)', margin: '20px 0' }}>
                 <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#fff', marginBottom: '8px' }}>📡 No live GeM data retrieved for the selected parameters</div>
