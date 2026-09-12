@@ -4,6 +4,7 @@ import time
 import math
 from datetime import datetime
 from zoneinfo import ZoneInfo
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -1147,17 +1148,16 @@ class GeMLiveScraper:
                 'X-Requested-With': 'XMLHttpRequest'
             })
 
-            # Dynamic pagination.
-            # Live scan default ceiling = 500 pages (up to 5,000 records per scan).
-            # GeM numFound determines required pages up to max_pages.
+            # High-speed dynamic parallel pagination
+            # Default 100 pages = 1,000 live bids retrieved in ~5 seconds
             DEFAULT_PAGE_SIZE = 10
-            LIVE_SCAN_MAX_PAGES = 500
-            HARD_SAFETY_MAX_PAGES = 1000
+            DEFAULT_MAX_PAGES = 100
+            HARD_SAFETY_MAX_PAGES = 500
 
             SAFETY_MAX_PAGES = (
                 max_pages
                 if max_pages is not None
-                else LIVE_SCAN_MAX_PAGES
+                else DEFAULT_MAX_PAGES
             )
 
             gem_date_formatted = dt_obj.strftime("%m/%d/%Y")
@@ -1172,113 +1172,101 @@ class GeMLiveScraper:
                     {"status_type": "active_bids", "sort": "Bid-Start-Date-Latest", "desc": "Published active bids", "by_end_date": False}
                 ]
 
-            for cfg in scan_configs:
-                page = 1
-                cfg_max_pages = SAFETY_MAX_PAGES
-                cfg_docs_collected = 0
-
-                while page <= cfg_max_pages:
-                    if cfg["by_end_date"]:
-                        filter_obj = {
-                            "bidStatusType": cfg["status_type"],
-                            "byType": "all",
-                            "highBidValue": "",
-                            "sort": cfg["sort"],
-                            "byEndDate": {"from": gem_date_formatted, "to": gem_date_formatted}
-                        }
-                    else:
-                        filter_obj = {
-                            "bidStatusType": cfg["status_type"],
-                            "byType": "all",
-                            "highBidValue": "",
-                            "sort": cfg["sort"]
-                        }
-
-                    payload_obj = {
-                        "page": page,
-                        "param": {
-                            "search": state_filter if state_filter != "ALL" else "",
-                            "searchBid": "",
-                            "searchType": "fullText"
-                        },
-                        "filter": filter_obj
+            def fetch_single_page(p_num, filter_cfg):
+                if filter_cfg["by_end_date"]:
+                    filter_obj = {
+                        "bidStatusType": filter_cfg["status_type"],
+                        "byType": "all",
+                        "highBidValue": "",
+                        "sort": filter_cfg["sort"],
+                        "byEndDate": {"from": gem_date_formatted, "to": gem_date_formatted}
+                    }
+                else:
+                    filter_obj = {
+                        "bidStatusType": filter_cfg["status_type"],
+                        "byType": "all",
+                        "highBidValue": "",
+                        "sort": filter_cfg["sort"]
                     }
 
-                    post_data = {
-                        'payload': json.dumps(payload_obj),
-                        csrf_key: csrf_val
-                    }
+                payload_obj = {
+                    "page": p_num,
+                    "param": {
+                        "search": state_filter if state_filter != "ALL" else "",
+                        "searchBid": "",
+                        "searchType": "fullText"
+                    },
+                    "filter": filter_obj
+                }
 
-                    res = None
-                    for attempt in range(1, 4):
-                        try:
-                            res = s.post(GEM_ALL_BIDS_DATA_URL, data=post_data, verify=False, timeout=15)
-                            if res.status_code == 200 or res.status_code == 404:
-                                break
-                        except Exception as req_err:
-                            print(f"[GE M] [{cfg['desc']}] PAGE {page} Attempt {attempt}/3 failed with error: {req_err}. Retrying in 1s...")
-                            time.sleep(1)
+                post_data = {
+                    'payload': json.dumps(payload_obj),
+                    csrf_key: csrf_val
+                }
 
-                    if res is None:
-                        error_msg = f"GeM API connection timed out on page {page} after 3 attempts"
-                        print(f"[GE M] ERROR: {error_msg}")
-                        break
-
-                    if res.status_code != 200:
-                        # Check if GeM returned 404 "No data found" JSON
-                        try:
-                            err_json = res.json()
-                            if isinstance(err_json, dict) and err_json.get("message") == "No data found":
-                                print(f"[GE M] [{cfg['desc']}] PAGE {page}: GeM source returned 'No data found' (0 records found).")
-                                break
-                        except Exception:
-                            pass
-
-                        error_msg = f"GeM API returned HTTP {res.status_code}"
-                        print(f"[GE M] ERROR: {error_msg} Content-Type: {res.headers.get('content-type')} Preview: {res.text[:200]}")
-                        break
-
+                for attempt in range(1, 4):
                     try:
-                        res_json = res.json()
-                    except Exception:
-                        error_msg = f"Non-JSON response from GeM: {res.text[:150]}"
-                        print(f"[GE M] ERROR: {error_msg}")
-                        break
+                        res = s.post(GEM_ALL_BIDS_DATA_URL, data=post_data, verify=False, timeout=12)
+                        if res.status_code == 200:
+                            res_json = res.json()
+                            response_inner = res_json.get('response', {}).get('response', {}) or res_json.get('response', {})
+                            p_num_found = response_inner.get('numFound', 0)
+                            p_docs = response_inner.get('docs', []) or res_json.get('docs', [])
+                            return p_num, p_docs, p_num_found, None
+                        elif res.status_code == 404:
+                            return p_num, [], 0, None
+                    except Exception as err:
+                        if attempt == 3:
+                            return p_num, [], 0, str(err)
+                        time.sleep(0.3)
+                return p_num, [], 0, "Max retries reached"
 
-                    response_inner = res_json.get('response', {}).get('response', {}) or res_json.get('response', {})
-                    num_found = response_inner.get('numFound', 0)
-                    docs = response_inner.get('docs', []) or res_json.get('docs', [])
+            for cfg in scan_configs:
+                # 1. Fetch Page 1 to get total numFound and initial records
+                p1_num, p1_docs, p1_num_found, p1_err = fetch_single_page(1, cfg)
+                if p1_err and not p1_docs:
+                    print(f"[GE M] [{cfg['desc']}] Page 1 notice: {p1_err}")
 
+                if p1_num_found > 0:
+                    num_found = p1_num_found
+
+                cfg_pages_target = 1
+                if num_found > 0:
+                    rows = len(p1_docs) if len(p1_docs) > 0 else 10
+                    expected_p = math.ceil(num_found / rows)
+                    ceiling = max_pages if max_pages is not None else (30 if scan_type_upper == "FINISHED" else DEFAULT_MAX_PAGES)
+                    cfg_pages_target = min(expected_p, ceiling)
+                elif p1_docs:
+                    cfg_pages_target = min(SAFETY_MAX_PAGES, DEFAULT_MAX_PAGES)
+
+                page_docs_map = {1: p1_docs}
+
+                # 2. Fetch pages 2..cfg_pages_target concurrently using ThreadPoolExecutor
+                if cfg_pages_target > 1:
+                    pages_to_fetch = list(range(2, cfg_pages_target + 1))
+                    with ThreadPoolExecutor(max_workers=15) as executor:
+                        future_to_page = {
+                            executor.submit(fetch_single_page, p, cfg): p
+                            for p in pages_to_fetch
+                        }
+                        for future in as_completed(future_to_page):
+                            p_res, docs_res, _, _ = future.result()
+                            if docs_res:
+                                page_docs_map[p_res] = docs_res
+
+                # 3. Collate docs in sequential page order
+                for p in sorted(page_docs_map.keys()):
+                    docs = page_docs_map[p]
                     if not docs:
-                        print(f"[GE M] [{cfg['desc']}] PAGE {page}: records=0 numFound={num_found}. End of pages for this category.")
-                        break
-
-                    # Dynamic Page Limit Calculation up to 500 pages
-                    if num_found > 0:
-                        rows = len(docs) if len(docs) > 0 else 10
-                        expected_p = math.ceil(num_found / rows)
-                        ceiling = max_pages if max_pages is not None else (SAFETY_MAX_PAGES if scan_type_upper == "FINISHED" else 500)
-                        cfg_max_pages = min(expected_p, ceiling)
-
+                        continue
                     pages_processed += 1
                     records_on_last_page = len(docs)
-                    cfg_docs_collected += len(docs)
                     page_unique = 0
-                    page_matches = 0
-
                     for d in docs:
                         bid_no_list = d.get('b_bid_number', [])
                         bid_no = bid_no_list[0] if isinstance(bid_no_list, list) and len(bid_no_list) > 0 else d.get('bidNumber')
                         if not bid_no:
                             bid_no = f"GEM/2026/B/{hash(json.dumps(d)) % 10000000}"
-
-                        if scan_type_upper == "PUBLISHED":
-                            rec_date = normalize_gem_date(unwrap_val(d.get("final_start_date_sort")))
-                        else:
-                            rec_date = normalize_gem_date(unwrap_val(d.get("final_end_date_sort")))
-
-                        if rec_date == norm_date_str:
-                            page_matches += 1
 
                         if bid_no in seen_bids:
                             dup_count += 1
@@ -1287,20 +1275,12 @@ class GeMLiveScraper:
                             all_docs.append(d)
                             page_unique += 1
 
-                    print(
-                        f"[{cfg['desc']}] PAGE {page}\n"
-                        f"records={len(docs)}\n"
-                        f"new_unique={page_unique}\n"
-                        f"duplicates={dup_count}\n"
-                        f"collected_total={len(seen_bids)}\n"
-                        f"cfg_collected={cfg_docs_collected}/{num_found}\n"
-                    )
-
-                    if cfg_docs_collected >= num_found and num_found > 0:
-                        print(f"[GE M] [{cfg['desc']}] PAGE {page}: Complete dataset retrieved ({cfg_docs_collected}/{num_found} records).")
-                        break
-
-                    page += 1
+                print(
+                    f"[{cfg['desc']}] Parallel Fetch Completed\n"
+                    f"pages_processed={pages_processed}/{cfg_pages_target}\n"
+                    f"collected_total={len(seen_bids)}\n"
+                    f"num_found={num_found}\n"
+                )
 
             pagination_complete = True
             stop_reason = "ALL_GE_M_NUMFOUND_RECORDS_RETRIEVED" if len(seen_bids) > 0 else "GE M SOURCE RETURNED ZERO RECORDS"

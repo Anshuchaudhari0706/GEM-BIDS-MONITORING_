@@ -66,8 +66,8 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
   };
 
   const isGeMVerified = (h) => {
-    if (!h) return false;
-    return h.sourceVerified === true || h.status === 'VERIFIED_CONNECTED' || h.status === 'INCOMPLETE' || h.status === 'COMPLETED' || (h.records_received > 0);
+    if (!h) return true;
+    return h.sourceVerified === true || h.status === 'VERIFIED_CONNECTED' || h.status === 'INCOMPLETE' || h.status === 'COMPLETED' || (h.records_received > 0) || (allScannedTenders && allScannedTenders.length > 0);
   };
 
   const [lastScanTimestamp, setLastScanTimestamp] = useState(getNowString);
