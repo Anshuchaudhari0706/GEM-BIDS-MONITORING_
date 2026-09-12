@@ -987,7 +987,7 @@ app.get('/api/bids', (req, res) => {
   });
 });
 
-// GET /api/services (Returns the 11 Core Service categories)
+// GET /api/services (Returns the Core Service categories)
 app.get('/api/services', (req, res) => {
   res.json({
     status: "success",
@@ -997,10 +997,7 @@ app.get('/api/services', (req, res) => {
       "Cleaning Services",
       "Security Guards",
       "Manpower Fixed",
-      "Facility Management",
       "Sanitation Staff",
-      "BOP",
-      "Global Tender",
       "Healthcare Staff",
       "Horticulture"
     ]
@@ -1030,12 +1027,15 @@ const handleTenderEvaluation = async (req, res) => {
   }
 
   // Live Extraction from Official GeM PDF Document via Python Microservice
+  // Live Extraction from Official GeM PDF Document via Python Microservice
   let pyParsed = null;
   try {
     const rawNumId = (tenderId || '').split('/').pop();
-    const docUrl = tender.gemLink || `https://bidplus.gem.gov.in/showbidDocument/${rawNumId}`;
+    const bId = (tender.raw_doc && tender.raw_doc.b_id && tender.raw_doc.b_id.length > 0) ? String(tender.raw_doc.b_id[0]) : null;
+    const docUrl = tender.gemLink || `https://bidplus.gem.gov.in/showbidDocument/${bId || rawNumId}`;
     const pyResp = await axios.post('http://localhost:8000/parse', {
       tender_id: tenderId,
+      b_id: bId,
       document_url: docUrl,
       consignee_box: tender.consignee_raw_box || tender.work_location?.raw_consignee_box || null,
       existing_consignee: tender.consignee_officer,
@@ -1046,7 +1046,7 @@ const handleTenderEvaluation = async (req, res) => {
       existing_department: tender.department,
       existing_value: tender.value || tender.estimatedValue,
       existing_emd: tender.emdAmount
-    }, { timeout: 10000 });
+    }, { timeout: 12000 });
     if (pyResp.data && pyResp.data.parserStatus === 'SUCCESS') {
       pyParsed = pyResp.data;
     }
@@ -1071,7 +1071,7 @@ const handleTenderEvaluation = async (req, res) => {
 
   const epbgVal = tender.epbgAmount || Math.round(estVal * 0.03);
 
-  // Field Resolution: Prioritize pyParsed (from document reader), then verified tender fields, never fallback to Central Procurement / Dwarka
+  // Field Resolution: Prioritize pyParsed (from document reader), then verified tender fields
   let consigneeRawBox = (pyParsed && pyParsed.officeAddress && pyParsed.officeAddress.raw_consignee_box) || tender.consignee_raw_box || tender.work_location?.raw_consignee_box || null;
 
   let consigneeOfficer = (pyParsed && pyParsed.consignee_officer && pyParsed.consignee_officer !== "Consignee / Reporting Officer" && pyParsed.consignee_officer !== "The Superintending Engineer / Consignee Officer")
@@ -1080,31 +1080,31 @@ const handleTenderEvaluation = async (req, res) => {
         ? tender.consignee_officer
         : (tender.work_location?.consignee_officer || "Consignee / Reporting Officer"));
 
-  let city = (pyParsed && pyParsed.city && pyParsed.city !== "Not Specified" && pyParsed.city !== "Central Procurement Office" && pyParsed.city !== "New Delhi")
+  let city = (pyParsed && pyParsed.city && pyParsed.city !== "Not Specified" && pyParsed.city !== "Central Procurement Office")
     ? pyParsed.city
-    : (tender.city && tender.city !== "Not Specified" && tender.city !== "Central Procurement Office" && tender.city !== "New Delhi"
+    : (tender.city && tender.city !== "Not Specified" && tender.city !== "Central Procurement Office"
         ? tender.city
-        : (tender.work_location?.city || "Bharuch"));
+        : (tender.work_location?.city || "Not Specified"));
 
-  let state = (pyParsed && pyParsed.state && pyParsed.state !== "Not Specified" && pyParsed.state !== "All India" && pyParsed.state !== "Delhi")
+  let state = (pyParsed && pyParsed.state && pyParsed.state !== "Not Specified" && pyParsed.state !== "All India")
     ? pyParsed.state
-    : (tender.state && tender.state !== "Not Specified" && tender.state !== "All India" && tender.state !== "Delhi"
+    : (tender.state && tender.state !== "Not Specified" && tender.state !== "All India"
         ? tender.state
-        : (tender.work_location?.state || "Gujarat"));
+        : (tender.work_location?.state || "Not Specified"));
 
-  let pincode = (pyParsed && pyParsed.pincode && pyParsed.pincode !== "Not Specified" && pyParsed.pincode !== "110077" && pyParsed.pincode !== "110001")
+  let pincode = (pyParsed && pyParsed.pincode && pyParsed.pincode !== "Not Specified")
     ? pyParsed.pincode
-    : (tender.pincode && tender.pincode !== "Not Specified" && tender.pincode !== "110077" && tender.pincode !== "110001"
+    : (tender.pincode && tender.pincode !== "Not Specified"
         ? tender.pincode
-        : (city === "Bharuch" ? "392001" : (city === "Vadodara" ? "390001" : "382010")));
+        : (tender.work_location?.pincode || "Not Specified"));
 
-  let fullAddress = (pyParsed && pyParsed.address && !pyParsed.address.includes("Central Procurement Office") && !pyParsed.address.includes("Sector-10, Dwarka") && !pyParsed.address.includes("New Delhi"))
+  let fullAddress = (pyParsed && pyParsed.address && !pyParsed.address.includes("Central Procurement Office") && !pyParsed.address.includes("Government Administrative Complex, Gandhinagar"))
     ? pyParsed.address
-    : (tender.address && !tender.address.includes("Central Procurement Office") && !tender.address.includes("Sector-10, Dwarka") && !tender.address.includes("New Delhi")
+    : (tender.address && !tender.address.includes("Central Procurement Office") && !tender.address.includes("Government Administrative Complex, Gandhinagar")
         ? tender.address
-        : (tender.office_address && !tender.office_address.includes("Central Procurement Office") && !tender.office_address.includes("Sector-10, Dwarka") && !tender.office_address.includes("New Delhi")
+        : (tender.office_address && !tender.office_address.includes("Central Procurement Office")
             ? tender.office_address
-            : `${consigneeOfficer}, ${tender.department || 'Government Office'}, ${city}, ${state} - ${pincode}`));
+            : `${consigneeOfficer}, ${tender.department || 'Government Office'}, ${city !== 'Not Specified' ? city : ''} ${state !== 'Not Specified' ? state : ''} ${pincode !== 'Not Specified' ? '- ' + pincode : ''}`.trim()));
 
   const desig = tender.primary_designation || "Sanitation & Housekeeping Staff / Multi-Tasking Staff";
   const duty = tender.duty_description || "Comprehensive facility maintenance, cleaning & sanitization, and administrative support.";
@@ -1119,6 +1119,19 @@ const handleTenderEvaluation = async (req, res) => {
     : (tender.emd_original || `₹${emdVal.toLocaleString('en-IN')}`);
 
   let advisoryBank = (pyParsed && pyParsed.advisoryBank) || tender.advisoryBank || tender.advisory_bank || "Bank Of Baroda";
+
+  const requiredDocuments = (pyParsed && pyParsed.required_documents) || tender.required_documents || [
+    "Experience Criteria",
+    "Certificate (Requested in ATC)"
+  ];
+  const requiredDocumentsRaw = (pyParsed && pyParsed.required_documents_raw) || tender.required_documents_raw || (Array.isArray(requiredDocuments) ? requiredDocuments.join(', ') : requiredDocuments);
+  const exemptionNote = (pyParsed && pyParsed.exemption_note) || tender.exemption_note || "*In case any bidder is seeking exemption from Experience / Turnover Criteria, the supporting documents to prove his eligibility for exemption must be uploaded for evaluation by the buyer";
+  const mseExemption = (pyParsed && pyParsed.mse_exemption) || tender.mse_exemption || "No";
+  const startupExemption = (pyParsed && pyParsed.startup_exemption) || tender.startup_exemption || "No";
+  const annualTurnoverRequired = (pyParsed && pyParsed.annual_turnover_required) || (pyParsed && pyParsed.eligibility_criteria && pyParsed.eligibility_criteria.past_turnover_required) || tender.annual_turnover_required || `₹${((estVal * 0.4) / 100000).toFixed(2)} Lakhs (40% of Estimated Value)`;
+  const pastExperienceYears = (pyParsed && pyParsed.past_experience_years) || (pyParsed && pyParsed.eligibility_criteria && pyParsed.eligibility_criteria.past_experience_years) || tender.past_experience_years || "2 Year (s)";
+  const pastPerformancePercentage = (pyParsed && pyParsed.eligibility_criteria && pyParsed.eligibility_criteria.past_performance_percentage) || tender.past_performance_percentage || "N/A";
+  const turnoverCriteriaNote = (pyParsed && pyParsed.eligibility_criteria && pyParsed.eligibility_criteria.turnover_criteria_note) || tender.turnover_criteria_note || "To be verified by the buyer at the time of technical evaluation";
 
   // Update in database cache
   const dbIndex = (db.tenders || []).findIndex(t => (t.id || t.bid_number) === tender.id);
@@ -1137,6 +1150,21 @@ const handleTenderEvaluation = async (req, res) => {
     db.tenders[dbIndex].consignee_raw_box = consigneeRawBox;
     db.tenders[dbIndex].address = fullAddress;
     db.tenders[dbIndex].office_address = fullAddress;
+    db.tenders[dbIndex].required_documents = requiredDocuments;
+    db.tenders[dbIndex].required_documents_raw = requiredDocumentsRaw;
+    db.tenders[dbIndex].exemption_note = exemptionNote;
+    db.tenders[dbIndex].mse_exemption = mseExemption;
+    db.tenders[dbIndex].startup_exemption = startupExemption;
+    db.tenders[dbIndex].annual_turnover_required = annualTurnoverRequired;
+    db.tenders[dbIndex].past_experience_years = pastExperienceYears;
+    db.tenders[dbIndex].past_performance_percentage = pastPerformancePercentage;
+    if (db.tenders[dbIndex].work_location) {
+      db.tenders[dbIndex].work_location.city = city;
+      db.tenders[dbIndex].work_location.state = state;
+      db.tenders[dbIndex].work_location.pincode = pincode;
+      db.tenders[dbIndex].work_location.consignee_officer = consigneeOfficer;
+      db.tenders[dbIndex].work_location.address = fullAddress;
+    }
     writeDB(db);
   }
 
@@ -1161,6 +1189,21 @@ const handleTenderEvaluation = async (req, res) => {
       address: fullAddress,
       raw_consignee_box: consigneeRawBox
     },
+    required_documents: requiredDocuments,
+    required_documents_raw: requiredDocumentsRaw,
+    document_required_from_seller: (pyParsed && pyParsed.document_required_from_seller) || {
+      document_list: requiredDocuments,
+      raw_text: requiredDocumentsRaw,
+      exemption_note: exemptionNote,
+      mse_exemption: mseExemption,
+      startup_exemption: startupExemption
+    },
+    exemption_note: exemptionNote,
+    mse_exemption: mseExemption,
+    startup_exemption: startupExemption,
+    annual_turnover_required: annualTurnoverRequired,
+    past_experience_years: pastExperienceYears,
+    past_performance_percentage: pastPerformancePercentage,
     primary_designation: desig,
     duty_summary: dutySum,
     duty_description: duty,
@@ -1179,16 +1222,20 @@ const handleTenderEvaluation = async (req, res) => {
         designation: desig,
         quantity: staffCount,
         qualification: "10th / 12th Pass / Graduate",
-        experience: "Minimum 1-3 Years Experience in Similar Works",
+        experience: `Minimum ${pastExperienceYears} Experience in Similar Works`,
         duty: duty,
         wageRate: "As per Central/State Minimum Wages Act + EPF + ESIC + Admin Charges"
       }
     ],
     eligibility_criteria: {
-      past_experience: "3 Years in Central/State Govt/PSU supplying similar manpower",
-      past_turnover_required: `₹${((estVal * 0.4) / 100000).toFixed(2)} Lakhs (40% of Estimated Bid Value)`,
-      mse_exemption: "EMD & Turnover Exemption Allowed for Registered MSEs",
-      startup_exemption: "Turnover & Experience Exemption Allowed as per DIPP Policy",
+      past_experience_years: pastExperienceYears,
+      past_experience: `${pastExperienceYears} in Central/State Govt/PSU supplying similar services`,
+      past_turnover_required: annualTurnoverRequired,
+      annual_turnover_required: annualTurnoverRequired,
+      past_performance_percentage: pastPerformancePercentage,
+      turnover_criteria_note: turnoverCriteriaNote,
+      mse_exemption: mseExemption === "Yes" || mseExemption === "Yes | Complete" ? "Yes | Complete (EMD & Turnover Exemption Allowed for Registered MSEs)" : "No Exemption",
+      startup_exemption: startupExemption === "Yes" || startupExemption === "Yes | Complete" ? "Yes | Complete (Turnover & Experience Exemption Allowed as per DIPP Policy)" : "No Exemption",
       make_in_india_preference: "Class 1 Local Supplier (50% Local Content Preference)"
     },
     timelines: {
@@ -1215,6 +1262,71 @@ app.post('/api/tenders/parse-document', authenticateToken, requireActiveSubscrip
 app.get(/^\/api\/tenders\/(.+)\/evaluate$/, authenticateToken, requireActiveSubscription, handleTenderEvaluation);
 app.get('/api/tenders/:id/evaluate', authenticateToken, requireActiveSubscription, handleTenderEvaluation);
 app.get('/api/tenders/evaluate', authenticateToken, requireActiveSubscription, handleTenderEvaluation);
+
+// Bulk Enrich Tender Addresses from GeM PDFs
+app.post('/api/tenders/enrich-all-addresses', authenticateToken, requireActiveSubscription, async (req, res) => {
+  try {
+    const db = readDB();
+    const tenders = db.tenders || [];
+    let updatedCount = 0;
+
+    for (let i = 0; i < tenders.length; i++) {
+      const t = tenders[i];
+      const rawNumId = (t.id || '').split('/').pop();
+      const bId = (t.raw_doc && t.raw_doc.b_id && t.raw_doc.b_id.length > 0) ? String(t.raw_doc.b_id[0]) : null;
+      const docUrl = t.gemLink || `https://bidplus.gem.gov.in/showbidDocument/${bId || rawNumId}`;
+
+      try {
+        const pyResp = await axios.post('http://localhost:8000/parse', {
+          tender_id: t.id,
+          b_id: bId,
+          document_url: docUrl,
+          existing_department: t.department
+        }, { timeout: 8000 });
+
+        if (pyResp.data && pyResp.data.parserStatus === 'SUCCESS') {
+          const parsed = pyResp.data;
+          if (parsed.address && !parsed.address.includes('Central Procurement') && !parsed.address.includes('Government Administrative Complex, Gandhinagar')) {
+            t.address = parsed.address;
+            t.office_address = parsed.address;
+            if (parsed.consignee_officer && parsed.consignee_officer !== 'Consignee / Reporting Officer') {
+              t.consignee_officer = parsed.consignee_officer;
+            }
+            if (parsed.city && parsed.city !== 'Not Specified') {
+              t.city = parsed.city;
+            }
+            if (parsed.state && parsed.state !== 'Not Specified') {
+              t.state = parsed.state;
+            }
+            if (parsed.pincode && parsed.pincode !== 'Not Specified') {
+              t.pincode = parsed.pincode;
+            }
+            if (t.work_location) {
+              t.work_location.address = t.address;
+              t.work_location.city = t.city;
+              t.work_location.state = t.state;
+              t.work_location.pincode = t.pincode;
+              t.work_location.consignee_officer = t.consignee_officer;
+            }
+            updatedCount++;
+          }
+        }
+      } catch (err) {
+        // Continue
+      }
+    }
+
+    writeDB(db);
+    res.json({
+      status: 'success',
+      message: `Enriched ${updatedCount} tenders with real official addresses from GeM PDFs.`,
+      updatedCount,
+      tenders: db.tenders
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // Single Authoritative Live Scan Handler
 const handleLiveScan = async (req, res) => {
@@ -1613,15 +1725,12 @@ app.get('/api/services', (req, res) => {
     'Security Guards',
     'Cleaning Services',
     'Sanitation Staff',
-    'BOP',
-    'Global Tender',
     'Custom Bid',
     'Manpower Fixed',
     'Manpower Minimum Wage',
     'Healthcare Services',
     'Horticulture',
     'Housekeeping',
-    'Facility Management',
     'Data Entry',
     'IT Services',
     'Other Services'

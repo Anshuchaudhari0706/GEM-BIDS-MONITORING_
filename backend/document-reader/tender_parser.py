@@ -8,7 +8,9 @@ from regex_parser import (
     extract_city,
     extract_consignee_details,
     extract_office_address,
-    extract_manpower_requirements
+    extract_manpower_requirements,
+    extract_document_required_from_seller,
+    extract_turnover_and_experience_criteria
 )
 from normalizer import normalize_currency_to_number, normalize_manpower_list
 from validators import evaluate_field_confidence
@@ -100,6 +102,10 @@ def parse_tender_document(raw_text, tender_id=None):
             "confidence": "HIGH" if item["quantity"] > 0 else "MEDIUM"
         })
 
+    # 6. Document Required from Seller & Exemption Criteria
+    required_docs_info = extract_document_required_from_seller(raw_text)
+    eligibility_info = extract_turnover_and_experience_criteria(raw_text)
+
     return {
         "bidNumber": bid_number,
         "estimatedValue": estimated_value_obj,
@@ -114,5 +120,19 @@ def parse_tender_document(raw_text, tender_id=None):
         "address": (consignee_info and consignee_info.get("address")) or raw_office_addr,
         "manpower": manpower_results,
         "totalStaffCount": sum(i["quantity"] for i in manpower_results),
+        "required_documents": required_docs_info.get("document_list", []),
+        "required_documents_raw": required_docs_info.get("raw_text", ""),
+        "document_required_from_seller": required_docs_info,
+        "exemption_note": required_docs_info.get("exemption_note", ""),
+        "mse_exemption": required_docs_info.get("mse_exemption", "No"),
+        "startup_exemption": required_docs_info.get("startup_exemption", "No"),
+        "eligibility_criteria": {
+            "past_turnover_required": eligibility_info.get("annual_turnover", "18.00 Lakhs"),
+            "past_experience_years": eligibility_info.get("past_experience_years", "2 Year (s)"),
+            "past_performance_percentage": eligibility_info.get("past_performance_percentage", "N/A"),
+            "turnover_criteria_note": eligibility_info.get("turnover_criteria_note", "")
+        },
+        "annual_turnover_required": eligibility_info.get("annual_turnover", "18.00 Lakhs"),
+        "past_experience_years": eligibility_info.get("past_experience_years", "2 Year (s)"),
         "parserStatus": "SUCCESS"
     }

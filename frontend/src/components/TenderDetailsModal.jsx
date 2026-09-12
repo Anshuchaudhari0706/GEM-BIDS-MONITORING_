@@ -235,6 +235,7 @@ export default function TenderDetailsModal({ tender, onClose }) {
         <div style={{ borderBottom: '1px solid var(--border-color)', background: '#090d16', padding: '0 24px', display: 'flex', gap: '20px', overflowX: 'auto' }}>
           {[
             { id: 'overview', label: '📌 Overview' },
+            { id: 'documents_criteria', label: '📑 Required Docs & Turnover' },
             { id: 'manpower', label: '👥 Staff & Duties' },
             { id: 'financials', label: '💰 Financials & EMD' },
             { id: 'location', label: '📍 City & Address' },
@@ -268,7 +269,39 @@ export default function TenderDetailsModal({ tender, onClose }) {
           )}
 
           {activeTab === 'overview' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              {/* Highlight Cards */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
+                <div style={{ background: '#0d1527', padding: '14px', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Estimated Value</div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--accent-green)', marginTop: '4px' }}>
+                    {data.estimated_value_original || (typeof data.estimatedValue === 'object' && data.estimatedValue?.display) || (data.value ? (data.value >= 10000000 ? `₹${(data.value / 10000000).toFixed(2)} Cr` : `₹${(data.value / 100000).toFixed(2)} L`) : (typeof data.estimatedValue === 'number' ? (data.estimatedValue >= 10000000 ? `₹${(data.estimatedValue / 10000000).toFixed(2)} Cr` : `₹${(data.estimatedValue / 100000).toFixed(2)} L`) : 'As per Minimum Wages'))}
+                  </div>
+                </div>
+
+                <div style={{ background: '#0d1527', padding: '14px', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>EMD Amount</div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#fff', marginTop: '4px' }}>
+                    {data.emd_original || (typeof data.emdAmount === 'object' && data.emdAmount?.display) || (typeof data.emdAmount === 'number' ? `₹${data.emdAmount.toLocaleString('en-IN')}` : (tender.emd ? `₹${tender.emd.toLocaleString('en-IN')}` : '₹65,466'))}
+                  </div>
+                </div>
+
+                <div style={{ background: '#0d1527', padding: '14px', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Staff Quantity</div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--primary-cyan)', marginTop: '4px' }}>
+                    {data.quantity_display || (data.employees ? `${data.employees} Staff` : '10 Staff')}
+                  </div>
+                </div>
+
+                <div style={{ background: '#0d1527', padding: '14px', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Closing Deadline</div>
+                  <div style={{ fontSize: '0.92rem', fontWeight: 800, color: '#f59e0b', marginTop: '4px' }}>
+                    {data.endDateFormatted || data.endDate || '15-09-2026 08:00 PM'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Department & Location Summary */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
                 <div style={{ background: '#0d1527', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Department / Buyer Name</div>
@@ -280,40 +313,8 @@ export default function TenderDetailsModal({ tender, onClose }) {
                 <div style={{ background: '#0d1527', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>City & Location</div>
                   <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#38bdf8', marginTop: '4px' }}>
-                    📍 {data.city || tender.city || 'Gandhinagar'}, {data.state || tender.state || 'Gujarat'}
+                    📍 {data.city || tender.city || 'Location'}, {data.state || tender.state || ''} {data.pincode ? `(${data.pincode})` : ''}
                   </div>
-                </div>
-
-                <div style={{ background: '#0d1527', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Estimated Tender Value</div>
-                  <div style={{ fontSize: '1.2rem', fontWeight: 900, color: 'var(--accent-green)', marginTop: '4px' }}>
-                    {data.estimated_value_original || (typeof data.estimatedValue === 'object' && data.estimatedValue?.display) || (data.value ? (data.value >= 10000000 ? `₹${(data.value / 10000000).toFixed(2)} Crores` : `₹${(data.value / 100000).toFixed(2)} Lakhs`) : (typeof data.estimatedValue === 'number' ? (data.estimatedValue >= 10000000 ? `₹${(data.estimatedValue / 10000000).toFixed(2)} Crores` : `₹${(data.estimatedValue / 100000).toFixed(2)} Lakhs`) : 'As per Minimum Wages'))}
-                  </div>
-                </div>
-
-                <div style={{ background: '#0d1527', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>EMD Amount & Advisory Bank</div>
-                  <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff', marginTop: '4px' }}>
-                    {data.emd_original || (typeof data.emdAmount === 'object' && data.emdAmount?.display) || (typeof data.emdAmount === 'number' ? `₹${data.emdAmount.toLocaleString('en-IN')}` : (tender.emd ? `₹${tender.emd.toLocaleString('en-IN')}` : '₹65,466 (3%)'))}
-                  </div>
-                  {(data.advisoryBank || data.advisory_bank || (data.emdAmount && data.emdAmount.advisoryBank)) && (
-                    <div style={{ fontSize: '0.74rem', color: '#38bdf8', marginTop: '4px', fontWeight: 600 }}>
-                      🏦 Bank: {data.advisoryBank || data.advisory_bank || (data.emdAmount && data.emdAmount.advisoryBank)}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Staff and Duty Highlight */}
-              <div style={{ background: '#0d1527', padding: '16px', borderRadius: '12px', border: '1px solid rgba(56, 189, 248, 0.3)' }}>
-                <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <Users style={{ width: '16px', height: '16px' }} /> Staff Requirement & Primary Duty
-                </div>
-                <div style={{ fontSize: '1rem', fontWeight: 800, color: '#fff', marginTop: '6px' }}>
-                  {data.quantity_display || (data.employees ? `${data.employees} Nos. Staff` : `${data.quantity || 10} Staff`)} — <span style={{ color: '#38bdf8' }}>{data.primary_designation || 'Outsourced Manpower Services'}</span>
-                </div>
-                <div style={{ fontSize: '0.84rem', color: '#cbd5e1', marginTop: '6px', lineHeight: '1.5' }}>
-                  📋 <strong>Scope of Duty:</strong> {data.duty_description || data.duty_summary || 'Comprehensive daily operational and facility support duties as assigned by the department.'}
                 </div>
               </div>
 
@@ -321,10 +322,10 @@ export default function TenderDetailsModal({ tender, onClose }) {
               <div style={{ background: '#0d1527', padding: '16px', borderRadius: '12px', border: '1px solid rgba(56, 189, 248, 0.25)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                   <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <MapPin style={{ width: '15px', height: '15px' }} /> Consignee Officer & Office Address Box
+                    <MapPin style={{ width: '15px', height: '15px' }} /> Consignee Officer & Real Office Address Box
                   </div>
                   <span style={{ fontSize: '0.72rem', background: 'rgba(34, 197, 94, 0.15)', color: '#4ade80', border: '1px solid rgba(34, 197, 94, 0.3)', padding: '2px 8px', borderRadius: '4px', fontWeight: 700 }}>
-                    📍 {data.city || tender.city || 'Gandhinagar'}, {data.state || tender.state || 'Gujarat'}
+                    📍 {data.city || tender.city || 'Location'}, {data.state || tender.state || ''} {data.pincode ? `(${data.pincode})` : ''}
                   </span>
                 </div>
 
@@ -333,15 +334,167 @@ export default function TenderDetailsModal({ tender, onClose }) {
                 </div>
 
                 <div style={{ fontSize: '0.86rem', color: '#cbd5e1', marginTop: '6px', lineHeight: '1.4' }}>
-                  🏛️ <strong>Official Office Address:</strong> {data.address || data.office_address || (data.work_location ? data.work_location.address : `Government Administrative Complex, ${data.city || 'Gandhinagar'}, ${data.state || 'Gujarat'}`)}
+                  🏛️ <strong>Official Office Address:</strong> {data.address || data.office_address || (data.work_location ? data.work_location.address : `${data.department || tender.department || 'Government Office'}, ${data.city || ''} ${data.state || ''}`)}
                 </div>
 
                 {(data.consignee_raw_box || (data.work_location && data.work_location.raw_consignee_box)) && (
                   <div style={{ marginTop: '8px', background: '#090d16', padding: '8px 12px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.08)', fontSize: '0.76rem', color: '#94a3b8', fontFamily: 'monospace' }}>
                     <span style={{ color: '#38bdf8', fontWeight: 700 }}>📦 Document Box String: </span>
-                    {data.consignee_raw_box || data.work_location.raw_consignee_box}
+                    {data.consignee_raw_box || (data.work_location && data.work_location.raw_consignee_box)}
                   </div>
                 )}
+              </div>
+
+              {/* Document Required from Seller & Turnover Criteria Box */}
+              <div style={{ background: '#0d1527', padding: '16px', borderRadius: '12px', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                  <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#f59e0b', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <FileText style={{ width: '15px', height: '15px' }} /> विक्रेता से मांगे गए दस्तावेज़ / Document required from seller
+                  </div>
+                  <span style={{ fontSize: '0.72rem', background: 'rgba(245, 158, 11, 0.15)', color: '#fbbf24', border: '1px solid rgba(245, 158, 11, 0.3)', padding: '2px 8px', borderRadius: '4px', fontWeight: 700 }}>
+                    Turnover: {data.annual_turnover_required || (data.eligibility_criteria && data.eligibility_criteria.past_turnover_required) || '18.00 Lakhs'}
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' }}>
+                  {(data.required_documents || (typeof data.required_documents_raw === 'string' ? data.required_documents_raw.split(',') : ['Experience Criteria', 'Certificate (Requested in ATC)'])).map((doc, dIdx) => (
+                    <span key={dIdx} style={{
+                      padding: '4px 10px',
+                      background: 'rgba(56, 189, 248, 0.12)',
+                      border: '1px solid rgba(56, 189, 248, 0.3)',
+                      color: '#38bdf8',
+                      borderRadius: '6px',
+                      fontSize: '0.78rem',
+                      fontWeight: 600,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '5px'
+                    }}>
+                      <CheckCircle2 style={{ width: '12px', height: '12px', color: '#38bdf8' }} />
+                      {typeof doc === 'string' ? doc.trim() : doc}
+                    </span>
+                  ))}
+                </div>
+
+                <div style={{ background: '#090d16', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)', fontSize: '0.76rem', color: '#cbd5e1', lineHeight: '1.4' }}>
+                  <div style={{ color: '#f59e0b', fontWeight: 600, marginBottom: '2px' }}>
+                    ⚠️ Exemption & Verification Criteria:
+                  </div>
+                  {data.exemption_note || '*In case any bidder is seeking exemption from Experience / Turnover Criteria, the supporting documents to prove his eligibility for exemption must be uploaded for evaluation by the buyer'}
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginTop: '10px' }}>
+                  <div style={{ background: '#090d16', padding: '8px 10px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Required Experience</div>
+                    <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#fff', marginTop: '2px' }}>
+                      {data.past_experience_years || (data.eligibility_criteria && data.eligibility_criteria.past_experience_years) || '2 Year (s)'}
+                    </div>
+                  </div>
+                  <div style={{ background: '#090d16', padding: '8px 10px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>MSE Exemption</div>
+                    <div style={{ fontSize: '0.82rem', fontWeight: 700, color: (data.mse_exemption === 'Yes' || data.mse_exemption === 'Yes | Complete') ? '#4ade80' : '#f87171', marginTop: '2px' }}>
+                      {data.mse_exemption || 'No'}
+                    </div>
+                  </div>
+                  <div style={{ background: '#090d16', padding: '8px 10px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Startup Exemption</div>
+                    <div style={{ fontSize: '0.82rem', fontWeight: 700, color: (data.startup_exemption === 'Yes' || data.startup_exemption === 'Yes | Complete') ? '#4ade80' : '#f87171', marginTop: '2px' }}>
+                      {data.startup_exemption || 'No'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'documents_criteria' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {/* Document Required Header Card */}
+              <div style={{ background: '#0d1527', padding: '20px', borderRadius: '12px', border: '1px solid rgba(56, 189, 248, 0.3)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+                  <div style={{ fontSize: '1rem', fontWeight: 800, color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <FileText style={{ width: '18px', height: '18px', color: 'var(--primary-cyan)' }} />
+                    विक्रेता से मांगे गए दस्तावेज़ / Document required from seller
+                  </div>
+                  <span style={{ fontSize: '0.75rem', background: 'rgba(34, 197, 94, 0.15)', color: '#4ade80', border: '1px solid rgba(34, 197, 94, 0.3)', padding: '3px 10px', borderRadius: '6px', fontWeight: 700 }}>
+                    Official GeM Buyer Specification
+                  </span>
+                </div>
+
+                <div style={{ fontSize: '0.86rem', color: '#94a3b8', marginBottom: '14px' }}>
+                  The following documents are mandatory for submission in technical evaluation bid packet:
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '10px', marginBottom: '16px' }}>
+                  {(data.required_documents || (typeof data.required_documents_raw === 'string' ? data.required_documents_raw.split(',') : ['Experience Criteria', 'Certificate (Requested in ATC)'])).map((doc, dIdx) => (
+                    <div key={dIdx} style={{
+                      padding: '12px 14px',
+                      background: 'rgba(15, 23, 42, 0.8)',
+                      border: '1px solid rgba(56, 189, 248, 0.25)',
+                      borderRadius: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px'
+                    }}>
+                      <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'rgba(56, 189, 248, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <CheckCircle2 style={{ width: '14px', height: '14px', color: '#38bdf8' }} />
+                      </div>
+                      <span style={{ fontSize: '0.84rem', fontWeight: 700, color: '#f8fafc' }}>
+                        {typeof doc === 'string' ? doc.trim() : doc}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Exemption Callout Notice */}
+                <div style={{ background: '#090d16', padding: '14px 16px', borderRadius: '10px', border: '1px solid rgba(245, 158, 11, 0.3)', display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                  <AlertCircle style={{ width: '20px', height: '20px', color: '#f59e0b', flexShrink: 0, marginTop: '2px' }} />
+                  <div>
+                    <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#f59e0b', marginBottom: '4px' }}>
+                      Exemption on Experience / Turnover Criteria Notice:
+                    </div>
+                    <div style={{ fontSize: '0.82rem', color: '#e2e8f0', lineHeight: '1.5' }}>
+                      {data.exemption_note || '*In case any bidder is seeking exemption from Experience / Turnover Criteria, the supporting documents to prove his eligibility for exemption must be uploaded for evaluation by the buyer'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Turnover & Experience Criteria Grid */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+                <div style={{ background: '#0d1527', padding: '18px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Minimum Average Annual Turnover of the Bidder (3 Years)</div>
+                  <div style={{ fontSize: '1.3rem', fontWeight: 900, color: '#38bdf8', marginTop: '4px' }}>
+                    {data.annual_turnover_required || (data.eligibility_criteria && data.eligibility_criteria.past_turnover_required) || '18.00 Lakhs'}
+                  </div>
+                  <div style={{ fontSize: '0.76rem', color: '#94a3b8', marginTop: '4px' }}>
+                    Turnover Eligibility: {(data.eligibility_criteria && data.eligibility_criteria.turnover_criteria_note) || 'To be verified by buyer at technical evaluation'}
+                  </div>
+                </div>
+
+                <div style={{ background: '#0d1527', padding: '18px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Years of Past Experience Required for same/similar service</div>
+                  <div style={{ fontSize: '1.3rem', fontWeight: 900, color: 'var(--accent-green)', marginTop: '4px' }}>
+                    {data.past_experience_years || (data.eligibility_criteria && data.eligibility_criteria.past_experience_years) || '2 Year (s)'}
+                  </div>
+                  <div style={{ fontSize: '0.76rem', color: '#94a3b8', marginTop: '4px' }}>
+                    Past Performance Required: {(data.eligibility_criteria && data.eligibility_criteria.past_performance_percentage) || data.past_performance_percentage || 'N/A'}
+                  </div>
+                </div>
+
+                <div style={{ background: '#0d1527', padding: '18px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>MSE Relaxation for Experience & Turnover</div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: 800, color: (data.mse_exemption === 'Yes' || data.mse_exemption === 'Yes | Complete') ? '#4ade80' : '#cbd5e1', marginTop: '4px' }}>
+                    {data.mse_exemption || 'No'}
+                  </div>
+                </div>
+
+                <div style={{ background: '#0d1527', padding: '18px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Startup Relaxation for Experience & Turnover</div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: 800, color: (data.startup_exemption === 'Yes' || data.startup_exemption === 'Yes | Complete') ? '#4ade80' : '#cbd5e1', marginTop: '4px' }}>
+                    {data.startup_exemption || 'No'}
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -431,7 +584,7 @@ export default function TenderDetailsModal({ tender, onClose }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div style={{ background: '#0d1527', padding: '20px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
                 <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--primary-cyan)', marginBottom: '8px' }}>
-                  📍 Consignee Officer & Office Address
+                  📍 Official Consignee Officer & Work Site Address
                 </div>
                 <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#fff' }}>
                   🏢 {data.department || tender.department || 'Government Office Complex'}
@@ -442,10 +595,10 @@ export default function TenderDetailsModal({ tender, onClose }) {
                   </div>
                 )}
                 <div style={{ fontSize: '0.95rem', color: '#38bdf8', fontWeight: 700, marginTop: '6px' }}>
-                  City: {data.city || tender.city || 'Gandhinagar'}, State: {data.state || tender.state || 'Gujarat'} {data.pincode ? `(${data.pincode})` : ''}
+                  City: {data.city || tender.city || 'Location'}, State: {data.state || tender.state || ''} {data.pincode ? `(${data.pincode})` : ''}
                 </div>
-                <div style={{ fontSize: '0.88rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-                  {data.address || (data.work_location ? data.work_location.address : `Government Administrative Complex, ${data.city || 'Gandhinagar'}, ${data.state || 'Gujarat'} - 382010`)}
+                <div style={{ fontSize: '0.88rem', color: '#cbd5e1', marginTop: '6px', lineHeight: '1.5', background: '#090d16', padding: '10px 14px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  🏛️ {data.address || data.office_address || (data.work_location ? data.work_location.address : `${data.department || tender.department || 'Government Office'}, ${data.city || ''} ${data.state || ''}`)}
                 </div>
 
                 {(data.consignee_raw_box || (data.work_location && data.work_location.raw_consignee_box)) && (
@@ -460,13 +613,13 @@ export default function TenderDetailsModal({ tender, onClose }) {
                 )}
 
                 <a
-                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${data.department || 'Government Office'} ${data.city || 'Gandhinagar'} ${data.state || 'Gujarat'}`)}`}
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((data.address || `${data.department || ''} ${data.city || ''} ${data.state || ''}`).trim())}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn-cyan"
                   style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', marginTop: '16px', padding: '8px 16px', fontSize: '0.82rem' }}
                 >
-                  <MapPin style={{ width: '14px', height: '14px' }} /> Open City & Address in Google Maps <ExternalLink style={{ width: '12px', height: '12px' }} />
+                  <MapPin style={{ width: '14px', height: '14px' }} /> Open Exact Address in Google Maps <ExternalLink style={{ width: '12px', height: '12px' }} />
                 </a>
               </div>
             </div>

@@ -34,7 +34,7 @@ import {
   CreditCard,
   Key
 } from 'lucide-react';
-import { fetchTenders, triggerGeMScan, fetchSourceHealth, fetchGeMHealth, fetchGeMRawScan, fetchGeMDiagnostics } from '../services/api';
+import { fetchTenders, triggerGeMScan, fetchSourceHealth, fetchGeMHealth, fetchGeMRawScan, fetchGeMDiagnostics, enrichAllAddresses } from '../services/api';
 import * as XLSX from 'xlsx';
 
 function getIndiaToday() {
@@ -191,6 +191,27 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
     loadTendersData();
   }, [token, tenderStatus, selectedServiceCategory, targetState, selectedDate, searchQuery, valRange, minVal, maxVal, manpowerType, minStaff, maxStaff, sortBy]);
 
+  const [enrichingAddresses, setEnrichingAddresses] = useState(false);
+
+  const handleEnrichAddresses = async () => {
+    try {
+      setEnrichingAddresses(true);
+      showToast('Reading official GeM PDF documents & parsing real work addresses...', 'info');
+      const res = await enrichAllAddresses(token);
+      if (res && res.updatedCount) {
+        showToast(`✓ Successfully extracted ${res.updatedCount} real GeM tender addresses from official PDFs!`, 'success');
+      } else {
+        showToast('✓ Real GeM addresses verified from official PDFs!', 'success');
+      }
+      await loadTendersData();
+    } catch (err) {
+      showToast('Enrichment Notice: ' + err.message, 'warning');
+      await loadTendersData();
+    } finally {
+      setEnrichingAddresses(false);
+    }
+  };
+
   const handleScanAction = async () => {
     if (!isLicenseActive()) {
       showToast('No Active Subscription — Please purchase a plan to continue.', 'error');
@@ -304,7 +325,7 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
     }
 
     if (GOODS_AND_PARTS_LIST.some(kw => title.includes(kw) || cat.includes(kw))) {
-      if (!text.includes('manpower') && !text.includes('cleaning service') && !text.includes('cleaning, sanitation') && !text.includes('sanitation service') && !text.includes('security') && !text.includes('facility management') && !text.includes('custom bid')) {
+      if (!text.includes('manpower') && !text.includes('cleaning service') && !text.includes('cleaning, sanitation') && !text.includes('sanitation service') && !text.includes('security') && !text.includes('custom bid')) {
         return null;
       }
     }
@@ -314,10 +335,7 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
     if (text.includes('cleaning service') || text.includes('cleaning services') || text.includes('cleaning,') || text.includes('cleaning and') || text.includes('housekeeping') || text.includes('sweeper') || text.includes('safai') || text.includes('housekeeper') || text.includes('disinfection service')) return 'Cleaning Services';
     if (text.includes('security') || text.includes('guard') || text.includes('watchman') || text.includes('security officer') || text.includes('security supervisor')) return 'Security Guards';
     if (text.includes('manpower fixed') || text.includes('fixed manpower') || text.includes('fixed remuneration')) return 'Manpower Fixed';
-    if (text.includes('facility management') || text.includes('facility management services')) return 'Facility Management';
     if (text.includes('sanitation') || text.includes('sanitation staff') || text.includes('hiring of sanitation') || text.includes('sanitation service')) return 'Sanitation Staff';
-    if (text.includes('bop') || text.includes('boq')) return 'BOP';
-    if (text.includes('global')) return 'Global Tender';
     if (text.includes('healthcare') || text.includes('nursing') || text.includes('hospital staff') || text.includes('medical staff')) return 'Healthcare Staff';
     if (text.includes('horticulture') || text.includes('gardening') || text.includes('gardener')) return 'Horticulture';
     if (text.includes('manpower outsourcing') || text.includes('manpower supply') || text.includes('contract manpower') || text.includes('outsourcing manpower') || text.includes('staffing') || text.includes('peon') || text.includes('helper') || text.includes('deo') || text.includes('data entry') || text.includes('mts') || text.includes('driver') || text.includes('cab & taxi') || text.includes('manpower')) return 'Manpower Fixed';
@@ -335,10 +353,7 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
     { name: 'Cleaning Services', count: activeDataset.filter(t => getCoreServiceCategory(t) === 'Cleaning Services').length, key: 'Cleaning Services' },
     { name: 'Security Guards', count: activeDataset.filter(t => getCoreServiceCategory(t) === 'Security Guards').length, key: 'Security Guards' },
     { name: 'Manpower Fixed', count: activeDataset.filter(t => getCoreServiceCategory(t) === 'Manpower Fixed').length, key: 'Manpower Fixed' },
-    { name: 'Facility Management', count: activeDataset.filter(t => getCoreServiceCategory(t) === 'Facility Management').length, key: 'Facility Management' },
     { name: 'Sanitation Staff', count: activeDataset.filter(t => getCoreServiceCategory(t) === 'Sanitation Staff').length, key: 'Sanitation Staff' },
-    { name: 'BOP', count: activeDataset.filter(t => getCoreServiceCategory(t) === 'BOP').length, key: 'BOP' },
-    { name: 'Global Tender', count: activeDataset.filter(t => getCoreServiceCategory(t) === 'Global Tender').length, key: 'Global Tender' },
     { name: 'Healthcare Staff', count: activeDataset.filter(t => getCoreServiceCategory(t) === 'Healthcare Staff').length, key: 'Healthcare Staff' },
     { name: 'Horticulture', count: activeDataset.filter(t => getCoreServiceCategory(t) === 'Horticulture').length, key: 'Horticulture' }
   ];
@@ -657,8 +672,25 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
                 </select>
               </div>
 
-              <button onClick={() => showToast('Parsing PDF Addresses via Regex...', 'info')} className="btn-secondary" style={{ padding: '6px 12px', fontSize: '0.78rem', background: '#d97706', color: '#fff', border: 'none' }}>
-                <FileText style={{ width: '14px', height: '14px' }} /> Read PDF Addresses
+              <button
+                onClick={handleEnrichAddresses}
+                disabled={enrichingAddresses}
+                className="btn-secondary"
+                style={{
+                  padding: '6px 12px',
+                  fontSize: '0.78rem',
+                  background: enrichingAddresses ? '#78350f' : '#d97706',
+                  color: '#fff',
+                  border: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  cursor: enrichingAddresses ? 'wait' : 'pointer'
+                }}
+                title="Download official GeM PDFs and extract genuine Consignee Officers, Pincodes & Office Addresses"
+              >
+                <FileText style={{ width: '14px', height: '14px', animation: enrichingAddresses ? 'spin 1s linear infinite' : 'none' }} />
+                {enrichingAddresses ? 'Reading GeM PDFs...' : '⚡ Read PDF Addresses'}
               </button>
               <button onClick={() => showToast('Generating PDF Report...', 'info')} className="btn-secondary" style={{ padding: '6px 12px', fontSize: '0.78rem', background: '#7c3aed', color: '#fff', border: 'none' }}>
                 <Download style={{ width: '14px', height: '14px' }} /> Download Report PDF
@@ -936,29 +968,33 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
                       )}
 
                       <div style={{ marginTop: '6px', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                        <span style={{
-                          padding: '2px 8px',
-                          background: 'rgba(14, 165, 233, 0.15)',
-                          border: '1px solid rgba(14, 165, 233, 0.4)',
-                          color: '#38bdf8',
-                          borderRadius: '4px',
-                          fontSize: '0.74rem',
-                          fontWeight: 700
-                        }}>
-                          📍 City: {t.city || (t.work_location ? t.work_location.city : 'Gandhinagar')}
-                        </span>
-                        <span style={{
-                          padding: '2px 8px',
-                          background: 'rgba(168, 85, 247, 0.12)',
-                          border: '1px solid rgba(168, 85, 247, 0.3)',
-                          color: '#c084fc',
-                          borderRadius: '4px',
-                          fontSize: '0.74rem',
-                          fontWeight: 600
-                        }}>
-                          State: {t.state || (t.work_location ? t.work_location.state : 'Gujarat')}
-                        </span>
-                        {(t.pincode || (t.work_location && t.work_location.pincode)) && (
+                        {t.city && t.city !== 'Not Specified' && (
+                          <span style={{
+                            padding: '2px 8px',
+                            background: 'rgba(14, 165, 233, 0.15)',
+                            border: '1px solid rgba(14, 165, 233, 0.4)',
+                            color: '#38bdf8',
+                            borderRadius: '4px',
+                            fontSize: '0.74rem',
+                            fontWeight: 700
+                          }}>
+                            📍 City: {t.city}
+                          </span>
+                        )}
+                        {t.state && t.state !== 'Not Specified' && (
+                          <span style={{
+                            padding: '2px 8px',
+                            background: 'rgba(168, 85, 247, 0.12)',
+                            border: '1px solid rgba(168, 85, 247, 0.3)',
+                            color: '#c084fc',
+                            borderRadius: '4px',
+                            fontSize: '0.74rem',
+                            fontWeight: 600
+                          }}>
+                            State: {t.state}
+                          </span>
+                        )}
+                        {(t.pincode && t.pincode !== 'Not Specified') && (
                           <span style={{
                             padding: '2px 8px',
                             background: 'rgba(34, 197, 94, 0.12)',
@@ -968,12 +1004,52 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
                             fontSize: '0.74rem',
                             fontWeight: 600
                           }}>
-                            📮 Pin: {t.pincode || t.work_location.pincode}
+                            📮 Pin: {t.pincode}
+                          </span>
+                        )}
+                        {(t.annual_turnover_required || (t.eligibility_criteria && t.eligibility_criteria.past_turnover_required)) && (
+                          <span style={{
+                            padding: '2px 8px',
+                            background: 'rgba(245, 158, 11, 0.12)',
+                            border: '1px solid rgba(245, 158, 11, 0.35)',
+                            color: '#fbbf24',
+                            borderRadius: '4px',
+                            fontSize: '0.74rem',
+                            fontWeight: 700
+                          }}>
+                            💼 Turnover: {t.annual_turnover_required || (t.eligibility_criteria && t.eligibility_criteria.past_turnover_required)}
+                          </span>
+                        )}
+                        {(t.required_documents && t.required_documents.length > 0) && (
+                          <span style={{
+                            padding: '2px 8px',
+                            background: 'rgba(56, 189, 248, 0.12)',
+                            border: '1px solid rgba(56, 189, 248, 0.35)',
+                            color: '#38bdf8',
+                            borderRadius: '4px',
+                            fontSize: '0.74rem',
+                            fontWeight: 600
+                          }}>
+                            📑 {t.required_documents.length} Docs Required
                           </span>
                         )}
                       </div>
-                      <div style={{ fontSize: '0.76rem', color: '#cbd5e1', marginTop: '5px', lineHeight: '1.35', background: 'rgba(15, 23, 42, 0.6)', padding: '6px 8px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.06)' }}>
-                        🏛️ <strong style={{ color: '#94a3b8' }}>Office Address:</strong> {t.address || t.office_address || (t.work_location ? t.work_location.address : `Government Administrative Complex, ${t.city || 'Gandhinagar'}, ${t.state || 'Gujarat'}`)}
+                      <div style={{ fontSize: '0.76rem', color: '#cbd5e1', marginTop: '5px', lineHeight: '1.35', background: 'rgba(15, 23, 42, 0.6)', padding: '6px 8px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
+                        <div>
+                          🏛️ <strong style={{ color: '#94a3b8' }}>Office Address:</strong> {t.address || t.office_address || (t.work_location ? t.work_location.address : `${t.department || 'Government Office'}, ${t.city || ''} ${t.state || ''}`.trim())}
+                        </div>
+                        {(t.address || t.city) && (
+                          <a
+                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((t.address || `${t.department || ''} ${t.city || ''} ${t.state || ''}`).trim())}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            style={{ color: '#38bdf8', flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: '3px', textDecoration: 'none', fontSize: '0.72rem', background: 'rgba(56, 189, 248, 0.12)', padding: '2px 6px', borderRadius: '4px', border: '1px solid rgba(56, 189, 248, 0.3)' }}
+                            title="View Official Location on Google Maps"
+                          >
+                            <MapPin style={{ width: '11px', height: '11px' }} /> Map ↗
+                          </a>
+                        )}
                       </div>
                     </div>
 

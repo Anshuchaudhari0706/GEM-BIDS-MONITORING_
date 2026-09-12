@@ -189,6 +189,15 @@ export async function parseTenderDocument(token, tenderId) {
   return data;
 }
 
+export async function enrichAllAddresses(token) {
+  const { ok, data } = await safeJsonFetch(`${API_BASE}/tenders/enrich-all-addresses`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!ok) throw new Error(data.error || 'Failed to enrich tender addresses');
+  return data;
+}
+
 export async function fetchServices() {
   const { ok, data } = await safeJsonFetch(`${API_BASE}/services`);
   if (!ok) throw new Error(data.error || 'Failed to fetch services');

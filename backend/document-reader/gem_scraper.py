@@ -42,10 +42,8 @@ CATEGORY_MAP = {
     "it manpower": "IT_MANPOWER",
     "electrician": "ELECTRICIAN",
     "helper": "HELPER",
-    "facility": "FACILITY_MGMT",
     "outsourcing": "OUTSOURCING",
     "manpower": "MANPOWER",
-    "boq": "BOQ",
     "it": "IT"
 }
 
@@ -544,70 +542,91 @@ PINCODE_PREFIX_CITY_MAP = {
     "201": ("Noida", "Uttar Pradesh"),
     "122": ("Gurugram", "Haryana"),
     "121": ("Faridabad", "Haryana"),
+    "125": ("Hisar", "Haryana"),
+    "132": ("Panipat", "Haryana"),
+    "133": ("Ambala", "Haryana"),
+    "134": ("Panchkula", "Haryana"),
     # Rajasthan
-    "302": ("Jaipur", "Rajasthan"),
     "301": ("Alwar", "Rajasthan"),
-    "342": ("Jodhpur", "Rajasthan"),
-    "324": ("Kota", "Rajasthan"),
-    "334": ("Bikaner", "Rajasthan"),
+    "302": ("Jaipur", "Rajasthan"),
     "305": ("Ajmer", "Rajasthan"),
     "313": ("Udaipur", "Rajasthan"),
+    "324": ("Kota", "Rajasthan"),
+    "334": ("Bikaner", "Rajasthan"),
+    "342": ("Jodhpur", "Rajasthan"),
     # Karnataka
     "560": ("Bengaluru", "Karnataka"),
     "570": ("Mysuru", "Karnataka"),
-    "580": ("Hubballi", "Karnataka"),
     "575": ("Mangaluru", "Karnataka"),
+    "580": ("Hubballi", "Karnataka"),
+    "585": ("Kalaburagi", "Karnataka"),
     # Tamil Nadu
     "600": ("Chennai", "Tamil Nadu"),
-    "641": ("Coimbatore", "Tamil Nadu"),
-    "625": ("Madurai", "Tamil Nadu"),
     "620": ("Tiruchirappalli", "Tamil Nadu"),
+    "625": ("Madurai", "Tamil Nadu"),
+    "636": ("Salem", "Tamil Nadu"),
+    "641": ("Coimbatore", "Tamil Nadu"),
     # Uttar Pradesh
-    "226": ("Lucknow", "Uttar Pradesh"),
     "208": ("Kanpur", "Uttar Pradesh"),
-    "221": ("Varanasi", "Uttar Pradesh"),
-    "282": ("Agra", "Uttar Pradesh"),
     "211": ("Prayagraj", "Uttar Pradesh"),
-    "250": ("Meerut", "Uttar Pradesh"),
+    "221": ("Varanasi", "Uttar Pradesh"),
+    "223": ("Azamgarh", "Uttar Pradesh"),
+    "226": ("Lucknow", "Uttar Pradesh"),
     "243": ("Bareilly", "Uttar Pradesh"),
+    "244": ("Moradabad", "Uttar Pradesh"),
+    "246": ("Bijnor", "Uttar Pradesh"),
+    "250": ("Meerut", "Uttar Pradesh"),
+    "272": ("Siddharthnagar", "Uttar Pradesh"),
     "273": ("Gorakhpur", "Uttar Pradesh"),
-    # Madhya Pradesh
-    "462": ("Bhopal", "Madhya Pradesh"),
+    "282": ("Agra", "Uttar Pradesh"),
+    # Madhya Pradesh & CG
     "452": ("Indore", "Madhya Pradesh"),
-    "482": ("Jabalpur", "Madhya Pradesh"),
+    "462": ("Bhopal", "Madhya Pradesh"),
     "474": ("Gwalior", "Madhya Pradesh"),
-    # West Bengal
+    "482": ("Jabalpur", "Madhya Pradesh"),
+    "484": ("Anuppur", "Madhya Pradesh"),
+    "492": ("Raipur", "Chhattisgarh"),
+    "495": ("Korba", "Chhattisgarh"),
+    # West Bengal, Odisha, Jharkhand
     "700": ("Kolkata", "West Bengal"),
     "711": ("Howrah", "West Bengal"),
     "713": ("Durgapur", "West Bengal"),
     "734": ("Siliguri", "West Bengal"),
+    "741": ("Kalyani", "West Bengal"),
+    "751": ("Bhubaneswar", "Odisha"),
+    "753": ("Cuttack", "Odisha"),
+    "760": ("Berhampur", "Odisha"),
+    "769": ("Rourkela", "Odisha"),
+    "825": ("Chatra", "Jharkhand"),
+    "826": ("Dhanbad", "Jharkhand"),
+    "831": ("Jamshedpur", "Jharkhand"),
+    "834": ("Ranchi", "Jharkhand"),
+    # Bihar
+    "800": ("Patna", "Bihar"),
+    "812": ("Bhagalpur", "Bihar"),
+    "823": ("Gaya", "Bihar"),
+    "842": ("Muzaffarpur", "Bihar"),
+    "846": ("Darbhanga", "Bihar"),
+    "854": ("Katihar", "Bihar"),
     # Telangana & AP
     "500": ("Hyderabad", "Telangana"),
     "506": ("Warangal", "Telangana"),
     "520": ("Vijayawada", "Andhra Pradesh"),
     "530": ("Visakhapatnam", "Andhra Pradesh"),
     # Kerala
-    "695": ("Thiruvananthapuram", "Kerala"),
     "682": ("Kochi", "Kerala"),
+    "695": ("Thiruvananthapuram", "Kerala"),
     "673": ("Kozhikode", "Kerala"),
     "691": ("Kollam", "Kerala"),
-    # Punjab, Haryana, Chandigarh
+    # Punjab & Chandigarh
     "160": ("Chandigarh", "Chandigarh"),
     "141": ("Ludhiana", "Punjab"),
     "143": ("Amritsar", "Punjab"),
     "144": ("Jalandhar", "Punjab"),
-    "132": ("Panipat", "Haryana"),
-    "133": ("Ambala", "Haryana"),
-    "124": ("Rohtak", "Haryana"),
-    # Bihar, Jharkhand, Odisha
-    "800": ("Patna", "Bihar"),
-    "834": ("Ranchi", "Jharkhand"),
-    "831": ("Jamshedpur", "Jharkhand"),
-    "826": ("Dhanbad", "Jharkhand"),
-    "751": ("Bhubaneswar", "Odisha"),
-    "753": ("Cuttack", "Odisha"),
-    "769": ("Rourkela", "Odisha"),
-    # Uttarakhand & HP
+    # J&K, Uttarakhand & HP
+    "180": ("Jammu", "Jammu and Kashmir"),
+    "184": ("Basohli", "Jammu and Kashmir"),
+    "190": ("Srinagar", "Jammu and Kashmir"),
     "248": ("Dehradun", "Uttarakhand"),
     "247": ("Haridwar", "Uttarakhand"),
     "171": ("Shimla", "Himachal Pradesh"),
@@ -898,14 +917,7 @@ def extract_staff_and_duty(display_title, cat_raw, full_text, core_service, empl
         duty_desc = "Safe driving of departmental light motor vehicles (LMV), routine vehicle maintenance, trip logbook maintenance."
         return desig, f"{count_val} Drivers", duty_summary, duty_desc
 
-    # 6. Facility Management
-    if any(k in text for k in ["facility management", "facility"]):
-        desig = "Facility Management Crew (Multi-Skill)"
-        duty_summary = "Integrated Building Operations & Maintenance"
-        duty_desc = "Integrated building maintenance including routine electrical repairs, plumbing upkeep, and daily housekeeping supervision."
-        return desig, f"{count_val} Crew", duty_summary, duty_desc
-
-    # 7. Horticulture & Gardening
+    # 6. Horticulture & Gardening
     if any(k in text for k in ["horticulture", "gardener", "gardening", "mali"]):
         desig = "Gardener / Mali"
         duty_summary = "Lawn Mowing, Plantation & Tree Trimming"
@@ -960,9 +972,8 @@ def is_goods_or_parts_tender(display_title, cat_raw=""):
     # If explicitly identified as one of the Core Services, it is NOT goods
     if any(s in text for s in [
         "manpower outsourcing", "outsourcing services", "cleaning, sanitation", "cleaning service", "cleaning services",
-        "sanitation service", "security service", "security guards", "facility management",
-        "housekeeping service", "hiring of sanitation", "custom bid for services", "custom service",
-        "boq based", "bop", "global tender"
+        "sanitation service", "security service", "security guards",
+        "housekeeping service", "hiring of sanitation", "custom bid for services", "custom service"
     ]):
         return False
 
@@ -973,18 +984,15 @@ def is_goods_or_parts_tender(display_title, cat_raw=""):
 
 def classify_core_service_category(display_title, cat_code, cat_raw, full_text=""):
     """
-    Classifies a tender into one of the 11 Core Services:
+    Classifies a tender into one of the Core Services:
     1. Custom Bid
     2. Manpower Minimum Wage
     3. Cleaning Services
     4. Security Guards
     5. Manpower Fixed
-    6. Facility Management
-    7. Sanitation Staff
-    8. BOP
-    9. Global Tender
-    10. Healthcare Staff
-    11. Horticulture
+    6. Sanitation Staff
+    7. Healthcare Staff
+    8. Horticulture
 
     Strictly discards goods, spare parts, and non-service items.
     Returns core_service_name or None if NOT a Core Service (to be DISCARDED).
@@ -1006,14 +1014,8 @@ def classify_core_service_category(display_title, cat_code, cat_raw, full_text="
         return "Security Guards"
     if "manpower fixed" in text or "fixed manpower" in text or "fixed remuneration" in text:
         return "Manpower Fixed"
-    if any(k in text for k in ["facility management", "facility management services", "facility management service"]):
-        return "Facility Management"
     if any(k in text for k in ["sanitation", "sanitation staff", "sanitation worker", "hiring of sanitation", "sanitation service"]):
         return "Sanitation Staff"
-    if any(k in text for k in ["bop", "boq"]):
-        return "BOP"
-    if any(k in text for k in ["global", "global tender"]):
-        return "Global Tender"
     if any(k in text for k in ["healthcare", "hospital staff", "nursing", "medical staff"]):
         return "Healthcare Staff"
     if any(k in text for k in ["horticulture", "gardening", "gardener"]):

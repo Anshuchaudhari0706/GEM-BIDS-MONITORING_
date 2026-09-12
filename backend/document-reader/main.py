@@ -18,6 +18,7 @@ app.add_middleware(
 class ParseRequest(BaseModel):
     document_url: Optional[str] = None
     tender_id: Optional[str] = None
+    b_id: Optional[str] = None
     sample_text: Optional[str] = None
     consignee_box: Optional[str] = None
     existing_consignee: Optional[str] = None
@@ -91,22 +92,34 @@ def scan_tenders_endpoint(req: ScanRequest):
         "scan_error": res.get("scan_error")
     }
 
-def fetch_pdf_text_from_gem(tender_id, document_url=None):
+def fetch_pdf_text_from_gem(tender_id, document_url=None, b_id=None):
     """
     Downloads and extracts all text from the official GeM Tender PDF copy.
+    Tries document_url, b_id (internal ID), and tender_id tail.
     """
     try:
-        raw_id = (tender_id or "").split("/")[-1].strip()
-        url = document_url or f"https://bidplus.gem.gov.in/showbidDocument/{raw_id}"
         import requests, fitz
-        res = requests.get(url, verify=False, timeout=12)
-        if res.status_code == 200 and len(res.content) > 500:
-            doc = fitz.open(stream=res.content, filetype="pdf")
-            text = ""
-            for p in doc:
-                text += p.get_text() + "\n"
-            if len(text.strip()) > 50:
-                return text
+        raw_id = (tender_id or "").split("/")[-1].strip()
+        candidates = []
+        if document_url:
+            candidates.append(document_url)
+        if b_id:
+            candidates.append(f"https://bidplus.gem.gov.in/showbidDocument/{b_id}")
+        if raw_id:
+            candidates.append(f"https://bidplus.gem.gov.in/showbidDocument/{raw_id}")
+
+        for url in candidates:
+            try:
+                res = requests.get(url, verify=False, timeout=10)
+                if res.status_code == 200 and len(res.content) > 1000:
+                    doc = fitz.open(stream=res.content, filetype="pdf")
+                    text = ""
+                    for p in doc:
+                        text += p.get_text() + "\n"
+                    if len(text.strip()) > 50:
+                        return text
+            except Exception:
+                pass
     except Exception as ex:
         print(f"[PDF Fetcher Error] {ex}")
     return None
@@ -115,8 +128,8 @@ def fetch_pdf_text_from_gem(tender_id, document_url=None):
 @app.post("/api/documents/parse")
 def parse_document(req: ParseRequest):
     pdf_text = None
-    if req.tender_id or req.document_url:
-        pdf_text = fetch_pdf_text_from_gem(req.tender_id, req.document_url)
+    if req.tender_id or req.document_url or req.b_id:
+        pdf_text = fetch_pdf_text_from_gem(req.tender_id, req.document_url, req.b_id)
 
     raw_text = req.sample_text or pdf_text
     if not raw_text:
@@ -138,12 +151,12 @@ def parse_document(req: ParseRequest):
         if parsed_json.get('officeAddress'): parsed_json['officeAddress']['consignee_officer'] = req.existing_consignee
         if parsed_json.get('workLocation'): parsed_json['workLocation']['consignee_officer'] = req.existing_consignee
 
-    if req.existing_city and (not parsed_json.get('city') or parsed_json.get('city') in ('Gandhinagar', 'New Delhi')):
+    if req.existing_city and (not parsed_json.get('city') or parsed_json.get('city') in ('Not Specified', 'Gandhinagar', 'New Delhi')):
         parsed_json['city'] = req.existing_city
         if parsed_json.get('officeAddress'): parsed_json['officeAddress']['city'] = req.existing_city
         if parsed_json.get('workLocation'): parsed_json['workLocation']['city'] = req.existing_city
 
-    if req.existing_state and (not parsed_json.get('state') or parsed_json.get('state') in ('Gujarat', 'Delhi')):
+    if req.existing_state and (not parsed_json.get('state') or parsed_json.get('state') in ('Not Specified', 'Gujarat', 'Delhi')):
         parsed_json['state'] = req.existing_state
         if parsed_json.get('officeAddress'): parsed_json['officeAddress']['state'] = req.existing_state
         if parsed_json.get('workLocation'): parsed_json['workLocation']['state'] = req.existing_state
