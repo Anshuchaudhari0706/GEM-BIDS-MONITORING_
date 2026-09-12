@@ -306,9 +306,9 @@ export default function TenderDetailsModal({ tender, onClose, onUpdate }) {
                 </div>
 
                 <div style={{ background: '#0d1527', padding: '14px', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Staff Quantity</div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Quantity</div>
                   <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--primary-cyan)', marginTop: '4px' }}>
-                    {data.quantity_display || (data.employees ? `${data.employees} Staff` : '10 Staff')}
+                    {data.quantity_display || (data.employees ? `${data.employees}` : (data.quantity || '1'))}
                   </div>
                 </div>
 

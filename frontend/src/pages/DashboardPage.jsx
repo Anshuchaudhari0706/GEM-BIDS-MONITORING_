@@ -1030,7 +1030,7 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
                         <strong>Items:</strong> <span style={{ color: '#38bdf8', fontWeight: 600 }}>{t.items || t.title}</span>
                       </div>
                       <div style={{ fontSize: '0.86rem', color: '#fff', fontWeight: 700, marginTop: '4px' }}>
-                        👥 Staff Required: <span style={{ color: '#38bdf8' }}>{t.quantity_display || (t.employees ? `${t.employees} Nos. Staff` : `${t.quantity || 10} Staff`)}</span>
+                        <strong>Quantity:</strong> <span style={{ color: '#38bdf8' }}>{t.quantity_display || t.quantity || t.employees || '1'}</span>
                         {t.primary_designation && (
                           <div style={{ fontSize: '0.78rem', color: '#cbd5e1', fontWeight: 600, marginTop: '2px' }}>
                             Role: <span style={{ color: '#e2e8f0' }}>{t.primary_designation}</span>

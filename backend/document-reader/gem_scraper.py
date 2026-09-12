@@ -887,7 +887,15 @@ def extract_staff_and_duty(display_title, cat_raw, full_text, core_service, empl
         duty_desc = "Patient assistance, sanitizing hospital wards, wheeling stretchers, linen changing, and supporting medical staff."
         return desig, f"{count_val} Staff", duty_summary, duty_desc
 
-    # 9. Generic Manpower Default
+    is_mp_specific = any(k in text for k in ["manpower", "security", "guard", "cleaning", "sanitation", "sweeper", "safai", "housekeeping", "nurse", "healthcare", "driver", "peon", "deo", "data entry", "gardener", "mali"])
+
+    # 9. Generic Service / Manpower
+    if not is_mp_specific:
+        desig = "Service Provider / Specialized Operations"
+        duty_summary = "Service Delivery & Contract Execution"
+        duty_desc = "Executing scope of service, operational maintenance, and contractual deliverables as specified by the buyer."
+        return desig, str(count_val), duty_summary, duty_desc
+
     desig = "Outsourced Manpower Staff (Skilled / Semi-Skilled)"
     duty_summary = "General Operational & Administrative Support"
     duty_desc = "Carrying out assigned departmental duties, office operational tasks, and routine support functions as directed by the buyer."
@@ -1369,7 +1377,16 @@ class GeMLiveScraper:
                 continue
 
             dept_raw = str(unwrap_val(doc.get('ba_official_details_deptName')) or unwrap_val(doc.get('ba_official_details_minName')) or unwrap_val(doc.get('b_department_name')) or 'Government Department')
-            employees = extract_manpower_count_from_json(doc, full_text)
+            
+            raw_qty_solr = unwrap_val(doc.get('b_total_quantity')) or unwrap_val(doc.get('total_quantity')) or unwrap_val(doc.get('quantity'))
+            real_qty_num = None
+            if raw_qty_solr is not None:
+                try:
+                    real_qty_num = int(str(raw_qty_solr).replace(',', '').strip())
+                except (ValueError, TypeError):
+                    pass
+
+            employees = real_qty_num if (real_qty_num is not None and real_qty_num > 0) else extract_manpower_count_from_json(doc, full_text)
             val_num, is_high_val = extract_high_value_info(doc, full_text)
             detected_state = detect_state_from_text(full_text)
 
