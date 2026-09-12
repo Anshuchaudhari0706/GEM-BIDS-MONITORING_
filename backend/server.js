@@ -710,8 +710,8 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
   let results = [...(db.tenders || [])];
   const now = new Date();
 
-  // Filter Manpower Tenders Only when requested or by default
-  if (manpowerOnly === 'true' || manpowerOnly !== 'false') {
+  // Filter Manpower Tenders Only when explicitly requested
+  if (manpowerOnly === 'true') {
     results = results.filter(t => t.manpowerTender === true);
   }
 

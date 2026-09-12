@@ -158,17 +158,19 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
 
       const res = await fetchTenders(token, baseParams);
       const fetched = res.tenders || [];
-      const coreServicesOnly = fetched.filter(t => getCoreServiceCategory(t) !== null);
-      setAllScannedTenders(coreServicesOnly);
+      setAllScannedTenders(fetched);
       setLastScanTimestamp(getNowString());
 
       // Apply tenderStatus filter
-      let filtered = coreServicesOnly;
+      let filtered = fetched;
       if (tenderStatus !== 'ALL') {
         filtered = filtered.filter(t => {
           const st = (t.status || '').toUpperCase();
           if (tenderStatus.toUpperCase() === 'FINISHED') {
             return st === 'FINISHED' || st === 'CLOSING_TODAY' || st === 'ENDED';
+          }
+          if (tenderStatus.toUpperCase() === 'PUBLISHED') {
+            return st === 'PUBLISHED' || st === 'CLOSING_TODAY' || st === 'ACTIVE';
           }
           return st === tenderStatus.toUpperCase();
         });
@@ -176,7 +178,11 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
 
       // Apply service category filter
       if (selectedServiceCategory !== 'ALL') {
-        filtered = filtered.filter(t => getCoreServiceCategory(t) === selectedServiceCategory || (t.category || t.title || '').toLowerCase().includes(selectedServiceCategory.toLowerCase()));
+        filtered = filtered.filter(t => {
+          const coreCat = getCoreServiceCategory(t);
+          const fullText = `${t.category || ''} ${t.title || ''} ${t.category_raw || ''}`.toLowerCase();
+          return coreCat === selectedServiceCategory || fullText.includes(selectedServiceCategory.toLowerCase());
+        });
       }
 
       setTenders(filtered);
@@ -303,62 +309,56 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
   ];
 
   const getCoreServiceCategory = (t) => {
+    if (!t) return 'Other Services';
+    const cat = (t.category || t.category_raw || t.category_code || '').toString().trim();
     const title = (t.title || '').toLowerCase();
-    const cat = (t.category || t.category_raw || '').toString().toLowerCase();
-    const text = `${title} ${cat}`;
+    const text = `${title} ${cat.toLowerCase()}`;
 
-    // 1. Goods, Consumables & Parts Exclusion
-    if (
-      title.includes('enzyme cleaner') ||
-      title.includes('alkaline cleaner') ||
-      title.includes('cleaner 10l') ||
-      title.includes('cleaner 5l') ||
-      title.includes('washers') ||
-      title.includes('vacuum cleaner') ||
-      title.includes('detergent') ||
-      title.includes('toilet cleaner') ||
-      title.includes('floor cleaner liquid')
-    ) {
-      if (!text.includes('cleaning service') && !text.includes('sanitation service') && !text.includes('housekeeping service')) {
-        return null;
-      }
-    }
-
-    if (GOODS_AND_PARTS_LIST.some(kw => title.includes(kw) || cat.includes(kw))) {
-      if (!text.includes('manpower') && !text.includes('cleaning service') && !text.includes('cleaning, sanitation') && !text.includes('sanitation service') && !text.includes('security') && !text.includes('custom bid')) {
-        return null;
-      }
-    }
-
-    if (text.includes('custom bid') || text.includes('custom service')) return 'Custom Bid';
     if (text.includes('minimum wage') || text.includes('min wage') || text.includes('manpower minimum')) return 'Manpower Minimum Wage';
-    if (text.includes('cleaning service') || text.includes('cleaning services') || text.includes('cleaning,') || text.includes('cleaning and') || text.includes('housekeeping') || text.includes('sweeper') || text.includes('safai') || text.includes('housekeeper') || text.includes('disinfection service')) return 'Cleaning Services';
-    if (text.includes('security') || text.includes('guard') || text.includes('watchman') || text.includes('security officer') || text.includes('security supervisor')) return 'Security Guards';
-    if (text.includes('manpower fixed') || text.includes('fixed manpower') || text.includes('fixed remuneration')) return 'Manpower Fixed';
-    if (text.includes('sanitation') || text.includes('sanitation staff') || text.includes('hiring of sanitation') || text.includes('sanitation service')) return 'Sanitation Staff';
-    if (text.includes('healthcare') || text.includes('nursing') || text.includes('hospital staff') || text.includes('medical staff')) return 'Healthcare Staff';
-    if (text.includes('horticulture') || text.includes('gardening') || text.includes('gardener')) return 'Horticulture';
-    if (text.includes('manpower outsourcing') || text.includes('manpower supply') || text.includes('contract manpower') || text.includes('outsourcing manpower') || text.includes('staffing') || text.includes('peon') || text.includes('helper') || text.includes('deo') || text.includes('data entry') || text.includes('mts') || text.includes('driver') || text.includes('cab & taxi') || text.includes('manpower')) return 'Manpower Fixed';
+    if (text.includes('security') || text.includes('guard') || text.includes('watchman')) return 'Security Guards';
+    if (text.includes('cleaning') || text.includes('housekeeping') || text.includes('sweeper') || text.includes('safai') || text.includes('laundry')) return 'Cleaning Services';
+    if (text.includes('sanitation') || text.includes('conservancy')) return 'Sanitation Staff';
+    if (text.includes('horticulture') || text.includes('gardening') || text.includes('tree trimming')) return 'Horticulture';
+    if (text.includes('healthcare') || text.includes('hospital') || text.includes('nursing') || text.includes('medical')) return 'Healthcare Staff';
+    if (text.includes('cab') || text.includes('taxi') || text.includes('transport') || text.includes('vehicle hiring') || text.includes('driver')) return 'Transport & Vehicle Hiring';
+    if (text.includes('custom bid') || text.includes('custom service')) return 'Custom Bid for Services';
+    if (text.includes('manpower') || text.includes('outsourcing') || text.includes('staff') || text.includes('helper') || text.includes('peon') || text.includes('mts') || text.includes('deo') || text.includes('data entry')) return 'Manpower Fixed';
+    if (text.includes('repair') || text.includes('maintenance') || text.includes('amc') || text.includes('installation') || text.includes('operation')) return 'Maintenance & Operations';
+    if (text.includes('it') || text.includes('software') || text.includes('bandwidth') || text.includes('lan') || text.includes('cctv')) return 'IT & Networking Services';
 
-    return null; // Discard uncategorized non-core service bids
+    return cat || 'Other Services';
   };
 
   // Synchronized Counts calculated dynamically from the current dataset
   const activeDataset = tenders.length > 0 ? tenders : allScannedTenders;
 
+  // Collect all unique service categories dynamically
+  const dynamicCategories = Array.from(new Set(allScannedTenders.map(t => getCoreServiceCategory(t)).filter(Boolean)));
+  const baseServiceKeys = [
+    'Custom Bid for Services',
+    'Manpower Minimum Wage',
+    'Manpower Fixed',
+    'Security Guards',
+    'Cleaning Services',
+    'Sanitation Staff',
+    'Transport & Vehicle Hiring',
+    'Healthcare Staff',
+    'Horticulture',
+    'Maintenance & Operations',
+    'IT & Networking Services'
+  ];
+  const allServiceKeys = Array.from(new Set([...baseServiceKeys, ...dynamicCategories]));
+
   const availableServicesList = [
     { name: 'All Services', count: activeDataset.length, key: 'ALL' },
-    { name: 'Custom Bid', count: activeDataset.filter(t => getCoreServiceCategory(t) === 'Custom Bid').length, key: 'Custom Bid' },
-    { name: 'Manpower Minimum Wage', count: activeDataset.filter(t => getCoreServiceCategory(t) === 'Manpower Minimum Wage').length, key: 'Manpower Minimum Wage' },
-    { name: 'Cleaning Services', count: activeDataset.filter(t => getCoreServiceCategory(t) === 'Cleaning Services').length, key: 'Cleaning Services' },
-    { name: 'Security Guards', count: activeDataset.filter(t => getCoreServiceCategory(t) === 'Security Guards').length, key: 'Security Guards' },
-    { name: 'Manpower Fixed', count: activeDataset.filter(t => getCoreServiceCategory(t) === 'Manpower Fixed').length, key: 'Manpower Fixed' },
-    { name: 'Sanitation Staff', count: activeDataset.filter(t => getCoreServiceCategory(t) === 'Sanitation Staff').length, key: 'Sanitation Staff' },
-    { name: 'Healthcare Staff', count: activeDataset.filter(t => getCoreServiceCategory(t) === 'Healthcare Staff').length, key: 'Healthcare Staff' },
-    { name: 'Horticulture', count: activeDataset.filter(t => getCoreServiceCategory(t) === 'Horticulture').length, key: 'Horticulture' }
+    ...allServiceKeys.map(k => ({
+      name: k,
+      count: activeDataset.filter(t => getCoreServiceCategory(t) === k || (t.category || t.title || '').toLowerCase().includes(k.toLowerCase())).length,
+      key: k
+    })).filter(s => s.count > 0 || baseServiceKeys.includes(s.key))
   ];
 
-  const activeCount = (tenders.length > 0 ? tenders : allScannedTenders).filter(t => t.status === 'PUBLISHED').length;
+  const activeCount = (tenders.length > 0 ? tenders : allScannedTenders).filter(t => t.status === 'PUBLISHED' || t.status === 'CLOSING_TODAY' || t.status === 'ACTIVE').length;
   const finishedCount = (tenders.length > 0 ? tenders : allScannedTenders).filter(t => t.status === 'FINISHED' || t.status === 'CLOSING_TODAY' || t.status === 'ENDED').length;
   const savedCount = savedTenders.length;
   const totalValueScanned = (tenders.length > 0 ? tenders : allScannedTenders).reduce((acc, t) => acc + (t.estimatedValue || 0), 0);
@@ -374,7 +374,7 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
   } else if (activeTab === 'FINISHED') {
     displayedTenders = currentDataset.filter(t => t.status === 'FINISHED' || t.status === 'CLOSING_TODAY' || t.status === 'ENDED');
   } else if (activeTab === 'PUBLISHED') {
-    displayedTenders = currentDataset.filter(t => t.status === 'PUBLISHED');
+    displayedTenders = currentDataset.filter(t => t.status === 'PUBLISHED' || t.status === 'CLOSING_TODAY' || t.status === 'ACTIVE');
   } else {
     displayedTenders = currentDataset;
   }
