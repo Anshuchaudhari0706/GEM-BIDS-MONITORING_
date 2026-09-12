@@ -199,9 +199,10 @@ def extract_manpower_count_from_json(json_obj, full_text):
 def format_inr_value(val_num):
     """
     Formats a numeric INR value into human readable Lakhs or Crores or full Rupee string.
+    Strictly returns 'Not Mentioned in Tender Copy' when no explicit value is published.
     """
     if val_num is None or val_num <= 0:
-        return "As per Minimum Wages"
+        return "Not Mentioned in Tender Copy"
     if val_num >= 10000000:
         cr = val_num / 10000000.0
         return f"₹{cr:.2f} Crores"
@@ -211,15 +212,37 @@ def format_inr_value(val_num):
     else:
         return f"₹{val_num:,.0f}"
 
+def extract_evaluation_method(text, json_obj=None):
+    """
+    Extracts Evaluation Method / मूल्यांकन पद्धति (e.g. Total value wise evaluation, Item wise evaluation)
+    from GeM tender copies. Never computes or invents estimated value when absent.
+    """
+    if isinstance(json_obj, dict):
+        for k in ["b_evaluation_type", "evaluation_method", "evaluation_type", "b_eval_type"]:
+            v = unwrap_val(json_obj.get(k))
+            if v and isinstance(v, str) and len(v.strip()) > 2:
+                return v.strip().title()
+
+    if text:
+        m = re.search(r"(?:मूल्यांकन\s+पद्धति\s*\/|\b)?Evaluation\s+Method\s*[:\-\|\/]?\s*([^\n\r]+)", text, re.IGNORECASE)
+        if m:
+            clean = re.sub(r'^[\|:\-\s]+|[\|:\-\s]+$', '', m.group(1).strip())
+            if len(clean) > 2 and not clean.startswith('---'):
+                return clean
+
+        m_hi = re.search(r"मूल्यांकन\s+पद्धति\s*[:\-\|\/]?\s*([^\n\r]+)", text, re.IGNORECASE)
+        if m_hi:
+            clean = re.sub(r'^[\|:\-\s]+|[\|:\-\s]+$', '', m_hi.group(1).strip())
+            if len(clean) > 2 and not clean.startswith('---'):
+                return clean
+
+    return "Total value wise evaluation"
+
 def extract_real_estimated_value(json_obj, full_text, employees_count=None, core_service=None):
     """
-    Multi-stage real estimated value extraction for GeM bids:
-    1. Direct Solr monetary fields (b_estimated_bid_value, b_estimated_value, bd_estimated_value, bid_value, etc.)
-    2. Bilingual Regex extraction from PDF & Text (अनुमानित निविदा मूल्य / Estimated Bid Value in INR, EMD Amount, etc.)
-    3. Embedded EMD & ePBG ratios
-    4. Solr base_price * total_quantity calculation
-    5. Government Minimum Wages & Benchmark Service Cost Calculation when contract size/staff is known.
-    Returns (value_numeric, is_high_value, formatted_value, emd_num, emd_formatted, epbg_num, epbg_formatted).
+    Strictly extracts ONLY explicitly declared Estimated Value from GeM Solr metadata or PDF copy.
+    ZERO artificial calculations/multipliers (No EMD x 50, No staff x wage).
+    If buyer did not declare estimated value, returns None and 'Not Mentioned in Tender Copy'.
     """
     value = None
     is_high_value = False
@@ -231,12 +254,12 @@ def extract_real_estimated_value(json_obj, full_text, employees_count=None, core
         if raw_hv is True or str(raw_hv).lower() == 'true':
             is_high_value = True
 
-        # 1. Direct Solr fields
+        # 1. Direct Solr fields with explicit numerical value
         possible_fields = [
             "b_estimated_bid_value", "estimated_bid_value", "b_estimated_value", "bd_estimated_value",
             "estimatedValue", "highBidValue", "bidValue", "bid_value", "totalValue", "contractValue",
             "b_total_price", "total_price", "b_value", "b_budget_amount", "budget_amount",
-            "b_pac_amount", "pac_amount", "b_base_price", "base_price", "bd_base_price"
+            "b_pac_amount", "pac_amount"
         ]
         for f in possible_fields:
             v = unwrap_val(json_obj.get(f))
@@ -249,46 +272,28 @@ def extract_real_estimated_value(json_obj, full_text, employees_count=None, core
                 except (ValueError, TypeError):
                     pass
 
-        # 2. Check EMD in Solr
+        # 2. Check EMD in Solr (exact value only, NO multiplier calculation for estimated value)
         emd_raw = unwrap_val(json_obj.get("b_emd_amount")) or unwrap_val(json_obj.get("emd_amount")) or unwrap_val(json_obj.get("ba_emd_amount"))
         if emd_raw is not None:
             try:
                 e_num = float(str(emd_raw).replace(',', ''))
                 if e_num > 0:
                     exact_emd = int(e_num)
-                    if value is None and e_num > 1000:
-                        value = int(e_num * 50)
             except (ValueError, TypeError):
                 pass
 
-        # 3. Check ePBG in Solr
+        # 3. Check ePBG in Solr (exact value only, NO multiplier calculation for estimated value)
         epbg_raw = unwrap_val(json_obj.get("b_epbg_amount")) or unwrap_val(json_obj.get("epbg_amount")) or unwrap_val(json_obj.get("ba_epbg_amount"))
         if epbg_raw is not None:
             try:
                 p_num = float(str(epbg_raw).replace(',', ''))
                 if p_num > 0:
                     exact_epbg = int(p_num)
-                    if value is None and p_num > 1000:
-                        value = int(p_num / 0.03)
             except (ValueError, TypeError):
                 pass
 
-        # 4. Check base_price * quantity
-        if value is None:
-            base_p = unwrap_val(json_obj.get("b_base_price")) or unwrap_val(json_obj.get("base_price"))
-            qty = unwrap_val(json_obj.get("b_total_quantity"))
-            if base_p and qty:
-                try:
-                    bp_num = float(str(base_p).replace(',', ''))
-                    q_num = float(str(qty).replace(',', ''))
-                    if bp_num > 0 and q_num > 0 and (bp_num * q_num) >= 50000:
-                        value = int(bp_num * q_num)
-                except (ValueError, TypeError):
-                    pass
-
-    # 5. Bilingual Regex Search in full_text
+    # 4. Bilingual Regex Search in full_text for explicitly declared Estimated Bid Value
     if full_text:
-        # Pattern A: Exact GeM Bilingual Header: Estimated Bid Value in INR / अनुमानित निविदा मूल्य
         if value is None:
             m_gem_bilingual = re.search(r"(?:Estimated\s+Bid\s+Value\s+in\s+INR[^\n\r\d]*|अनुमानित\s+निविदा\s+मूल्य[^\n\r\d]*|Estimated\s+Tender\s+Value|Estimated\s+Bid\s+Value|Estimated\s+Value|Total\s+Estimated\s+Value)\s*(?:\([^\)]*\))?\s*[:\-\/]?\s*(?:taxes\))?\s*[:\-]?\s*(?:Rs\.?|INR|₹)?\s*([0-9\,\.]+(?:\s*(?:Lakhs?|Lakh|Crores?|Crore|Cr))?)", full_text, re.IGNORECASE)
             if m_gem_bilingual:
@@ -315,7 +320,7 @@ def extract_real_estimated_value(json_obj, full_text, employees_count=None, core
                 except ValueError:
                     pass
 
-        # Check EMD in text
+        # Check explicit EMD in text
         if exact_emd is None:
             m_emd = re.search(r"(?:ईएमडी\s+राशि\/EMD\s+Amount|EMD\s+Amount|Earnest\s+Money\s+Deposit|ईएमडी\s+राशि|EMD)\s*[:\-]?\s*(?:Rs\.?|INR|₹)?\s*([0-9\.\,]+)", full_text, re.IGNORECASE)
             if m_emd:
@@ -323,68 +328,18 @@ def extract_real_estimated_value(json_obj, full_text, employees_count=None, core
                     emd_val = float(m_emd.group(1).replace(',', ''))
                     if emd_val > 0:
                         exact_emd = int(emd_val)
-                        if value is None and emd_val >= 1000:
-                            value = int(emd_val * 50)
                 except ValueError:
                     pass
 
-        # Check standalone Lakhs/Crores
-        if value is None:
-            m_standalone = re.search(r"(?:rs\.?|inr|₹)\s*([0-9\.\,]+)\s*(cr|crore|crores|lakh|lakhs|lacs)\b", full_text, re.IGNORECASE)
-            if m_standalone:
-                try:
-                    raw_num = float(m_standalone.group(1).replace(',', ''))
-                    unit = m_standalone.group(2).lower()
-                    if 'cr' in unit:
-                        value = int(raw_num * 10000000)
-                    else:
-                        value = int(raw_num * 100000)
-                except ValueError:
-                    pass
-
-    # 6. Benchmark Government Contract Calculation when explicit estimate is not in public Solr index
-    if value is None:
-        staff_n = employees_count if (employees_count and employees_count > 0) else None
-        
-        # Monthly rate benchmarks per worker category in Central/State Government tenders
-        srv_lower = str(core_service or "").lower()
-        if "security" in srv_lower:
-            monthly_rate = 22500  # Security Guard with statutory components
-            default_staff = 4
-        elif "cleaning" in srv_lower or "sanitation" in srv_lower or "housekeeping" in srv_lower:
-            monthly_rate = 18500  # Sanitation/Housekeeping staff
-            default_staff = 6
-        elif "data entry" in srv_lower or "it" in srv_lower:
-            monthly_rate = 24000  # DEO/Typist
-            default_staff = 4
-        elif "driver" in srv_lower:
-            monthly_rate = 25000  # Driver
-            default_staff = 2
-        elif "facility" in srv_lower:
-            monthly_rate = 21000  # Facility Crew
-            default_staff = 8
-        elif "healthcare" in srv_lower:
-            monthly_rate = 26000  # Hospital staff
-            default_staff = 6
-        elif "horticulture" in srv_lower:
-            monthly_rate = 18000  # Gardener
-            default_staff = 4
-        else:
-            monthly_rate = 20000  # General Manpower
-            default_staff = 5
-
-        effective_staff = staff_n if staff_n else default_staff
-        # 12-Month standard government service contract value
-        value = int(effective_staff * monthly_rate * 12)
-
+    # Strictly NO heuristic/benchmark calculation if value is not published in tender
     if value and value >= 5000000:
         is_high_value = True
 
     formatted_str = format_inr_value(value)
-    emd_num = exact_emd if exact_emd is not None else (int(value * 0.02) if value else 0)
-    emd_str = f"₹{emd_num:,.0f}" if emd_num > 0 else "₹50,000"
-    epbg_num = exact_epbg if exact_epbg is not None else (int(value * 0.03) if value else 0)
-    epbg_str = f"₹{epbg_num:,.0f} (3% of Bid Value)" if epbg_num > 0 else "₹75,000 (3% of Bid Value)"
+    emd_num = exact_emd if exact_emd is not None else 0
+    emd_str = f"₹{emd_num:,.0f}" if emd_num > 0 else "Not Mentioned in Tender Copy"
+    epbg_num = exact_epbg if exact_epbg is not None else 0
+    epbg_str = f"₹{epbg_num:,.0f} (3% of Bid Value)" if epbg_num > 0 else "As per Buyer Terms / GeM Portal Rules"
 
     return value, is_high_value, formatted_str, emd_num, emd_str, epbg_num, epbg_str
 
@@ -1557,6 +1512,7 @@ class GeMLiveScraper:
             extracted_city, extracted_addr, extracted_pin, consignee_off, raw_consignee_b, final_st = extract_city_and_address(doc, full_text, detected_state)
             primary_desig, staff_count_str, duty_summary, duty_desc = extract_staff_and_duty(display_title, cat_raw, full_text, core_service, employees)
             val_num, is_high_val, formatted_val, emd_num, emd_str, epbg_num, epbg_str = extract_real_estimated_value(doc, full_text, employees, core_service)
+            eval_method = extract_evaluation_method(full_text, doc)
 
             parsed_bids.append({
                 "id": str(bid_no),
@@ -1583,6 +1539,8 @@ class GeMLiveScraper:
                 "estimated_value": val_num,
                 "estimated_value_original": formatted_val,
                 "formattedValue": formatted_val,
+                "evaluation_method": eval_method,
+                "evaluationMethod": eval_method,
                 "emdAmount": emd_num,
                 "emd_original": emd_str,
                 "advisoryBank": extract_advisory_bank(full_text),

@@ -279,8 +279,9 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
         'Department Name And Address': t.department || t.organization,
         'Start Date & Time': t.startDateFormatted || '28-07-2026 4:42 PM',
         'End Date & Time': t.endDateFormatted || '12-08-2026 5:00 PM',
-        'Est. Value (₹)': t.estimatedValue,
-        'Formatted Value': t.estimated_value_original || `₹${(t.estimatedValue).toLocaleString('en-IN')}`,
+        'Est. Value (₹)': t.estimatedValue || 'Not Mentioned',
+        'Formatted Value': (t.estimated_value_original && !t.estimated_value_original.includes('Minimum Wages')) ? t.estimated_value_original : (t.estimatedValue ? `₹${(t.estimatedValue).toLocaleString('en-IN')}` : 'Not Mentioned in Tender Copy'),
+        'Evaluation Method': t.evaluation_method || t.evaluationMethod || 'Total value wise evaluation',
         'Status': t.status,
         'Participation Status': t.participation_status || 'Not participating'
       };
@@ -947,8 +948,24 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
                       <div style={{ fontSize: '0.76rem', color: '#94a3b8', marginTop: '6px', background: 'rgba(56, 189, 248, 0.05)', border: '1px solid rgba(56, 189, 248, 0.15)', padding: '5px 9px', borderRadius: '6px' }}>
                         📋 <strong style={{ color: '#38bdf8' }}>Duty:</strong> {t.duty_summary || t.duty_description || 'Facility Maintenance & Operational Support'}
                       </div>
-                      <div style={{ fontSize: '0.78rem', color: 'var(--accent-green)', fontWeight: 700, marginTop: '6px' }}>
-                        💰 Est. Value: {t.estimated_value_original || (t.value ? (t.value >= 10000000 ? `₹${(t.value / 10000000).toFixed(2)} Crores` : `₹${(t.value / 100000).toFixed(2)} Lakhs`) : (t.estimatedValue ? (t.estimatedValue >= 10000000 ? `₹${(t.estimatedValue / 10000000).toFixed(2)} Crores` : `₹${(t.estimatedValue / 100000).toFixed(2)} Lakhs`) : 'As per Minimum Wages'))}
+                      <div style={{
+                        fontSize: '0.78rem',
+                        color: (t.estimated_value_original && t.estimated_value_original !== 'As per Minimum Wages' && !t.estimated_value_original.includes('Not Mentioned')) ? 'var(--accent-green)' : '#94a3b8',
+                        fontWeight: 700,
+                        marginTop: '6px'
+                      }}>
+                        💰 Est. Value: {(t.estimated_value_original && t.estimated_value_original !== 'As per Minimum Wages')
+                          ? t.estimated_value_original
+                          : (t.value && typeof t.value === 'number'
+                              ? (t.value >= 10000000 ? `₹${(t.value / 10000000).toFixed(2)} Crores` : `₹${(t.value / 100000).toFixed(2)} Lakhs`)
+                              : (t.estimatedValue && typeof t.estimatedValue === 'number'
+                                  ? (t.estimatedValue >= 10000000 ? `₹${(t.estimatedValue / 10000000).toFixed(2)} Crores` : `₹${(t.estimatedValue / 100000).toFixed(2)} Lakhs`)
+                                  : 'Not Mentioned in Tender Copy'))}
+                        {(!t.value && !t.estimatedValue && (!t.estimated_value_original || t.estimated_value_original.includes('Not Mentioned') || t.estimated_value_original === 'As per Minimum Wages')) && (
+                          <span style={{ fontSize: '0.72rem', color: '#38bdf8', fontWeight: 600, marginLeft: '6px' }}>
+                            ({t.evaluation_method || t.evaluationMethod || 'Total value wise evaluation'})
+                          </span>
+                        )}
                       </div>
                     </div>
 

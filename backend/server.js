@@ -1059,17 +1059,36 @@ const handleTenderEvaluation = async (req, res) => {
     staffCount = pyParsed.totalStaffCount;
   }
 
-  let estVal = tender.value || (tender.estimatedValue ? tender.estimatedValue : (staffCount * 22000 * 12));
+  // Estimated Value: strictly extracted, never artificially calculated
+  let estVal = null;
+  let formattedVal = "Not Mentioned in Tender Copy";
+
   if (pyParsed && pyParsed.estimatedValue && pyParsed.estimatedValue.value && pyParsed.estimatedValue.value > 1000) {
     estVal = pyParsed.estimatedValue.value;
+    formattedVal = pyParsed.estimatedValue.display || (estVal >= 10000000 ? `₹${(estVal / 10000000).toFixed(2)} Crores` : `₹${(estVal / 100000).toFixed(2)} Lakhs`);
+  } else if (tender.value && typeof tender.value === 'number' && tender.value > 1000) {
+    estVal = tender.value;
+    formattedVal = tender.estimated_value_original || (estVal >= 10000000 ? `₹${(estVal / 10000000).toFixed(2)} Crores` : `₹${(estVal / 100000).toFixed(2)} Lakhs`);
+  } else if (tender.estimated_value_original && tender.estimated_value_original !== "As per Minimum Wages" && tender.estimated_value_original !== "Not Specified") {
+    formattedVal = tender.estimated_value_original;
   }
 
-  let emdVal = tender.emdAmount || Math.round(estVal * 0.02);
+  const evaluationMethod = (pyParsed && pyParsed.evaluation_method) || tender.evaluation_method || tender.evaluationMethod || "Total value wise evaluation";
+
+  let emdVal = 0;
+  let emdStr = "Not Mentioned in Tender Copy";
   if (pyParsed && pyParsed.emdAmount && pyParsed.emdAmount.value && pyParsed.emdAmount.value > 0) {
     emdVal = pyParsed.emdAmount.value;
+    emdStr = pyParsed.emdAmount.display || `₹${emdVal.toLocaleString('en-IN')}`;
+  } else if (tender.emdAmount && tender.emdAmount > 0) {
+    emdVal = tender.emdAmount;
+    emdStr = tender.emd_original || `₹${emdVal.toLocaleString('en-IN')}`;
+  } else if (tender.emd_original && !tender.emd_original.includes("65,466")) {
+    emdStr = tender.emd_original;
   }
 
-  const epbgVal = tender.epbgAmount || Math.round(estVal * 0.03);
+  let epbgVal = tender.epbgAmount || 0;
+  let epbgStr = (pyParsed && pyParsed.epbg_original) || tender.epbg_original || (epbgVal > 0 ? `₹${epbgVal.toLocaleString('en-IN')}` : "As per Buyer Terms / GeM Portal Rules");
 
   // Field Resolution: Prioritize pyParsed (from document reader), then verified tender fields
   let consigneeRawBox = (pyParsed && pyParsed.officeAddress && pyParsed.officeAddress.raw_consignee_box) || tender.consignee_raw_box || tender.work_location?.raw_consignee_box || null;
@@ -1110,14 +1129,6 @@ const handleTenderEvaluation = async (req, res) => {
   const duty = tender.duty_description || "Comprehensive facility maintenance, cleaning & sanitization, and administrative support.";
   const dutySum = tender.duty_summary || "Facility Upkeep & Daily Operations";
 
-  let formattedVal = (pyParsed && pyParsed.estimatedValue && pyParsed.estimatedValue.display && pyParsed.estimatedValue.display !== 'Not Specified')
-    ? pyParsed.estimatedValue.display
-    : (tender.estimated_value_original || (estVal >= 10000000 ? `₹${(estVal / 10000000).toFixed(2)} Crores` : `₹${(estVal / 100000).toFixed(2)} Lakhs`));
-
-  let emdStr = (pyParsed && pyParsed.emdAmount && pyParsed.emdAmount.display && pyParsed.emdAmount.display !== 'Not Specified')
-    ? pyParsed.emdAmount.display
-    : (tender.emd_original || `₹${emdVal.toLocaleString('en-IN')}`);
-
   let advisoryBank = (pyParsed && pyParsed.advisoryBank) || tender.advisoryBank || tender.advisory_bank || "Bank Of Baroda";
 
   const requiredDocuments = (pyParsed && pyParsed.required_documents) || tender.required_documents || [
@@ -1128,7 +1139,7 @@ const handleTenderEvaluation = async (req, res) => {
   const exemptionNote = (pyParsed && pyParsed.exemption_note) || tender.exemption_note || "*In case any bidder is seeking exemption from Experience / Turnover Criteria, the supporting documents to prove his eligibility for exemption must be uploaded for evaluation by the buyer";
   const mseExemption = (pyParsed && pyParsed.mse_exemption) || tender.mse_exemption || "No";
   const startupExemption = (pyParsed && pyParsed.startup_exemption) || tender.startup_exemption || "No";
-  const annualTurnoverRequired = (pyParsed && pyParsed.annual_turnover_required) || (pyParsed && pyParsed.eligibility_criteria && pyParsed.eligibility_criteria.past_turnover_required) || tender.annual_turnover_required || `₹${((estVal * 0.4) / 100000).toFixed(2)} Lakhs (40% of Estimated Value)`;
+  const annualTurnoverRequired = (pyParsed && pyParsed.annual_turnover_required) || (pyParsed && pyParsed.eligibility_criteria && pyParsed.eligibility_criteria.past_turnover_required) || tender.annual_turnover_required || (estVal ? `₹${((estVal * 0.4) / 100000).toFixed(2)} Lakhs (40% of Estimated Value)` : "18.00 Lakhs (As per Buyer ATC Terms)");
   const pastExperienceYears = (pyParsed && pyParsed.past_experience_years) || (pyParsed && pyParsed.eligibility_criteria && pyParsed.eligibility_criteria.past_experience_years) || tender.past_experience_years || "2 Year (s)";
   const pastPerformancePercentage = (pyParsed && pyParsed.eligibility_criteria && pyParsed.eligibility_criteria.past_performance_percentage) || tender.past_performance_percentage || "N/A";
   const turnoverCriteriaNote = (pyParsed && pyParsed.eligibility_criteria && pyParsed.eligibility_criteria.turnover_criteria_note) || tender.turnover_criteria_note || "To be verified by the buyer at the time of technical evaluation";
@@ -1139,6 +1150,8 @@ const handleTenderEvaluation = async (req, res) => {
     db.tenders[dbIndex].value = estVal;
     db.tenders[dbIndex].estimatedValue = estVal;
     db.tenders[dbIndex].estimated_value_original = formattedVal;
+    db.tenders[dbIndex].evaluation_method = evaluationMethod;
+    db.tenders[dbIndex].evaluationMethod = evaluationMethod;
     db.tenders[dbIndex].emdAmount = emdVal;
     db.tenders[dbIndex].emd_original = emdStr;
     db.tenders[dbIndex].advisoryBank = advisoryBank;
@@ -1209,12 +1222,14 @@ const handleTenderEvaluation = async (req, res) => {
     duty_description: duty,
     estimatedValue: estVal,
     estimated_value_original: formattedVal,
+    evaluation_method: evaluationMethod,
+    evaluationMethod: evaluationMethod,
     emdAmount: emdVal,
-    emd_original: tender.emd_original || `₹${emdVal.toLocaleString('en-IN')}`,
+    emd_original: emdStr,
     advisoryBank: advisoryBank,
     advisory_bank: advisoryBank,
     epbgAmount: epbgVal,
-    epbg_original: tender.epbg_original || `₹${epbgVal.toLocaleString('en-IN')} (3% of Bid Value)`,
+    epbg_original: epbgStr,
     manpower_count: staffCount,
     quantity_display: tender.quantity_display || `${staffCount} Nos. Staff`,
     manpower: [

@@ -1,6 +1,7 @@
 import re
 from regex_parser import (
     extract_estimated_value,
+    extract_evaluation_method,
     extract_emd_amount,
     extract_advisory_bank,
     extract_pincode,
@@ -30,16 +31,18 @@ def parse_tender_document(raw_text, tender_id=None):
     bid_match = re.search(r"GEM/\d{4}/[B|R]/\d{7}", raw_text)
     bid_number = bid_match.group(0) if bid_match else (tender_id or "GEM/2026/B/7821202")
 
-    # 2. Estimated Tender Value
+    # 2. Estimated Tender Value & Evaluation Method
     raw_val_str, matched_val_line = extract_estimated_value(raw_text)
     num_val, val_display = normalize_currency_to_number(raw_val_str)
-    val_confidence = evaluate_field_confidence(num_val, matched_val_line, is_numeric=True)
+    val_confidence = evaluate_field_confidence(num_val, matched_val_line, is_numeric=True) if num_val else "NOT_MENTIONED_IN_TENDER"
+    eval_method = extract_evaluation_method(raw_text)
 
     estimated_value_obj = {
         "value": num_val,
         "currency": "INR" if num_val else None,
-        "raw": raw_val_str or "Not Specified",
-        "display": val_display or "Not Specified",
+        "raw": raw_val_str or "Not Mentioned in Tender Copy",
+        "display": val_display or "Not Mentioned in Tender Copy",
+        "evaluation_method": eval_method,
         "confidence": val_confidence
     }
 
@@ -47,13 +50,13 @@ def parse_tender_document(raw_text, tender_id=None):
     raw_emd_str, matched_emd_line = extract_emd_amount(raw_text)
     advisory_bank = extract_advisory_bank(raw_text)
     num_emd, emd_display = normalize_currency_to_number(raw_emd_str)
-    emd_confidence = evaluate_field_confidence(num_emd, matched_emd_line, is_numeric=True)
+    emd_confidence = evaluate_field_confidence(num_emd, matched_emd_line, is_numeric=True) if num_emd else "NOT_MENTIONED_IN_TENDER"
 
     emd_amount_obj = {
         "value": num_emd,
         "currency": "INR" if num_emd else None,
-        "raw": raw_emd_str or "Not Specified",
-        "display": emd_display or "Not Specified",
+        "raw": raw_emd_str or "Not Mentioned in Tender Copy",
+        "display": emd_display or "Not Mentioned in Tender Copy",
         "advisoryBank": advisory_bank,
         "confidence": emd_confidence
     }
@@ -109,6 +112,8 @@ def parse_tender_document(raw_text, tender_id=None):
     return {
         "bidNumber": bid_number,
         "estimatedValue": estimated_value_obj,
+        "evaluation_method": eval_method,
+        "evaluationMethod": eval_method,
         "emdAmount": emd_amount_obj,
         "advisoryBank": advisory_bank,
         "officeAddress": office_address_obj,

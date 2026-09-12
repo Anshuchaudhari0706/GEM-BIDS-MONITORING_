@@ -113,9 +113,10 @@ export default function TenderDetailsModal({ tender, onClose }) {
         ['Office Address', data.address || (data.work_location ? data.work_location.address : tender.address || 'Government Administrative Complex')],
         ['Staff Required & Designation', `${data.quantity_display || data.quantity || '10 Staff'} - ${data.primary_designation || 'Outsourced Manpower'}`],
         ['Duty Responsibilities', data.duty_description || data.duty_summary || 'General Administrative & Facility Support'],
-        ['Estimated Bid Value', data.estimated_value_original || (data.estimatedValue ? (data.estimatedValue >= 10000000 ? `INR ${(data.estimatedValue/10000000).toFixed(2)} Crores` : `INR ${(data.estimatedValue/100000).toFixed(2)} Lakhs`) : 'As per Minimum Wages')],
-        ['EMD Amount', data.emd_original || (data.emdAmount ? `INR ${data.emdAmount.toLocaleString('en-IN')}` : (data.estimatedValue ? `INR ${Math.round(data.estimatedValue * 0.02).toLocaleString('en-IN')}` : 'As per GeM Portal Rules'))],
-        ['Performance Security (ePBG)', data.epbg_original || (data.epbgAmount ? `INR ${data.epbgAmount.toLocaleString('en-IN')}` : (data.estimatedValue ? `INR ${Math.round(data.estimatedValue * 0.03).toLocaleString('en-IN')} (3%)` : 'INR 1,35,000 (3%)'))],
+        ['Estimated Bid Value', (data.estimated_value_original && !data.estimated_value_original.includes('Minimum Wages')) ? data.estimated_value_original : (data.estimatedValue ? (data.estimatedValue >= 10000000 ? `INR ${(data.estimatedValue/10000000).toFixed(2)} Crores` : `INR ${(data.estimatedValue/100000).toFixed(2)} Lakhs`) : 'Not Mentioned in Tender Copy')],
+        ['Evaluation Method', data.evaluation_method || data.evaluationMethod || 'Total value wise evaluation'],
+        ['EMD Amount', data.emd_original || (data.emdAmount ? `INR ${data.emdAmount.toLocaleString('en-IN')}` : 'Not Mentioned in Tender Copy')],
+        ['Performance Security (ePBG)', data.epbg_original || (data.epbgAmount ? `INR ${data.epbgAmount.toLocaleString('en-IN')}` : 'As per Buyer Terms / GeM Portal Rules')],
         ['Publish Date', data.startDateFormatted || new Date(data.startDate || Date.now()).toLocaleDateString()],
         ['Closing Date & Time', data.endDateFormatted || data.deadline || 'Closing Soon'],
         ['Tender Status', data.statusLabel || data.status || 'Active']
@@ -274,15 +275,29 @@ export default function TenderDetailsModal({ tender, onClose }) {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
                 <div style={{ background: '#0d1527', padding: '14px', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
                   <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Estimated Value</div>
-                  <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--accent-green)', marginTop: '4px' }}>
-                    {data.estimated_value_original || (typeof data.estimatedValue === 'object' && data.estimatedValue?.display) || (data.value ? (data.value >= 10000000 ? `₹${(data.value / 10000000).toFixed(2)} Cr` : `₹${(data.value / 100000).toFixed(2)} L`) : (typeof data.estimatedValue === 'number' ? (data.estimatedValue >= 10000000 ? `₹${(data.estimatedValue / 10000000).toFixed(2)} Cr` : `₹${(data.estimatedValue / 100000).toFixed(2)} L`) : 'As per Minimum Wages'))}
+                  <div style={{
+                    fontSize: (data.estimated_value_original && data.estimated_value_original !== 'As per Minimum Wages' && !data.estimated_value_original.includes('Not Mentioned')) ? '1.1rem' : '0.82rem',
+                    fontWeight: 800,
+                    color: (data.estimated_value_original && data.estimated_value_original !== 'As per Minimum Wages' && !data.estimated_value_original.includes('Not Mentioned')) ? 'var(--accent-green)' : '#94a3b8',
+                    marginTop: '4px'
+                  }}>
+                    {(data.estimated_value_original && data.estimated_value_original !== 'As per Minimum Wages')
+                      ? data.estimated_value_original
+                      : (typeof data.estimatedValue === 'object' && data.estimatedValue?.display && data.estimatedValue.display !== 'Not Specified' && data.estimatedValue.display !== 'As per Minimum Wages')
+                        ? data.estimatedValue.display
+                        : (data.value && typeof data.value === 'number'
+                            ? (data.value >= 10000000 ? `₹${(data.value / 10000000).toFixed(2)} Cr` : `₹${(data.value / 100000).toFixed(2)} L`)
+                            : 'Not Mentioned in Tender Copy')}
+                  </div>
+                  <div style={{ fontSize: '0.68rem', color: '#38bdf8', marginTop: '3px', fontWeight: 600 }}>
+                    Method: {data.evaluation_method || data.evaluationMethod || 'Total value wise evaluation'}
                   </div>
                 </div>
 
                 <div style={{ background: '#0d1527', padding: '14px', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
                   <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>EMD Amount</div>
-                  <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#fff', marginTop: '4px' }}>
-                    {data.emd_original || (typeof data.emdAmount === 'object' && data.emdAmount?.display) || (typeof data.emdAmount === 'number' ? `₹${data.emdAmount.toLocaleString('en-IN')}` : (tender.emd ? `₹${tender.emd.toLocaleString('en-IN')}` : '₹65,466'))}
+                  <div style={{ fontSize: '1.0rem', fontWeight: 800, color: '#fff', marginTop: '4px' }}>
+                    {data.emd_original || (typeof data.emdAmount === 'object' && data.emdAmount?.display) || (typeof data.emdAmount === 'number' && data.emdAmount > 0 ? `₹${data.emdAmount.toLocaleString('en-IN')}` : (tender.emd ? `₹${tender.emd.toLocaleString('en-IN')}` : 'Not Mentioned in Tender Copy'))}
                   </div>
                 </div>
 
@@ -547,15 +562,29 @@ export default function TenderDetailsModal({ tender, onClose }) {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
               <div style={{ background: '#0d1527', padding: '18px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
                 <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Estimated Tender Value</div>
-                <div style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--accent-green)', marginTop: '4px' }}>
-                  {data.estimated_value_original || (typeof data.estimatedValue === 'object' && data.estimatedValue?.display) || (data.value ? (data.value >= 10000000 ? `₹${(data.value / 10000000).toFixed(2)} Crores` : `₹${(data.value / 100000).toFixed(2)} Lakhs`) : (typeof data.estimatedValue === 'number' ? (data.estimatedValue >= 10000000 ? `₹${(data.estimatedValue / 10000000).toFixed(2)} Crores` : `₹${(data.estimatedValue / 100000).toFixed(2)} Lakhs`) : 'As per Minimum Wages'))}
+                <div style={{
+                  fontSize: (data.estimated_value_original && data.estimated_value_original !== 'As per Minimum Wages' && !data.estimated_value_original.includes('Not Mentioned')) ? '1.4rem' : '1.05rem',
+                  fontWeight: 900,
+                  color: (data.estimated_value_original && data.estimated_value_original !== 'As per Minimum Wages' && !data.estimated_value_original.includes('Not Mentioned')) ? 'var(--accent-green)' : '#94a3b8',
+                  marginTop: '4px'
+                }}>
+                  {(data.estimated_value_original && data.estimated_value_original !== 'As per Minimum Wages')
+                    ? data.estimated_value_original
+                    : (typeof data.estimatedValue === 'object' && data.estimatedValue?.display && data.estimatedValue.display !== 'Not Specified' && data.estimatedValue.display !== 'As per Minimum Wages')
+                      ? data.estimatedValue.display
+                      : (data.value && typeof data.value === 'number'
+                          ? (data.value >= 10000000 ? `₹${(data.value / 10000000).toFixed(2)} Crores` : `₹${(data.value / 100000).toFixed(2)} Lakhs`)
+                          : 'Not Mentioned in Tender Copy')}
+                </div>
+                <div style={{ marginTop: '8px', background: 'rgba(56, 189, 248, 0.08)', border: '1px solid rgba(56, 189, 248, 0.25)', padding: '6px 10px', borderRadius: '6px', fontSize: '0.76rem', color: '#38bdf8' }}>
+                  <strong>मूल्यांकन पद्धति / Evaluation Method:</strong> {data.evaluation_method || data.evaluationMethod || 'Total value wise evaluation'}
                 </div>
               </div>
 
               <div style={{ background: '#0d1527', padding: '18px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
                 <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>EMD Amount & Advisory Bank</div>
                 <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#fff', marginTop: '4px' }}>
-                  {data.emd_original || (typeof data.emdAmount === 'object' && data.emdAmount?.display) || (typeof data.emdAmount === 'number' ? `₹${data.emdAmount.toLocaleString('en-IN')}` : (tender.emd ? `₹${tender.emd.toLocaleString('en-IN')}` : '₹65,466 (3%)'))}
+                  {data.emd_original || (typeof data.emdAmount === 'object' && data.emdAmount?.display) || (typeof data.emdAmount === 'number' && data.emdAmount > 0 ? `₹${data.emdAmount.toLocaleString('en-IN')}` : (tender.emd ? `₹${tender.emd.toLocaleString('en-IN')}` : 'Not Mentioned in Tender Copy'))}
                 </div>
                 {(data.advisoryBank || data.advisory_bank || (data.emdAmount && data.emdAmount.advisoryBank)) && (
                   <div style={{ fontSize: '0.8rem', color: '#38bdf8', marginTop: '4px', fontWeight: 600 }}>

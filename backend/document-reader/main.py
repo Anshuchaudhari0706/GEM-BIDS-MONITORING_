@@ -136,8 +136,8 @@ def parse_document(req: ParseRequest):
         box_str = req.consignee_box or f"{req.existing_consignee or 'Consignee Officer'}, {req.existing_address or 'Government Office'}"
         raw_text = f"""
         Bid Number: {req.tender_id or 'GEM/2026/B/8015751'}
-        Estimated Bid Value: {req.existing_value or 'As per Minimum Wages'}
-        EMD Amount: {req.existing_emd or 'As per GeM Portal Rules'}
+        Estimated Bid Value: {req.existing_value or 'Not Mentioned in Tender Copy'}
+        EMD Amount: {req.existing_emd or 'Not Mentioned in Tender Copy'}
         Consignee Reporting/Officer: {req.existing_consignee or 'Consignee Officer'}
         Address: {req.existing_pincode or '382010'},{req.existing_address or 'Government Office'}
         {box_str}

@@ -8,10 +8,9 @@ Strictly zero fake/mock data generation — returns None when patterns do not ma
 
 # Estimated Value Patterns (Bilingual Hindi / English GeM Tender Specs)
 ESTIMATED_VALUE_PATTERNS = [
-    r"(?:Estimated\s+Bid\s+Value\s+in\s+INR[^\n\r\d]*|अनुमानित\s+निविदा\s+मूल्य[^\n\r\d]*|Estimated\s+Tender\s+Value|Estimated\s+Bid\s+Value|Estimated\s+Value|Total\s+Estimated\s+Value|Tender\s+Value|Approximate\s+Value|Contract\s+Value|Estimated\s+Cost)\s*(?:\([^\)]*\))?\s*[:\-\/]?\s*(?:taxes\))?\s*[:\-]?\s*(?:Rs\.?|INR|₹)?\s*([0-9\,\.]+(?:\s*(?:Lakhs?|Lakh|Crores?|Crore|Cr))?)",
+    r"(?:Estimated\s+Bid\s+Value\s+in\s+INR[^\n\r\d]*|अनुमानित\s+निविदा\s+मूल्य[^\n\r\d]*|Estimated\s+Tender\s+Value|Estimated\s+Bid\s+Value|Estimated\s+Value|Total\s+Estimated\s+Value|Tender\s+Value|Approximate\s+Value|Estimated\s+Cost)\s*(?:\([^\)]*\))?\s*[:\-\/]?\s*(?:taxes\))?\s*[:\-]?\s*(?:Rs\.?|INR|₹)?\s*([0-9\,\.]+(?:\s*(?:Lakhs?|Lakh|Crores?|Crore|Cr))?)",
     r"(?:Estimated\s+Bid\s+Value[^\d]{0,80}?|अनुमानित\s+निविदा\s+मूल्य[^\d]{0,80}?)\s+([0-9]+(?:\.[0-9]+)?)",
-    r"(?:Rs\.?|INR|₹)\s*([0-9\,\.]+\s*(?:Lakhs?|Lakh|Crores?|Crore|Cr))",
-    r"Value\s*of\s*Work\s*[:\-]?\s*(?:Rs\.?|INR|₹)?\s*([0-9\,\.]+)"
+    r"(?:Value\s*of\s*Work|Contract\s*Value)\s*[:\-]?\s*(?:Rs\.?|INR|₹)?\s*([0-9\,\.]+(?:\s*(?:Lakhs?|Lakh|Crores?|Crore|Cr))?)"
 ]
 
 # EMD Amount Patterns (Bilingual Hindi / English GeM Tender Specs)
@@ -20,6 +19,32 @@ EMD_PATTERNS = [
     r"(?:EMD\s+Amount|ईएमडी\s+राशि)[^\d]{0,50}?([0-9]+(?:\.[0-9]+)?)",
     r"EMD\s*[:\-]?\s*₹?\s*([0-9\,\.]+)"
 ]
+
+def extract_evaluation_method(text, json_obj=None):
+    """
+    Extracts Evaluation Method / मूल्यांकन पद्धति (e.g. Total value wise evaluation, Item wise evaluation)
+    from GeM tender copies. Never computes or invents estimated value when absent.
+    """
+    if isinstance(json_obj, dict):
+        for k in ["b_evaluation_type", "evaluation_method", "evaluation_type", "b_eval_type"]:
+            v = json_obj.get(k)
+            if v and isinstance(v, str) and len(v.strip()) > 2:
+                return v.strip().title()
+
+    if text:
+        m = re.search(r"(?:मूल्यांकन\s+पद्धति\s*\/|\b)?Evaluation\s+Method\s*[:\-\|\/]?\s*([^\n\r]+)", text, re.IGNORECASE)
+        if m:
+            clean = re.sub(r'^[\|:\-\s]+|[\|:\-\s]+$', '', m.group(1).strip())
+            if len(clean) > 2 and not clean.startswith('---'):
+                return clean
+
+        m_hi = re.search(r"मूल्यांकन\s+पद्धति\s*[:\-\|\/]?\s*([^\n\r]+)", text, re.IGNORECASE)
+        if m_hi:
+            clean = re.sub(r'^[\|:\-\s]+|[\|:\-\s]+$', '', m_hi.group(1).strip())
+            if len(clean) > 2 and not clean.startswith('---'):
+                return clean
+
+    return "Total value wise evaluation"
 
 # Pincode Pattern (6-digit Indian Postal Code)
 PINCODE_PATTERN = r"\b[1-9][0-9]{2}\s?[0-9]{3}\b"
