@@ -15,7 +15,11 @@ from regex_parser import (
 )
 from normalizer import normalize_currency_to_number, normalize_manpower_list
 from validators import evaluate_field_confidence
-from table_parser import extract_tables_from_text
+from table_parser import (
+    extract_tables_from_text,
+    extract_core_specifications,
+    extract_wage_and_resource_breakdown
+)
 
 """
 Master Tender Intelligence Parser
@@ -65,13 +69,13 @@ def parse_tender_document(raw_text, tender_id=None):
     consignee_info = extract_consignee_details(raw_text)
     raw_office_addr = extract_office_address(raw_text)
     pincode = (consignee_info and consignee_info.get("pincode")) or extract_pincode(raw_text)
-    state = (consignee_info and consignee_info.get("state")) or extract_state(raw_text) or "Gujarat"
+    state = (consignee_info and consignee_info.get("state")) or extract_state(raw_text) or "Delhi"
     city = (consignee_info and consignee_info.get("city")) or extract_city(raw_text, state)
     consignee_officer = (consignee_info and consignee_info.get("consignee_officer")) or "Consignee / Reporting Officer"
     addr_confidence = evaluate_field_confidence(raw_office_addr, raw_office_addr)
 
     office_address_obj = {
-        "value": (consignee_info and consignee_info.get("address")) or raw_office_addr or f"Government Office Complex, {city}, {state} - {pincode or '382010'}",
+        "value": (consignee_info and consignee_info.get("address")) or raw_office_addr or f"Government Office Complex, {city}, {state} - {pincode or '110001'}",
         "city": city,
         "district": city,
         "state": state,
@@ -109,6 +113,12 @@ def parse_tender_document(raw_text, tender_id=None):
     required_docs_info = extract_document_required_from_seller(raw_text)
     eligibility_info = extract_turnover_and_experience_criteria(raw_text)
 
+    # 7. Core Specifications (विवरण/ Specification | मूल्य/ Values) & Wage Breakdown
+    total_staff = sum(i["quantity"] for i in manpower_results) if manpower_results else 8
+    primary_profile = (manpower_results[0]["designation"] if manpower_results else "Security Guard")
+    core_specs = extract_core_specifications(raw_text, tender_title=raw_text[:200], tender_category="", tender_state=state)
+    wage_breakdown = extract_wage_and_resource_breakdown(raw_text, resource_count=total_staff, profile_name=core_specs.get("list_of_profiles", primary_profile))
+
     return {
         "bidNumber": bid_number,
         "estimatedValue": estimated_value_obj,
@@ -124,7 +134,15 @@ def parse_tender_document(raw_text, tender_id=None):
         "pincode": pincode,
         "address": (consignee_info and consignee_info.get("address")) or raw_office_addr,
         "manpower": manpower_results,
-        "totalStaffCount": sum(i["quantity"] for i in manpower_results),
+        "totalStaffCount": total_staff,
+        "primary_designation": core_specs.get("list_of_profiles", primary_profile),
+        "core_specifications": core_specs,
+        "wage_breakdown": wage_breakdown,
+        "additional_requirements": wage_breakdown,
+        "manpower_specifications": {
+            "core": core_specs,
+            "wages": wage_breakdown
+        },
         "required_documents": required_docs_info.get("document_list", []),
         "required_documents_raw": required_docs_info.get("raw_text", ""),
         "document_required_from_seller": required_docs_info,

@@ -174,7 +174,11 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
             return st === 'FINISHED' || st === 'CLOSING_TODAY' || st === 'ENDED';
           }
           if (tenderStatus.toUpperCase() === 'PUBLISHED') {
-            return st === 'PUBLISHED' || st === 'CLOSING_TODAY' || st === 'ACTIVE';
+            if (selectedDate && selectedDate !== 'ALL') {
+              const startStr = t.startDate || t.publishedDate || (t.startDateFormatted ? t.startDateFormatted.split('-').reverse().join('-') : '');
+              if (startStr && startStr !== selectedDate) return false;
+            }
+            return st === 'PUBLISHED' || st === 'ACTIVE' || (st !== 'ENDED' && st !== 'FINISHED');
           }
           return st === tenderStatus.toUpperCase();
         });
@@ -356,8 +360,20 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
     };
   });
 
-  const activeCount = (tenders.length > 0 ? tenders : allScannedTenders).filter(t => t.status === 'PUBLISHED' || t.status === 'CLOSING_TODAY' || t.status === 'ACTIVE').length;
-  const finishedCount = (tenders.length > 0 ? tenders : allScannedTenders).filter(t => t.status === 'FINISHED' || t.status === 'CLOSING_TODAY' || t.status === 'ENDED').length;
+  const activeCount = (tenders.length > 0 ? tenders : allScannedTenders).filter(t => {
+    if (selectedDate && selectedDate !== 'ALL') {
+      const startStr = t.startDate || t.publishedDate || (t.startDateFormatted ? t.startDateFormatted.split('-').reverse().join('-') : '');
+      if (startStr && startStr !== selectedDate) return false;
+    }
+    return t.status === 'PUBLISHED' || t.status === 'ACTIVE' || (t.status !== 'ENDED' && t.status !== 'FINISHED');
+  }).length;
+  const finishedCount = (tenders.length > 0 ? tenders : allScannedTenders).filter(t => {
+    if (selectedDate && selectedDate !== 'ALL') {
+      const endStr = t.endDate || t.deadlineDate || t.deadline || (t.endDateFormatted ? t.endDateFormatted.split('-').reverse().join('-') : '');
+      if (endStr && String(endStr).slice(0, 10) !== selectedDate) return false;
+    }
+    return t.status === 'FINISHED' || t.status === 'CLOSING_TODAY' || t.status === 'ENDED';
+  }).length;
   const savedCount = savedTenders.length;
   const totalValueScanned = (tenders.length > 0 ? tenders : allScannedTenders).reduce((acc, t) => acc + (t.estimatedValue || 0), 0);
   const formattedValueCr = (totalValueScanned / 10000000).toFixed(2);
@@ -370,9 +386,21 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
   } else if (activeTab === 'ALL') {
     displayedTenders = currentDataset;
   } else if (activeTab === 'FINISHED') {
-    displayedTenders = currentDataset.filter(t => t.status === 'FINISHED' || t.status === 'CLOSING_TODAY' || t.status === 'ENDED');
+    displayedTenders = currentDataset.filter(t => {
+      if (selectedDate && selectedDate !== 'ALL') {
+        const endStr = t.endDate || t.deadlineDate || t.deadline || (t.endDateFormatted ? t.endDateFormatted.split('-').reverse().join('-') : '');
+        if (endStr && String(endStr).slice(0, 10) !== selectedDate) return false;
+      }
+      return t.status === 'FINISHED' || t.status === 'CLOSING_TODAY' || t.status === 'ENDED';
+    });
   } else if (activeTab === 'PUBLISHED') {
-    displayedTenders = currentDataset.filter(t => t.status === 'PUBLISHED' || t.status === 'CLOSING_TODAY' || t.status === 'ACTIVE');
+    displayedTenders = currentDataset.filter(t => {
+      if (selectedDate && selectedDate !== 'ALL') {
+        const startStr = t.startDate || t.publishedDate || (t.startDateFormatted ? t.startDateFormatted.split('-').reverse().join('-') : '');
+        if (startStr && startStr !== selectedDate) return false;
+      }
+      return t.status === 'PUBLISHED' || t.status === 'ACTIVE' || (t.status !== 'ENDED' && t.status !== 'FINISHED');
+    });
   } else {
     displayedTenders = currentDataset;
   }
@@ -556,21 +584,41 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
       <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: '20px', alignItems: 'start' }}>
 
         {/* Left Control Sidebar Widget */}
-        <div className="glass-panel" style={{ padding: '20px', borderRadius: '16px', display: 'flex', flexDirection: 'column', gap: '18px' }}>
+        <div
+          className="glass-panel"
+          style={{
+            padding: '22px',
+            borderRadius: '16px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '18px',
+            background: 'linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.85) 100%)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
+          }}
+        >
+          {/* Header */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingBottom: '10px', borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
+            <Filter style={{ width: '16px', height: '16px', color: 'var(--primary-cyan)' }} />
+            <span style={{ fontSize: '0.92rem', fontWeight: 800, color: '#fff', letterSpacing: '0.3px' }}>Scanner Filters</span>
+          </div>
+
           <div>
-            <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '6px' }}>
-              Tender Status Option
+            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', fontWeight: 700, color: '#94a3b8', marginBottom: '8px' }}>
+              <Layers style={{ width: '14px', height: '14px', color: '#38bdf8' }} />
+              Tender Status Scope
             </label>
             <CustomStatusDropdown value={tenderStatus} onChange={(val) => { setTenderStatus(val); setActiveTab(val); }} />
           </div>
 
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-              <label style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-muted)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', fontWeight: 700, color: '#94a3b8' }}>
+                <Calendar style={{ width: '14px', height: '14px', color: '#38bdf8' }} />
                 Target Scan Date
               </label>
-              <span onClick={() => setSelectedDate('')} style={{ fontSize: '0.72rem', color: 'var(--primary-cyan)', cursor: 'pointer' }}>
-                Clear Filter
+              <span onClick={() => setSelectedDate('')} style={{ fontSize: '0.72rem', color: '#38bdf8', cursor: 'pointer', fontWeight: 600 }}>
+                Clear
               </span>
             </div>
             <CustomDatePicker value={selectedDate} onChange={(d) => setSelectedDate(d)} onClear={() => setSelectedDate('')} />
@@ -578,76 +626,167 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
 
           {/* Select Target State Option */}
           <div>
-            <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '6px' }}>
-              🗺️ Select Target State
+            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', fontWeight: 700, color: '#94a3b8', marginBottom: '8px' }}>
+              <MapPin style={{ width: '14px', height: '14px', color: '#38bdf8' }} />
+              Select Target State
             </label>
-            <select
-              value={targetState}
-              onChange={(e) => setTargetState(e.target.value)}
-              className="input-control"
-              style={{ fontSize: '0.82rem', height: '38px', borderRadius: '8px' }}
-            >
-              <option value="ALL">All India (All States)</option>
-              {INDIAN_STATES.map((st) => (
-                <option key={st} value={st}>{st}</option>
-              ))}
-            </select>
+            <div style={{ position: 'relative' }}>
+              <select
+                value={targetState}
+                onChange={(e) => setTargetState(e.target.value)}
+                style={{
+                  width: '100%',
+                  background: 'rgba(15, 23, 42, 0.9)',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  borderRadius: '10px',
+                  padding: '10px 14px',
+                  color: '#fff',
+                  fontSize: '0.86rem',
+                  fontWeight: 600,
+                  fontFamily: 'inherit',
+                  outline: 'none',
+                  cursor: 'pointer',
+                  boxSizing: 'border-box',
+                  transition: 'all 0.2s ease',
+                  appearance: 'none',
+                  WebkitAppearance: 'none'
+                }}
+                onFocus={(e) => { e.target.style.borderColor = '#38bdf8'; e.target.style.boxShadow = '0 0 0 3px rgba(6, 182, 212, 0.2)'; }}
+                onBlur={(e) => { e.target.style.borderColor = 'rgba(255, 255, 255, 0.15)'; e.target.style.boxShadow = 'none'; }}
+              >
+                <option value="ALL">All India (All States)</option>
+                {INDIAN_STATES.map((st) => (
+                  <option key={st} value={st}>{st}</option>
+                ))}
+              </select>
+              <div style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#94a3b8', fontSize: '0.75rem' }}>
+                ▼
+              </div>
+            </div>
           </div>
 
           {/* Section 66: Estimated Value Filter */}
           <div>
-            <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '6px' }}>
-              💰 Estimated Tender Value
+            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', fontWeight: 700, color: '#94a3b8', marginBottom: '8px' }}>
+              <TrendingUp style={{ width: '14px', height: '14px', color: '#38bdf8' }} />
+              Estimated Tender Value
             </label>
-            <select
-              value={valRange}
-              onChange={(e) => setValRange(e.target.value)}
-              className="input-control"
-              style={{ fontSize: '0.82rem', height: '38px', borderRadius: '8px' }}
-            >
-              <option value="ALL">All Values</option>
-              <option value="0-1L">₹0 – ₹1 Lakh</option>
-              <option value="1L-5L">₹1 Lakh – ₹5 Lakh</option>
-              <option value="5L-10L">₹5 Lakh – ₹10 Lakh</option>
-              <option value="10L-50L">₹10 Lakh – ₹50 Lakh</option>
-              <option value="50L-1Cr">₹50 Lakh – ₹1 Crore</option>
-              <option value="1Cr+">₹1 Crore+</option>
-            </select>
+            <div style={{ position: 'relative' }}>
+              <select
+                value={valRange}
+                onChange={(e) => setValRange(e.target.value)}
+                style={{
+                  width: '100%',
+                  background: 'rgba(15, 23, 42, 0.9)',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  borderRadius: '10px',
+                  padding: '10px 14px',
+                  color: '#fff',
+                  fontSize: '0.86rem',
+                  fontWeight: 600,
+                  fontFamily: 'inherit',
+                  outline: 'none',
+                  cursor: 'pointer',
+                  boxSizing: 'border-box',
+                  transition: 'all 0.2s ease',
+                  appearance: 'none',
+                  WebkitAppearance: 'none'
+                }}
+                onFocus={(e) => { e.target.style.borderColor = '#38bdf8'; e.target.style.boxShadow = '0 0 0 3px rgba(6, 182, 212, 0.2)'; }}
+                onBlur={(e) => { e.target.style.borderColor = 'rgba(255, 255, 255, 0.15)'; e.target.style.boxShadow = 'none'; }}
+              >
+                <option value="ALL">All Values</option>
+                <option value="0-1L">₹0 – ₹1 Lakh</option>
+                <option value="1L-5L">₹1 Lakh – ₹5 Lakh</option>
+                <option value="5L-10L">₹5 Lakh – ₹10 Lakh</option>
+                <option value="10L-50L">₹10 Lakh – ₹50 Lakh</option>
+                <option value="50L-1Cr">₹50 Lakh – ₹1 Crore</option>
+                <option value="1Cr+">₹1 Crore+</option>
+              </select>
+              <div style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#94a3b8', fontSize: '0.75rem' }}>
+                ▼
+              </div>
+            </div>
           </div>
 
           {/* Section 86: Manpower Filter */}
           <div>
-            <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '6px' }}>
-              👥 Manpower Designation
+            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', fontWeight: 700, color: '#94a3b8', marginBottom: '8px' }}>
+              <Users style={{ width: '14px', height: '14px', color: '#38bdf8' }} />
+              Manpower Designation
             </label>
-            <select
-              value={manpowerType}
-              onChange={(e) => setManpowerType(e.target.value)}
-              className="input-control"
-              style={{ fontSize: '0.82rem', height: '38px', borderRadius: '8px' }}
-            >
-              <option value="ALL">All Designations</option>
-              {MANPOWER_DESIGNATIONS.map((d) => (
-                <option key={d.value} value={d.value}>{d.label}</option>
-              ))}
-            </select>
+            <div style={{ position: 'relative' }}>
+              <select
+                value={manpowerType}
+                onChange={(e) => setManpowerType(e.target.value)}
+                style={{
+                  width: '100%',
+                  background: 'rgba(15, 23, 42, 0.9)',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  borderRadius: '10px',
+                  padding: '10px 14px',
+                  color: '#fff',
+                  fontSize: '0.86rem',
+                  fontWeight: 600,
+                  fontFamily: 'inherit',
+                  outline: 'none',
+                  cursor: 'pointer',
+                  boxSizing: 'border-box',
+                  transition: 'all 0.2s ease',
+                  appearance: 'none',
+                  WebkitAppearance: 'none'
+                }}
+                onFocus={(e) => { e.target.style.borderColor = '#38bdf8'; e.target.style.boxShadow = '0 0 0 3px rgba(6, 182, 212, 0.2)'; }}
+                onBlur={(e) => { e.target.style.borderColor = 'rgba(255, 255, 255, 0.15)'; e.target.style.boxShadow = 'none'; }}
+              >
+                <option value="ALL">All Designations</option>
+                {MANPOWER_DESIGNATIONS.map((d) => (
+                  <option key={d.value} value={d.value}>{d.label}</option>
+                ))}
+              </select>
+              <div style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#94a3b8', fontSize: '0.75rem' }}>
+                ▼
+              </div>
+            </div>
           </div>
 
           <button
             onClick={handleScanAction}
             disabled={scanning}
             className="btn-cyan"
-            style={{ width: '100%', justifyContent: 'center', padding: '12px', fontSize: '0.9rem' }}
+            style={{
+              width: '100%',
+              justifyContent: 'center',
+              padding: '13px',
+              fontSize: '0.94rem',
+              fontWeight: 800,
+              letterSpacing: '0.3px',
+              gap: '8px',
+              borderRadius: '10px',
+              boxShadow: '0 4px 20px rgba(6, 182, 212, 0.4)'
+            }}
           >
-            <Zap style={{ width: '16px', height: '16px' }} />
-            ⚡ Scan Tenders
+            <Zap style={{ width: '18px', height: '18px' }} />
+            {scanning ? 'Scanning GeM Portal...' : 'Scan Tenders'}
           </button>
 
-          <div style={{ background: 'rgba(0,0,0,0.3)', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.75rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
-            <div style={{ color: 'var(--accent-green)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <CheckCircle2 style={{ width: '12px', height: '12px' }} /> Active scan:
+          <div style={{
+            background: 'rgba(0, 0, 0, 0.35)',
+            padding: '12px 14px',
+            borderRadius: '10px',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '4px'
+          }}>
+            <div style={{ color: '#34d399', fontSize: '0.76rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#34d399', display: 'inline-block' }} />
+              Active Scan Verified
             </div>
-            <div style={{ marginTop: '2px' }}>{lastScanTimestamp}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#94a3b8', fontSize: '0.78rem', fontFamily: 'monospace' }}>
+              <Clock style={{ width: '12px', height: '12px', color: 'var(--primary-cyan)' }} />
+              {lastScanTimestamp}
+            </div>
           </div>
         </div>
 
@@ -766,8 +905,8 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
           {/* Tabs Filter Bar */}
           <div style={{ borderBottom: '1px solid var(--border-color)', display: 'flex', gap: '20px' }}>
             {[
-              { id: 'PUBLISHED', label: `Published Bids (${allScannedTenders.filter(t => t.status === 'PUBLISHED').length})` },
-              { id: 'FINISHED', label: `Finished Bids (${allScannedTenders.filter(t => t.status === 'FINISHED').length})` },
+              { id: 'PUBLISHED', label: `Published Bids (${activeCount})` },
+              { id: 'FINISHED', label: `Finished Bids (${finishedCount})` },
               { id: 'SAVED', label: `Saved Tenders (${savedCount})` },
               { id: 'ALL', label: `All Scanned Bids (${allScannedTenders.length})` }
             ].map(tab => (
@@ -883,7 +1022,8 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
               const nowTime = new Date();
 
               // A bid is ONLY Closed/Ended if its closing deadline has actually passed in real time!
-              const isEndingToday = t.status === 'CLOSING_TODAY' || (endDateTime && !isNaN(endDateTime.getTime()) && endDateTime.toDateString() === nowTime.toDateString() && endDateTime > nowTime);
+              const isPublishedContext = t.status === 'PUBLISHED' || tenderStatus === 'PUBLISHED' || activeTab === 'PUBLISHED';
+              const isEndingToday = !isPublishedContext && (t.status === 'CLOSING_TODAY' || (endDateTime && !isNaN(endDateTime.getTime()) && endDateTime.toDateString() === nowTime.toDateString() && endDateTime > nowTime));
               const isLiveClosed = (t.status === 'ENDED' || (endDateTime && !isNaN(endDateTime.getTime()) ? endDateTime <= nowTime : (t.status === 'FINISHED' && !isEndingToday)));
               const isFinished = isLiveClosed;
               const endingTimeStr = t.deadlineTime || (endDateTime && !isNaN(endDateTime.getTime()) ? endDateTime.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) : '');
@@ -943,7 +1083,10 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
                           ? '🔴 CLOSED / ENDED'
                           : (isEndingToday
                             ? `🟢 ACTIVE — CLOSING TODAY${endingTimeStr ? ' (' + endingTimeStr + ')' : ''}`
-                            : '🟢 ACTIVE — OPEN FOR SUBMISSION'
+                            : (isPublishedContext
+                              ? `🟢 ACTIVE — PUBLISHED ON ${startDisplay}`
+                              : '🟢 ACTIVE — OPEN FOR SUBMISSION'
+                            )
                           )
                         }
                       </span>
@@ -1065,11 +1208,12 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
                     <div>
                       <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>Department Name And Address:</div>
                       <div style={{ fontSize: '0.86rem', color: '#fff', fontWeight: 600, marginTop: '2px', lineHeight: '1.4' }}>
-                        🏢 {t.department || t.organization}
+                        🏢 {t.department && t.department !== 'NA' ? t.department : (t.organization || 'Government Department')}
                       </div>
 
                       {/* Consignee / Reporting Officer */}
-                      {(t.consignee_officer || (t.work_location && t.work_location.consignee_officer)) && (
+                      {(t.consignee_officer || (t.work_location && t.work_location.consignee_officer)) &&
+                       (t.consignee_officer !== 'NA' && t.consignee_officer !== 'N/A') && (
                         <div style={{ fontSize: '0.78rem', color: '#93c5fd', fontWeight: 600, marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                           <span>👤 Consignee:</span>
                           <span style={{ color: '#e0f2fe' }}>{t.consignee_officer || t.work_location.consignee_officer}</span>
@@ -1145,11 +1289,11 @@ export default function DashboardPage({ searchQuery, setSearchQuery }) {
                       </div>
                       <div style={{ fontSize: '0.76rem', color: '#cbd5e1', marginTop: '5px', lineHeight: '1.35', background: 'rgba(15, 23, 42, 0.6)', padding: '6px 8px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
                         <div>
-                          🏛️ <strong style={{ color: '#94a3b8' }}>Office Address:</strong> {t.address || t.office_address || (t.work_location ? t.work_location.address : `${t.department || 'Government Office'}, ${t.city || ''} ${t.state || ''}`.trim())}
+                          🏛️ <strong style={{ color: '#94a3b8' }}>Office Address:</strong> {(t.address && !t.address.startsWith("NA,")) ? t.address : (t.office_address && !t.office_address.startsWith("NA,") ? t.office_address : `${t.department && t.department !== 'NA' ? t.department : 'Government Office'}, ${t.city && t.city !== 'Not Specified' ? t.city : ''} ${t.state && t.state !== 'Not Specified' ? t.state : ''} ${t.pincode && t.pincode !== 'Not Specified' ? '- ' + t.pincode : ''}`.trim())}
                         </div>
                         {(t.address || t.city) && (
                           <a
-                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((t.address || `${t.department || ''} ${t.city || ''} ${t.state || ''}`).trim())}`}
+                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(((t.address && !t.address.startsWith("NA,")) ? t.address : `${t.department && t.department !== 'NA' ? t.department : ''} ${t.city || ''} ${t.state || ''}`).trim())}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}

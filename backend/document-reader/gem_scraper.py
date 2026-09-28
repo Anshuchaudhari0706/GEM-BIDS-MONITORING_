@@ -455,7 +455,9 @@ DEPARTMENT_LOCATION_REGISTRY = [
     (r"narmada water|kalpsar|sardar sarovar", ("Gandhinagar", "Gujarat", "382010", "Block No. 9, 2nd Floor, Sardar Bhavan, Sachivalaya, Gandhinagar, Gujarat - 382010")),
     (r"gsecl|gujarat state electricity|ugvcl|mgvcl|pgvcl|dgvcl|getco", ("Vadodara", "Gujarat", "390007", "Vidyut Bhavan, Race Course, Vadodara, Gujarat - 390007")),
     (r"western railway", ("Vadodara", "Gujarat", "390004", "Divisional Railway Manager Office, Pratapnagar, Vadodara, Gujarat - 390004")),
-    (r"gujarat police|home department gujarat", ("Gandhinagar", "Gujarat", "382010", "Police Bhavan, Sector 18, Gandhinagar, Gujarat - 382010")),
+    (r"gujarat police", ("Gandhinagar", "Gujarat", "382010", "Gujarat Police Headquarters, Sector 18, Gandhinagar, Gujarat - 382010")),
+    (r"home department gujarat", ("Gandhinagar", "Gujarat", "382010", "Home Department, New Sachivalaya, Gandhinagar, Gujarat - 382010")),
+    (r"home department|ministry of home affairs", ("New Delhi", "Delhi", "110001", "Ministry of Home Affairs, North Block, Central Secretariat, New Delhi, Delhi - 110001")),
     (r"gujarat.*sachivalaya|new sachivalaya|swarnim sankul", ("Gandhinagar", "Gujarat", "382010", "New Sachivalaya Complex, Sector 10, Gandhinagar, Gujarat - 382010"))
 ]
 
@@ -505,91 +507,423 @@ PINCODE_PREFIX_CITY_MAP = {
     # Rajasthan
     "301": ("Alwar", "Rajasthan"),
     "302": ("Jaipur", "Rajasthan"),
+    "303": ("Jaipur", "Rajasthan"),
+    "304": ("Tonk", "Rajasthan"),
     "305": ("Ajmer", "Rajasthan"),
+    "306": ("Pali", "Rajasthan"),
+    "307": ("Sirohi", "Rajasthan"),
+    "311": ("Bhilwara", "Rajasthan"),
+    "312": ("Chittorgarh", "Rajasthan"),
     "313": ("Udaipur", "Rajasthan"),
+    "314": ("Dungarpur", "Rajasthan"),
+    "321": ("Bharatpur", "Rajasthan"),
+    "322": ("Sawai Madhopur", "Rajasthan"),
     "324": ("Kota", "Rajasthan"),
+    "325": ("Kota", "Rajasthan"),
+    "326": ("Jhalawar", "Rajasthan"),
+    "331": ("Churu", "Rajasthan"),
+    "332": ("Sikar", "Rajasthan"),
+    "333": ("Jhunjhunu", "Rajasthan"),
     "334": ("Bikaner", "Rajasthan"),
+    "335": ("Sri Ganganagar", "Rajasthan"),
+    "341": ("Nagaur", "Rajasthan"),
     "342": ("Jodhpur", "Rajasthan"),
+    "343": ("Jalore", "Rajasthan"),
+    "344": ("Barmer", "Rajasthan"),
+    "345": ("Jaisalmer", "Rajasthan"),
     # Karnataka
     "560": ("Bengaluru", "Karnataka"),
+    "561": ("Bengaluru Rural", "Karnataka"),
+    "562": ("Ramanagara", "Karnataka"),
+    "563": ("Kolar", "Karnataka"),
     "570": ("Mysuru", "Karnataka"),
+    "571": ("Mandya", "Karnataka"),
+    "572": ("Tumakuru", "Karnataka"),
+    "573": ("Hassan", "Karnataka"),
+    "574": ("Dakshina Kannada", "Karnataka"),
     "575": ("Mangaluru", "Karnataka"),
+    "576": ("Udupi", "Karnataka"),
+    "577": ("Shivamogga", "Karnataka"),
     "580": ("Hubballi", "Karnataka"),
+    "581": ("Dharwad", "Karnataka"),
+    "582": ("Gadag", "Karnataka"),
+    "583": ("Ballari", "Karnataka"),
+    "584": ("Raichur", "Karnataka"),
     "585": ("Kalaburagi", "Karnataka"),
+    "586": ("Vijayapura", "Karnataka"),
+    "587": ("Bagalkote", "Karnataka"),
+    "590": ("Belagavi", "Karnataka"),
+    "591": ("Chikkodi", "Karnataka"),
     # Tamil Nadu
     "600": ("Chennai", "Tamil Nadu"),
+    "601": ("Tiruvallur", "Tamil Nadu"),
+    "602": ("Kanchipuram", "Tamil Nadu"),
+    "603": ("Chengalpattu", "Tamil Nadu"),
+    "604": ("Tindivanam", "Tamil Nadu"),
+    "605": ("Puducherry", "Puducherry"),
+    "606": ("Tiruvannamalai", "Tamil Nadu"),
+    "607": ("Cuddalore", "Tamil Nadu"),
+    "608": ("Chidambaram", "Tamil Nadu"),
+    "609": ("Mayiladuthurai", "Tamil Nadu"),
+    "610": ("Tiruvarur", "Tamil Nadu"),
+    "611": ("Nagapattinam", "Tamil Nadu"),
+    "612": ("Kumbakonam", "Tamil Nadu"),
+    "613": ("Thanjavur", "Tamil Nadu"),
+    "614": ("Pattukkottai", "Tamil Nadu"),
     "620": ("Tiruchirappalli", "Tamil Nadu"),
+    "621": ("Lalgudi", "Tamil Nadu"),
+    "622": ("Pudukkottai", "Tamil Nadu"),
+    "623": ("Ramanathapuram", "Tamil Nadu"),
+    "624": ("Dindigul", "Tamil Nadu"),
     "625": ("Madurai", "Tamil Nadu"),
+    "626": ("Virudhunagar", "Tamil Nadu"),
+    "627": ("Tirunelveli", "Tamil Nadu"),
+    "628": ("Thoothukudi", "Tamil Nadu"),
+    "629": ("Nagercoil", "Tamil Nadu"),
+    "630": ("Karaikudi", "Tamil Nadu"),
+    "631": ("Arakkonam", "Tamil Nadu"),
+    "632": ("Vellore", "Tamil Nadu"),
+    "635": ("Krishnagiri", "Tamil Nadu"),
     "636": ("Salem", "Tamil Nadu"),
+    "637": ("Namakkal", "Tamil Nadu"),
+    "638": ("Erode", "Tamil Nadu"),
     "641": ("Coimbatore", "Tamil Nadu"),
+    "642": ("Pollachi", "Tamil Nadu"),
+    "643": ("Udhagamandalam", "Tamil Nadu"),
     # Uttar Pradesh
+    "201": ("Noida", "Uttar Pradesh"),
+    "202": ("Aligarh", "Uttar Pradesh"),
+    "203": ("Bulandshahr", "Uttar Pradesh"),
+    "204": ("Hathras", "Uttar Pradesh"),
+    "205": ("Mainpuri", "Uttar Pradesh"),
+    "206": ("Etawah", "Uttar Pradesh"),
+    "207": ("Etah", "Uttar Pradesh"),
     "208": ("Kanpur", "Uttar Pradesh"),
+    "209": ("Kanpur Dehat", "Uttar Pradesh"),
+    "210": ("Banda", "Uttar Pradesh"),
     "211": ("Prayagraj", "Uttar Pradesh"),
+    "212": ("Kaushambi", "Uttar Pradesh"),
     "221": ("Varanasi", "Uttar Pradesh"),
+    "222": ("Jaunpur", "Uttar Pradesh"),
     "223": ("Azamgarh", "Uttar Pradesh"),
+    "224": ("Ayodhya", "Uttar Pradesh"),
+    "225": ("Barabanki", "Uttar Pradesh"),
     "226": ("Lucknow", "Uttar Pradesh"),
+    "227": ("Amethi", "Uttar Pradesh"),
+    "228": ("Sultanpur", "Uttar Pradesh"),
+    "229": ("Rae Bareli", "Uttar Pradesh"),
+    "230": ("Pratapgarh", "Uttar Pradesh"),
+    "231": ("Mirzapur", "Uttar Pradesh"),
+    "232": ("Chandauli", "Uttar Pradesh"),
+    "233": ("Ghazipur", "Uttar Pradesh"),
+    "241": ("Hardoi", "Uttar Pradesh"),
+    "242": ("Shahjahanpur", "Uttar Pradesh"),
     "243": ("Bareilly", "Uttar Pradesh"),
     "244": ("Moradabad", "Uttar Pradesh"),
+    "245": ("Hapur", "Uttar Pradesh"),
     "246": ("Bijnor", "Uttar Pradesh"),
+    "247": ("Saharanpur", "Uttar Pradesh"),
+    "248": ("Dehradun", "Uttarakhand"),
+    "249": ("Haridwar", "Uttarakhand"),
     "250": ("Meerut", "Uttar Pradesh"),
-    "272": ("Siddharthnagar", "Uttar Pradesh"),
+    "251": ("Muzaffarnagar", "Uttar Pradesh"),
+    "261": ("Sitapur", "Uttar Pradesh"),
+    "262": ("Pilibhit", "Uttar Pradesh"),
+    "263": ("Nainital", "Uttarakhand"),
+    "271": ("Gonda", "Uttar Pradesh"),
+    "272": ("Basti", "Uttar Pradesh"),
     "273": ("Gorakhpur", "Uttar Pradesh"),
+    "274": ("Deoria", "Uttar Pradesh"),
+    "275": ("Mau", "Uttar Pradesh"),
+    "276": ("Azamgarh", "Uttar Pradesh"),
+    "277": ("Ballia", "Uttar Pradesh"),
+    "281": ("Mathura", "Uttar Pradesh"),
     "282": ("Agra", "Uttar Pradesh"),
+    "283": ("Firozabad", "Uttar Pradesh"),
+    "284": ("Jhansi", "Uttar Pradesh"),
+    "285": ("Jalaun", "Uttar Pradesh"),
     # Madhya Pradesh & CG
+    "450": ("Khandwa", "Madhya Pradesh"),
+    "451": ("Khargone", "Madhya Pradesh"),
     "452": ("Indore", "Madhya Pradesh"),
+    "453": ("Mhow", "Madhya Pradesh"),
+    "454": ("Dhar", "Madhya Pradesh"),
+    "455": ("Dewas", "Madhya Pradesh"),
+    "456": ("Ujjain", "Madhya Pradesh"),
+    "457": ("Ratlam", "Madhya Pradesh"),
+    "458": ("Mandsaur", "Madhya Pradesh"),
+    "460": ("Betul", "Madhya Pradesh"),
+    "461": ("Hoshangabad", "Madhya Pradesh"),
     "462": ("Bhopal", "Madhya Pradesh"),
+    "464": ("Vidisha", "Madhya Pradesh"),
+    "465": ("Shajapur", "Madhya Pradesh"),
+    "466": ("Sehore", "Madhya Pradesh"),
+    "470": ("Sagar", "Madhya Pradesh"),
+    "471": ("Chhatarpur", "Madhya Pradesh"),
+    "472": ("Tikamgarh", "Madhya Pradesh"),
+    "473": ("Guna", "Madhya Pradesh"),
     "474": ("Gwalior", "Madhya Pradesh"),
+    "475": ("Dabra", "Madhya Pradesh"),
+    "476": ("Morena", "Madhya Pradesh"),
+    "477": ("Bhind", "Madhya Pradesh"),
+    "480": ("Chhindwara", "Madhya Pradesh"),
+    "481": ("Balaghat", "Madhya Pradesh"),
     "482": ("Jabalpur", "Madhya Pradesh"),
-    "484": ("Anuppur", "Madhya Pradesh"),
+    "483": ("Katni", "Madhya Pradesh"),
+    "484": ("Shahdol", "Madhya Pradesh"),
+    "485": ("Satna", "Madhya Pradesh"),
+    "486": ("Rewa", "Madhya Pradesh"),
+    "487": ("Narsinghpur", "Madhya Pradesh"),
+    "488": ("Panna", "Madhya Pradesh"),
+    "490": ("Bhilai", "Chhattisgarh"),
+    "491": ("Durg", "Chhattisgarh"),
     "492": ("Raipur", "Chhattisgarh"),
-    "495": ("Korba", "Chhattisgarh"),
-    # West Bengal, Odisha, Jharkhand
+    "493": ("Mahasamund", "Chhattisgarh"),
+    "494": ("Jagdalpur", "Chhattisgarh"),
+    "495": ("Bilaspur", "Chhattisgarh"),
+    "496": ("Raigarh", "Chhattisgarh"),
+    "497": ("Ambikapur", "Chhattisgarh"),
+    # West Bengal, Odisha, Jharkhand, Bihar
     "700": ("Kolkata", "West Bengal"),
     "711": ("Howrah", "West Bengal"),
+    "712": ("Hooghly", "West Bengal"),
     "713": ("Durgapur", "West Bengal"),
+    "721": ("Midnapore", "West Bengal"),
+    "722": ("Bankura", "West Bengal"),
+    "723": ("Purulia", "West Bengal"),
+    "731": ("Birbhum", "West Bengal"),
+    "732": ("Malda", "West Bengal"),
+    "733": ("Uttar Dinajpur", "West Bengal"),
     "734": ("Siliguri", "West Bengal"),
+    "735": ("Jalpaiguri", "West Bengal"),
+    "736": ("Cooch Behar", "West Bengal"),
     "741": ("Kalyani", "West Bengal"),
+    "742": ("Murshidabad", "West Bengal"),
+    "743": ("Barasat", "West Bengal"),
     "751": ("Bhubaneswar", "Odisha"),
+    "752": ("Puri", "Odisha"),
     "753": ("Cuttack", "Odisha"),
+    "754": ("Kendrapara", "Odisha"),
+    "755": ("Jajpur", "Odisha"),
+    "756": ("Balasore", "Odisha"),
+    "757": ("Baripada", "Odisha"),
+    "758": ("Kendujhar", "Odisha"),
+    "759": ("Dhenkanal", "Odisha"),
     "760": ("Berhampur", "Odisha"),
+    "761": ("Ganjam", "Odisha"),
+    "762": ("Phulbani", "Odisha"),
+    "764": ("Koraput", "Odisha"),
+    "765": ("Rayagada", "Odisha"),
+    "766": ("Bhawanipatna", "Odisha"),
+    "767": ("Balangir", "Odisha"),
+    "768": ("Sambalpur", "Odisha"),
     "769": ("Rourkela", "Odisha"),
-    "825": ("Chatra", "Jharkhand"),
+    "770": ("Sundargarh", "Odisha"),
+    # Jharkhand
+    "814": ("Dumka", "Jharkhand"),
+    "815": ("Giridih", "Jharkhand"),
+    "816": ("Pakur", "Jharkhand"),
+    "822": ("Garhwa", "Jharkhand"),
+    "825": ("Hazaribagh", "Jharkhand"),
     "826": ("Dhanbad", "Jharkhand"),
+    "827": ("Bokaro", "Jharkhand"),
+    "828": ("Dhanbad", "Jharkhand"),
+    "829": ("Ramgarh", "Jharkhand"),
     "831": ("Jamshedpur", "Jharkhand"),
+    "832": ("Ghatshila", "Jharkhand"),
+    "833": ("Chaibasa", "Jharkhand"),
     "834": ("Ranchi", "Jharkhand"),
+    "835": ("Gumla", "Jharkhand"),
     # Bihar
     "800": ("Patna", "Bihar"),
+    "801": ("Patna", "Bihar"),
+    "802": ("Bhojpur", "Bihar"),
+    "803": ("Nalanda", "Bihar"),
+    "804": ("Jehanabad", "Bihar"),
+    "805": ("Nawada", "Bihar"),
+    "811": ("Munger", "Bihar"),
     "812": ("Bhagalpur", "Bihar"),
+    "813": ("Banka", "Bihar"),
+    "821": ("Sasaram", "Bihar"),
     "823": ("Gaya", "Bihar"),
+    "824": ("Aurangabad", "Bihar"),
+    "841": ("Siwan", "Bihar"),
     "842": ("Muzaffarpur", "Bihar"),
+    "843": ("Sitamarhi", "Bihar"),
+    "844": ("Hajipur", "Bihar"),
+    "845": ("Motihari", "Bihar"),
     "846": ("Darbhanga", "Bihar"),
-    "854": ("Katihar", "Bihar"),
+    "847": ("Madhubani", "Bihar"),
+    "848": ("Samastipur", "Bihar"),
+    "851": ("Begusarai", "Bihar"),
+    "852": ("Saharsa", "Bihar"),
+    "853": ("Khagaria", "Bihar"),
+    "854": ("Purnea", "Bihar"),
+    "855": ("Kishanganj", "Bihar"),
     # Telangana & AP
     "500": ("Hyderabad", "Telangana"),
+    "501": ("Ranga Reddy", "Telangana"),
+    "502": ("Sangareddy", "Telangana"),
+    "503": ("Nizamabad", "Telangana"),
+    "504": ("Adilabad", "Telangana"),
+    "505": ("Karimnagar", "Telangana"),
     "506": ("Warangal", "Telangana"),
+    "507": ("Khammam", "Telangana"),
+    "508": ("Nalgonda", "Telangana"),
+    "509": ("Mahabubnagar", "Telangana"),
+    "515": ("Anantapur", "Andhra Pradesh"),
+    "516": ("Kadapa", "Andhra Pradesh"),
+    "517": ("Tirupati", "Andhra Pradesh"),
+    "518": ("Kurnool", "Andhra Pradesh"),
     "520": ("Vijayawada", "Andhra Pradesh"),
+    "521": ("Machilipatnam", "Andhra Pradesh"),
+    "522": ("Guntur", "Andhra Pradesh"),
+    "523": ("Ongole", "Andhra Pradesh"),
+    "524": ("Nellore", "Andhra Pradesh"),
     "530": ("Visakhapatnam", "Andhra Pradesh"),
+    "531": ("Anakapalli", "Andhra Pradesh"),
+    "532": ("Srikakulam", "Andhra Pradesh"),
+    "533": ("Kakinada", "Andhra Pradesh"),
+    "534": ("Eluru", "Andhra Pradesh"),
+    "535": ("Vizianagaram", "Andhra Pradesh"),
     # Kerala
-    "682": ("Kochi", "Kerala"),
-    "695": ("Thiruvananthapuram", "Kerala"),
+    "670": ("Kannur", "Kerala"),
+    "671": ("Kasaragod", "Kerala"),
     "673": ("Kozhikode", "Kerala"),
+    "676": ("Malappuram", "Kerala"),
+    "678": ("Palakkad", "Kerala"),
+    "679": ("Shornur", "Kerala"),
+    "680": ("Thrissur", "Kerala"),
+    "682": ("Kochi", "Kerala"),
+    "683": ("Aluva", "Kerala"),
+    "685": ("Idukki", "Kerala"),
+    "686": ("Kottayam", "Kerala"),
+    "688": ("Alappuzha", "Kerala"),
+    "689": ("Pathanamthitta", "Kerala"),
     "691": ("Kollam", "Kerala"),
+    "695": ("Thiruvananthapuram", "Kerala"),
     # Punjab & Chandigarh
-    "160": ("Chandigarh", "Chandigarh"),
+    "140": ("Mohali", "Punjab"),
     "141": ("Ludhiana", "Punjab"),
+    "142": ("Moga", "Punjab"),
     "143": ("Amritsar", "Punjab"),
     "144": ("Jalandhar", "Punjab"),
+    "145": ("Pathankot", "Punjab"),
+    "146": ("Hoshiarpur", "Punjab"),
+    "147": ("Patiala", "Punjab"),
+    "148": ("Sangrur", "Punjab"),
+    "151": ("Bathinda", "Punjab"),
+    "152": ("Firozpur", "Punjab"),
+    "160": ("Chandigarh", "Chandigarh"),
     # J&K, Uttarakhand & HP
-    "180": ("Jammu", "Jammu and Kashmir"),
-    "184": ("Basohli", "Jammu and Kashmir"),
-    "190": ("Srinagar", "Jammu and Kashmir"),
-    "248": ("Dehradun", "Uttarakhand"),
-    "247": ("Haridwar", "Uttarakhand"),
     "171": ("Shimla", "Himachal Pradesh"),
+    "172": ("Solan", "Himachal Pradesh"),
+    "173": ("Nahan", "Himachal Pradesh"),
+    "174": ("Bilaspur", "Himachal Pradesh"),
+    "175": ("Mandi", "Himachal Pradesh"),
+    "176": ("Dharamshala", "Himachal Pradesh"),
+    "177": ("Hamirpur", "Himachal Pradesh"),
+    "180": ("Jammu", "Jammu and Kashmir"),
+    "181": ("Samba", "Jammu and Kashmir"),
+    "182": ("Udhampur", "Jammu and Kashmir"),
+    "184": ("Kathua", "Jammu and Kashmir"),
+    "185": ("Rajouri", "Jammu and Kashmir"),
+    "190": ("Srinagar", "Jammu and Kashmir"),
+    "191": ("Budgam", "Jammu and Kashmir"),
+    "192": ("Anantnag", "Jammu and Kashmir"),
+    "193": ("Baramulla", "Jammu and Kashmir"),
+    "194": ("Leh", "Ladakh"),
     # Assam & Northeast
     "781": ("Guwahati", "Assam"),
+    "782": ("Nagaon", "Assam"),
+    "783": ("Goalpara", "Assam"),
+    "784": ("Tezpur", "Assam"),
+    "785": ("Jorhat", "Assam"),
+    "786": ("Dibrugarh", "Assam"),
+    "787": ("Dhemaji", "Assam"),
+    "788": ("Silchar", "Assam"),
+    "790": ("Itanagar", "Arunachal Pradesh"),
+    "791": ("Itanagar", "Arunachal Pradesh"),
+    "793": ("Shillong", "Meghalaya"),
+    "794": ("Tura", "Meghalaya"),
+    "795": ("Imphal", "Manipur"),
+    "796": ("Aizawl", "Mizoram"),
+    "797": ("Kohima", "Nagaland"),
+    "799": ("Agartala", "Tripura"),
     # Goa
     "403": ("Panaji", "Goa")
+}
+
+PINCODE_2DIGIT_STATE_MAP = {
+    "11": ("New Delhi", "Delhi"),
+    "12": ("Gurugram", "Haryana"),
+    "13": ("Ambala", "Haryana"),
+    "14": ("Ludhiana", "Punjab"),
+    "15": ("Bathinda", "Punjab"),
+    "16": ("Chandigarh", "Chandigarh"),
+    "17": ("Shimla", "Himachal Pradesh"),
+    "18": ("Jammu", "Jammu and Kashmir"),
+    "19": ("Srinagar", "Jammu and Kashmir"),
+    "20": ("Noida", "Uttar Pradesh"),
+    "21": ("Prayagraj", "Uttar Pradesh"),
+    "22": ("Varanasi", "Uttar Pradesh"),
+    "23": ("Mirzapur", "Uttar Pradesh"),
+    "24": ("Bareilly", "Uttar Pradesh"),
+    "25": ("Meerut", "Uttar Pradesh"),
+    "26": ("Dehradun", "Uttarakhand"),
+    "27": ("Gorakhpur", "Uttar Pradesh"),
+    "28": ("Agra", "Uttar Pradesh"),
+    "30": ("Jaipur", "Rajasthan"),
+    "31": ("Udaipur", "Rajasthan"),
+    "32": ("Kota", "Rajasthan"),
+    "33": ("Bikaner", "Rajasthan"),
+    "34": ("Jodhpur", "Rajasthan"),
+    "36": ("Rajkot", "Gujarat"),
+    "37": ("Bhuj", "Gujarat"),
+    "38": ("Ahmedabad", "Gujarat"),
+    "39": ("Surat", "Gujarat"),
+    "40": ("Mumbai", "Maharashtra"),
+    "41": ("Pune", "Maharashtra"),
+    "42": ("Nashik", "Maharashtra"),
+    "43": ("Chhatrapati Sambhajinagar", "Maharashtra"),
+    "44": ("Nagpur", "Maharashtra"),
+    "45": ("Indore", "Madhya Pradesh"),
+    "46": ("Bhopal", "Madhya Pradesh"),
+    "47": ("Gwalior", "Madhya Pradesh"),
+    "48": ("Jabalpur", "Madhya Pradesh"),
+    "49": ("Raipur", "Chhattisgarh"),
+    "50": ("Hyderabad", "Telangana"),
+    "51": ("Tirupati", "Andhra Pradesh"),
+    "52": ("Vijayawada", "Andhra Pradesh"),
+    "53": ("Visakhapatnam", "Andhra Pradesh"),
+    "56": ("Bengaluru", "Karnataka"),
+    "57": ("Mangaluru", "Karnataka"),
+    "58": ("Hubballi", "Karnataka"),
+    "59": ("Belagavi", "Karnataka"),
+    "60": ("Chennai", "Tamil Nadu"),
+    "61": ("Thanjavur", "Tamil Nadu"),
+    "62": ("Madurai", "Tamil Nadu"),
+    "63": ("Salem", "Tamil Nadu"),
+    "64": ("Coimbatore", "Tamil Nadu"),
+    "67": ("Kozhikode", "Kerala"),
+    "68": ("Kochi", "Kerala"),
+    "69": ("Thiruvananthapuram", "Kerala"),
+    "70": ("Kolkata", "West Bengal"),
+    "71": ("Howrah", "West Bengal"),
+    "72": ("Midnapore", "West Bengal"),
+    "73": ("Siliguri", "West Bengal"),
+    "74": ("Kalyani", "West Bengal"),
+    "75": ("Bhubaneswar", "Odisha"),
+    "76": ("Berhampur", "Odisha"),
+    "77": ("Sambalpur", "Odisha"),
+    "78": ("Guwahati", "Assam"),
+    "79": ("Shillong", "Meghalaya"),
+    "80": ("Patna", "Bihar"),
+    "81": ("Bhagalpur", "Bihar"),
+    "82": ("Hazaribagh", "Jharkhand"),
+    "83": ("Ranchi", "Jharkhand"),
+    "84": ("Muzaffarpur", "Bihar"),
+    "85": ("Purnea", "Bihar")
 }
 
 def resolve_department_location(dept_name, title="", full_text="", default_state=None):
@@ -609,23 +943,23 @@ def resolve_department_location(dept_name, title="", full_text="", default_state
         for c in cities:
             if re.search(r"\b" + re.escape(c.lower()) + r"\b", combined):
                 cap_pin = STATE_CAPITAL_MAP.get(state, ("City", "110001"))[1]
-                return c, state, cap_pin, f"Government Office Complex, {c}, {state} - {cap_pin}"
+                return c, state, cap_pin, f"{dept_name or 'Government Office Complex'}, {c}, {state} - {cap_pin}"
 
     # 3. Check for explicit Indian state mentions
     for state in STATE_CAPITAL_MAP:
         if re.search(r"\b" + re.escape(state.lower()) + r"\b", combined):
             cap_city, cap_pin = STATE_CAPITAL_MAP[state]
-            return cap_city, state, cap_pin, f"Government Administrative Complex, {cap_city}, {state} - {cap_pin}"
+            return cap_city, state, cap_pin, f"{dept_name or 'Government Administrative Complex'}, {cap_city}, {state} - {cap_pin}"
 
     # 4. Use provided default_state if specified and valid
     if default_state and default_state in STATE_CAPITAL_MAP:
         cap_city, cap_pin = STATE_CAPITAL_MAP[default_state]
-        return cap_city, default_state, cap_pin, f"Government Administrative Complex, {cap_city}, {default_state} - {cap_pin}"
+        return cap_city, default_state, cap_pin, f"{dept_name or 'Government Administrative Complex'}, {cap_city}, {default_state} - {cap_pin}"
 
     # 5. Default fallback for Central Government Ministries to New Delhi
-    return "New Delhi", "Delhi", "110001", "Government Secretariat Complex, New Delhi, Delhi - 110001"
+    return "New Delhi", "Delhi", "110001", f"{dept_name or 'Government Secretariat Complex'}, New Delhi, Delhi - 110001"
 
-def parse_raw_consignee_block(raw_str, default_state="Gujarat", dept_name=""):
+def parse_raw_consignee_block(raw_str, default_state=None, dept_name=""):
     """
     Parses comma-separated GeM Consignee strings.
     Example: '390001,The Superintending Engineer's Office,National Highway Circle,712 & 713,7th floor, E-block,Kuber Bhavan,Kothi char rasta,Raopura,vadodara'
@@ -633,12 +967,12 @@ def parse_raw_consignee_block(raw_str, default_state="Gujarat", dept_name=""):
     """
     if not raw_str or not isinstance(raw_str, str):
         c, s, p, a = resolve_department_location(dept_name, "", "", default_state)
-        return c, s, p, "The Superintending Engineer / Consignee Officer", a, None
+        return c, s, p, "Consignee / Reporting Officer", a, None
 
     clean_str = raw_str.strip()
     if len(clean_str) < 10:
         c, s, p, a = resolve_department_location(dept_name, clean_str, "", default_state)
-        return c, s, p, "The Superintending Engineer / Consignee Officer", a, clean_str
+        return c, s, p, "Consignee / Reporting Officer", a, clean_str
 
     pin_m = re.search(r"\b[1-9][0-9]{5}\b", clean_str)
     pin = pin_m.group(0) if pin_m else None
@@ -646,13 +980,13 @@ def parse_raw_consignee_block(raw_str, default_state="Gujarat", dept_name=""):
     tokens = [t.strip() for t in clean_str.split(',') if t.strip()]
     if not tokens:
         c, s, p, a = resolve_department_location(dept_name, clean_str, "", default_state)
-        return c, s, pin or p, "The Superintending Engineer / Consignee Officer", clean_str, clean_str
+        return c, s, pin or p, "Consignee / Reporting Officer", clean_str, clean_str
 
     filtered_tokens = [t for t in tokens if t != pin]
     officer = filtered_tokens[0] if filtered_tokens else "Consignee / Reporting Officer"
 
     detected_city = None
-    detected_state = default_state or "Gujarat"
+    detected_state = default_state or None
 
     # Step A: Check 3-digit Pincode prefix map
     if pin and pin[:3] in PINCODE_PREFIX_CITY_MAP:
@@ -684,7 +1018,7 @@ def parse_raw_consignee_block(raw_str, default_state="Gujarat", dept_name=""):
 
     return detected_city, detected_state, pin, officer, formatted_address, clean_str
 
-def extract_city_and_address(json_obj, full_text, state="Gujarat"):
+def extract_city_and_address(json_obj, full_text, state=None):
     """
     Extracts the official City Name, Consignee Officer, Pincode, and Work Site Address
     from GeM Solr metadata, consignee details box, or full text. Never outputs fake dummy fallbacks.
@@ -813,13 +1147,16 @@ def extract_city_and_address(json_obj, full_text, state="Gujarat"):
         if not address_parts:
             address_parts.append(res_a)
 
-    if not consignee_officer:
-        consignee_officer = "The Superintending Engineer / Consignee Officer"
+    clean_dept = dept_name if dept_name and dept_name.upper() not in ['NA', 'N/A', 'NONE', ''] else 'Government Department'
+    if not consignee_officer or consignee_officer.upper() in ['NA', 'N/A', 'NONE', '']:
+        consignee_officer = clean_dept
 
     if not found_pincode:
         found_pincode = STATE_CAPITAL_MAP.get(found_state, ("City", "110001"))[1]
 
-    full_addr = ", ".join(address_parts) if address_parts else f"{consignee_officer}, Government Office Complex, {found_city}, {found_state} - {found_pincode}"
+    # Filter out any "NA" or empty tokens in address_parts
+    clean_addr_parts = [p.strip() for p in address_parts if p and p.strip().upper() not in ['NA', 'N/A', 'NONE', ''] and not p.strip().startswith('NA,')]
+    full_addr = ", ".join(clean_addr_parts) if clean_addr_parts else f"{clean_dept}, {found_city}, {found_state} - {found_pincode}"
     return found_city, full_addr, found_pincode, consignee_officer, raw_consignee_box, found_state
 
 def extract_staff_and_duty(display_title, cat_raw, full_text, core_service, employees_count):
@@ -889,16 +1226,49 @@ def extract_staff_and_duty(display_title, cat_raw, full_text, core_service, empl
 
     is_mp_specific = any(k in text for k in ["manpower", "security", "guard", "cleaning", "sanitation", "sweeper", "safai", "housekeeping", "nurse", "healthcare", "driver", "peon", "deo", "data entry", "gardener", "mali"])
 
-    # 9. Generic Service / Manpower
+    # 9. Check specialized trades
+    if any(k in text for k in ["electrician", "wireman"]):
+        desig = "Electrician / Wireman"
+        duty_summary = "Electrical Wiring & Equipment Maintenance"
+        duty_desc = "Routine electrical maintenance, wiring inspection, panel checking & equipment troubleshooting."
+        return desig, f"{count_val} Staff", duty_summary, duty_desc
+
+    if any(k in text for k in ["plumber", "pipe"]):
+        desig = "Plumber / Pipe Fitter"
+        duty_summary = "Sanitary Pipelines & Water Supply Upkeep"
+        duty_desc = "Pipeline maintenance, tap repairs, drainage clearance & water tank line maintenance."
+        return desig, f"{count_val} Staff", duty_summary, duty_desc
+
+    if any(k in text for k in ["cook", "cater", "kitchen"]):
+        desig = "Cook / Catering Staff"
+        duty_summary = "Meal Preparation & Kitchen Hygiene"
+        duty_desc = "Hygienic cooking, pantry service, utensils cleaning, and meal distribution."
+        return desig, f"{count_val} Staff", duty_summary, duty_desc
+
     if not is_mp_specific:
         desig = "Service Provider / Specialized Operations"
         duty_summary = "Service Delivery & Contract Execution"
         duty_desc = "Executing scope of service, operational maintenance, and contractual deliverables as specified by the buyer."
         return desig, str(count_val), duty_summary, duty_desc
 
-    desig = "Outsourced Manpower Staff (Skilled / Semi-Skilled)"
-    duty_summary = "General Operational & Administrative Support"
-    duty_desc = "Carrying out assigned departmental duties, office operational tasks, and routine support functions as directed by the buyer."
+    # Default to Security Guard or General Staff depending on context
+    if "security" in text or "watchman" in text or "guard" in text:
+        desig = "Security Guard (Without Arms)"
+        duty_summary = "Watch & Ward / 24x7 Gate Security"
+        duty_desc = "24x7 premises guarding, main gate access control, visitor register logging & night patrolling."
+    elif "clean" in text or "sweeper" in text or "sanitation" in text:
+        desig = "Sanitation Worker / Housekeeping Staff"
+        duty_summary = "Sweeping, Wet Mopping & Waste Disposal"
+        duty_desc = "Daily sweeping, wet mopping, trash disposal, and sanitization of office premises."
+    elif "computer" in text or "data" in text or "office" in text:
+        desig = "Data Entry Operator (DEO)"
+        duty_summary = "Computer Data Entry & Records Management"
+        duty_desc = "Data entry into government portals, office record keeping, document scanning & desk support."
+    else:
+        desig = "Security Guard"
+        duty_summary = "Watch & Ward / Premises Security"
+        duty_desc = "24x7 premises guarding, access control, visitor logbook checking, and facility oversight."
+
     return desig, f"{count_val} Staff", duty_summary, duty_desc
 
 GOODS_AND_PARTS_KEYWORDS = [
@@ -1172,22 +1542,30 @@ class GeMLiveScraper:
 
             if scan_type_upper == "FINISHED":
                 scan_configs = [
-                    {"status_type": "active_bids", "sort": "Bid-End-Date-Latest", "desc": "Active bids closing today", "by_end_date": True},
-                    {"status_type": "ended_bids", "sort": "Bid-End-Date-Oldest", "desc": "Already ended bids", "by_end_date": True}
+                    {"status_type": "active_bids", "sort": "Bid-End-Date-Latest", "desc": "Active bids closing today", "by_end_date": True, "by_start_date": False},
+                    {"status_type": "ended_bids", "sort": "Bid-End-Date-Oldest", "desc": "Already ended bids", "by_end_date": True, "by_start_date": False}
                 ]
             else:
                 scan_configs = [
-                    {"status_type": "active_bids", "sort": "Bid-Start-Date-Latest", "desc": "Published active bids", "by_end_date": False}
+                    {"status_type": "active_bids", "sort": "Bid-Start-Date-Latest", "desc": "Published active bids", "by_end_date": False, "by_start_date": True}
                 ]
 
             def fetch_single_page(p_num, filter_cfg):
-                if filter_cfg["by_end_date"]:
+                if filter_cfg.get("by_end_date"):
                     filter_obj = {
                         "bidStatusType": filter_cfg["status_type"],
                         "byType": "all",
                         "highBidValue": "",
                         "sort": filter_cfg["sort"],
                         "byEndDate": {"from": gem_date_formatted, "to": gem_date_formatted}
+                    }
+                elif filter_cfg.get("by_start_date") and not is_all_date:
+                    filter_obj = {
+                        "bidStatusType": filter_cfg["status_type"],
+                        "byType": "all",
+                        "highBidValue": "",
+                        "sort": filter_cfg["sort"],
+                        "byStartDate": {"from": gem_date_formatted, "to": gem_date_formatted}
                     }
                 else:
                     filter_obj = {
@@ -1330,25 +1708,49 @@ class GeMLiveScraper:
                 bid_no = f"GEM/2026/B/{hash(full_text) % 10000000}"
 
             # REAL GeM dates only
-            start_solr = unwrap_val(doc.get("final_start_date_sort"))
-            end_solr = unwrap_val(doc.get("final_end_date_sort"))
+            start_solr = (
+                unwrap_val(doc.get("final_start_date_sort"))
+                or unwrap_val(doc.get("b_bid_start_date"))
+                or unwrap_val(doc.get("b_start_date"))
+                or unwrap_val(doc.get("start_date"))
+                or unwrap_val(doc.get("startDate"))
+            )
+            end_solr = (
+                unwrap_val(doc.get("final_end_date_sort"))
+                or unwrap_val(doc.get("b_bid_end_date"))
+                or unwrap_val(doc.get("b_end_date"))
+                or unwrap_val(doc.get("end_date"))
+                or unwrap_val(doc.get("endDate"))
+            )
 
             start_date_str = normalize_gem_date(start_solr)
             end_date_str = normalize_gem_date(end_solr)
 
-            # DATE VALIDATION
-            if scan_type_upper == "PUBLISHED":
-                # For active published bids, all records returned by GeM active_bids query are valid active tenders
-                date_matches += 1
-            elif not is_all_date and scan_type_upper == "FINISHED":
-                if end_date_str != norm_date_str:
-                    date_mismatches += 1
-                    print(
-                        f"[DATE REJECT] bid={bid_no} "
-                        f"deadline={end_date_str} "
-                        f"selected={norm_date_str}"
-                    )
-                    continue
+            # STRICT DATE VALIDATION LAYER:
+            # - If Published: MUST match Start Date only (Publication date). Reject any record where start date != selected scan date.
+            # - If Finished: MUST match End Date only (Deadline / Closing date). Reject any record where end date != selected scan date.
+            if not is_all_date:
+                if scan_type_upper == "PUBLISHED":
+                    if start_date_str != norm_date_str:
+                        date_mismatches += 1
+                        print(
+                            f"[PUBLISHED DATE REJECT] bid={bid_no} "
+                            f"startDate={start_date_str} "
+                            f"selected={norm_date_str}"
+                        )
+                        continue
+                    date_matches += 1
+                elif scan_type_upper == "FINISHED":
+                    if end_date_str != norm_date_str:
+                        date_mismatches += 1
+                        print(
+                            f"[FINISHED DATE REJECT] bid={bid_no} "
+                            f"deadline={end_date_str} "
+                            f"selected={norm_date_str}"
+                        )
+                        continue
+                    date_matches += 1
+            else:
                 date_matches += 1
             # STRICT SERVICE-ONLY GUARD:
             # We ONLY provide SERVICES. Exclude all Product / Goods / Hardware / Production tenders (b_type == 0).
@@ -1376,7 +1778,12 @@ class GeMLiveScraper:
             if is_goods_or_parts_tender(display_title, cat_raw):
                 continue
 
-            dept_raw = str(unwrap_val(doc.get('ba_official_details_deptName')) or unwrap_val(doc.get('ba_official_details_minName')) or unwrap_val(doc.get('b_department_name')) or 'Government Department')
+            dept_cand = unwrap_val(doc.get('ba_official_details_deptName'))
+            if not dept_cand or str(dept_cand).strip().upper() in ['NA', 'N/A', 'NONE', '']:
+                dept_cand = unwrap_val(doc.get('ba_official_details_minName')) or unwrap_val(doc.get('ba_official_details_offName')) or unwrap_val(doc.get('b_department_name'))
+            if not dept_cand or str(dept_cand).strip().upper() in ['NA', 'N/A', 'NONE', '']:
+                dept_cand = unwrap_val(doc.get('b_department_name')) or 'Government Department'
+            dept_raw = str(dept_cand).strip()
             
             raw_qty_solr = unwrap_val(doc.get('b_total_quantity')) or unwrap_val(doc.get('total_quantity')) or unwrap_val(doc.get('quantity'))
             real_qty_num = None
@@ -1389,11 +1796,13 @@ class GeMLiveScraper:
             employees = real_qty_num if (real_qty_num is not None and real_qty_num > 0) else extract_manpower_count_from_json(doc, full_text)
             val_num, is_high_val = extract_high_value_info(doc, full_text)
             detected_state = detect_state_from_text(full_text)
+            if detected_state == "All India":
+                detected_state = None
 
             if state_filter and state_filter.upper() != "ALL":
-                st_l = detected_state.lower()
+                st_l = (detected_state or "").lower()
                 target_l = state_filter.lower()
-                if st_l != target_l and target_l not in st_l and st_l != "all india":
+                if st_l and st_l != target_l and target_l not in st_l and st_l != "all india":
                     continue
 
             cat_counts[cat_code] = cat_counts.get(cat_code, 0) + 1
@@ -1528,17 +1937,17 @@ class GeMLiveScraper:
                 "epbgAmount": epbg_num,
                 "epbg_original": epbg_str,
                 "isHighValue": is_high_val,
-                "state": final_st or detected_state,
-                "city": extracted_city,
-                "pincode": extracted_pin,
+                "state": final_st or detected_state or "Delhi",
+                "city": extracted_city or "New Delhi",
+                "pincode": extracted_pin or "110001",
                 "consignee_officer": consignee_off,
                 "consignee_raw_box": raw_consignee_b,
                 "address": extracted_addr,
                 "office_address": extracted_addr,
                 "work_location": {
-                    "city": extracted_city,
-                    "state": final_st or detected_state,
-                    "pincode": extracted_pin,
+                    "city": extracted_city or "New Delhi",
+                    "state": final_st or detected_state or "Delhi",
+                    "pincode": extracted_pin or "110001",
                     "consignee_officer": consignee_off,
                     "address": extracted_addr,
                     "raw_consignee_box": raw_consignee_b
@@ -1556,7 +1965,7 @@ class GeMLiveScraper:
                 "status": bid_status,
                 "statusLabel": bid_status_label,
                 "gemLink": f"https://bidplus.gem.gov.in/showbidDocument/{str(bid_no).split('/')[-1]}",
-                "aiSummary": f"Real GeM Tender {bid_no} - {dept_raw} ({extracted_city}, {final_st or detected_state}) - {primary_desig}",
+                "aiSummary": f"Real GeM Tender {bid_no} - {dept_raw} ({extracted_city or 'New Delhi'}, {final_st or detected_state or 'Delhi'}) - {primary_desig}",
                 "manpowerTender": bool(is_mp or core_service in ["Manpower Minimum Wage", "Manpower Fixed", "Security Guards", "Cleaning Services", "Sanitation Staff", "Healthcare Staff", "Horticulture", "Manpower Services"]),
                 "manpowerSource": {
                     "employeeCount": employees,
@@ -1564,6 +1973,105 @@ class GeMLiveScraper:
                 },
                 "raw_doc": doc
             })
+
+        # PARALLEL REAL-TIME PDF DOCUMENT READER ENRICHMENT
+        # Automatically extracts authentic consignee, city, state, pin, and address from GeM PDF during live scan
+        def _enrich_single_bid_from_pdf(b):
+            try:
+                raw_d = b.get("raw_doc") or {}
+                b_id_list = raw_d.get("b_id") or []
+                b_id_val = str(b_id_list[0]) if b_id_list else None
+                bid_no_tail = str(b.get("id") or "").split("/")[-1].strip()
+
+                urls_to_try = []
+                if b_id_val:
+                    urls_to_try.append(f"https://bidplus.gem.gov.in/showbidDocument/{b_id_val}")
+                if bid_no_tail:
+                    urls_to_try.append(f"https://bidplus.gem.gov.in/showbidDocument/{bid_no_tail}")
+
+                pdf_text = None
+                for u in urls_to_try:
+                    try:
+                        from curl_cffi import requests as curl_req
+                        import fitz
+                        r = curl_req.get(u, verify=False, impersonate="chrome120", timeout=8)
+                        if r.status_code == 200 and len(r.content) > 1000:
+                            d_fitz = fitz.open(stream=r.content, filetype="pdf")
+                            t_acc = ""
+                            for pg in d_fitz:
+                                t_acc += pg.get_text() + "\n"
+                            if len(t_acc.strip()) > 50:
+                                pdf_text = t_acc
+                                break
+                    except Exception:
+                        pass
+
+                if pdf_text:
+                    from tender_parser import parse_tender_document
+                    parsed_res = parse_tender_document(pdf_text, b.get("id"))
+                    if parsed_res:
+                        p_office = parsed_res.get("officeAddress") or {}
+                        if p_office.get("city") and p_office.get("city") != "Not Specified":
+                            b["city"] = p_office["city"]
+                        elif parsed_res.get("city") and parsed_res.get("city") != "Not Specified":
+                            b["city"] = parsed_res["city"]
+
+                        if p_office.get("state") and p_office.get("state") != "Not Specified":
+                            b["state"] = p_office["state"]
+                        elif parsed_res.get("state") and parsed_res.get("state") != "Not Specified":
+                            b["state"] = parsed_res["state"]
+
+                        if p_office.get("pincode") and p_office.get("pincode") != "Not Specified":
+                            b["pincode"] = p_office["pincode"]
+                        elif parsed_res.get("pincode") and parsed_res.get("pincode") != "Not Specified":
+                            b["pincode"] = parsed_res["pincode"]
+
+                        if p_office.get("consignee_officer") and p_office.get("consignee_officer") not in ["Consignee / Reporting Officer", "The Superintending Engineer / Consignee Officer"]:
+                            b["consignee_officer"] = p_office["consignee_officer"]
+                        elif parsed_res.get("consignee_officer") and parsed_res.get("consignee_officer") not in ["Consignee / Reporting Officer", "The Superintending Engineer / Consignee Officer"]:
+                            b["consignee_officer"] = parsed_res["consignee_officer"]
+
+                        if p_office.get("value") and len(str(p_office.get("value"))) > 5:
+                            b["address"] = p_office["value"]
+                            b["office_address"] = p_office["value"]
+                        elif parsed_res.get("address"):
+                            b["address"] = parsed_res["address"]
+                            b["office_address"] = parsed_res["address"]
+
+                        if p_office.get("raw_consignee_box"):
+                            b["consignee_raw_box"] = p_office["raw_consignee_box"]
+
+                        if parsed_res.get("estimatedValue") and parsed_res["estimatedValue"].get("value"):
+                            b["value"] = parsed_res["estimatedValue"]["value"]
+                            b["estimatedValue"] = parsed_res["estimatedValue"]["value"]
+                            b["estimated_value"] = parsed_res["estimatedValue"]["value"]
+                            b["formattedValue"] = parsed_res["estimatedValue"]["display"]
+                            b["estimated_value_original"] = parsed_res["estimatedValue"]["display"]
+
+                        if parsed_res.get("emdAmount") and parsed_res["emdAmount"].get("value"):
+                            b["emdAmount"] = parsed_res["emdAmount"]["value"]
+                            b["emd_original"] = parsed_res["emdAmount"]["display"]
+
+                        if parsed_res.get("totalStaffCount") and parsed_res["totalStaffCount"] > 0:
+                            b["employees"] = parsed_res["totalStaffCount"]
+                            b["quantity"] = str(parsed_res["totalStaffCount"])
+                            b["quantity_display"] = str(parsed_res["totalStaffCount"])
+
+                        b["work_location"] = {
+                            "city": b.get("city"),
+                            "state": b.get("state"),
+                            "pincode": b.get("pincode"),
+                            "consignee_officer": b.get("consignee_officer"),
+                            "address": b.get("address"),
+                            "raw_consignee_box": b.get("consignee_raw_box")
+                        }
+            except Exception:
+                pass
+            return b
+
+        if parsed_bids and len(parsed_bids) > 0:
+            with ThreadPoolExecutor(max_workers=min(16, len(parsed_bids))) as pool:
+                parsed_bids = list(pool.map(_enrich_single_bid_from_pdf, parsed_bids))
 
         # SORTING FOR FINISHED TENDERS:
         # 1. CLOSING TODAY first (nearest closing time first)
@@ -1639,12 +2147,13 @@ class GeMLiveScraper:
             "data": parsed_bids
         }
 
-def scan_real_gem_portal(target_date=None, target_state=None, limit=500, status_filter="PUBLISHED"):
+def scan_real_gem_portal(target_date=None, target_state=None, limit=500, status_filter="PUBLISHED", max_pages=None):
     scraper = GeMLiveScraper()
     res = scraper.fetch_live_bids(
         date_str=target_date,
         scan_type=status_filter or "published",
-        state_filter=target_state or "ALL"
+        state_filter=target_state or "ALL",
+        max_pages=max_pages
     )
     final_status = res.get("status", "success")
     source_verified = final_status in ("success", "SOURCE_REACHABLE_ZERO")

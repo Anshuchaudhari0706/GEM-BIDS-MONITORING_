@@ -4,8 +4,9 @@ import { ShieldCheck, ShieldAlert, Key, CreditCard, Calendar, Sparkles, CheckCir
 import { fetchMyLicenses } from '../services/api';
 
 export default function BillingPage() {
-  const { user, token, license, pricing, isLicenseActive, activateKey, generateKey, setShowPaymentModal, setSelectedPlanForPayment, showToast } = useAuth();
+  const { user, token, license, pricing, isLicenseActive, activateKey, generateKey, setShowPaymentModal, selectedPlanForPayment, setSelectedPlanForPayment, showToast } = useAuth();
   const [subscriptionData, setSubscriptionData] = useState(null);
+  const [selectedPlan, setSelectedPlan] = useState(selectedPlanForPayment || 'quarterly');
   const [manualKey, setManualKey] = useState('');
   const [activating, setActivating] = useState(false);
   
@@ -54,6 +55,12 @@ export default function BillingPage() {
     loadMyKeys();
   }, [token, license]);
 
+  useEffect(() => {
+    if (selectedPlanForPayment) {
+      setSelectedPlan(selectedPlanForPayment);
+    }
+  }, [selectedPlanForPayment]);
+
   const handleManualActivate = async (e) => {
     if (e) e.preventDefault();
     if (!manualKey.trim()) return;
@@ -99,6 +106,7 @@ export default function BillingPage() {
   };
 
   const openPaymentForPlan = (planId) => {
+    setSelectedPlan(planId);
     setSelectedPlanForPayment(planId);
     setShowPaymentModal(true);
   };
@@ -278,162 +286,213 @@ export default function BillingPage() {
             Choose a Plan & Make Payment to Generate Key
           </h2>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-            Complete payment via UPI QR code or Razorpay to instantly receive and activate your cryptographic license key.
+            Complete payment via Direct UPI QR code to instantly receive and activate your cryptographic license key.
           </p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px' }}>
-          {/* Monthly Pass */}
-          <div
-            className="glass-panel"
-            style={{
-              padding: '24px',
-              borderRadius: '16px',
-              border: '1px solid var(--border-color)',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              background: 'rgba(15, 23, 42, 0.7)'
-            }}
-          >
-            <div>
-              <span className="badge badge-published" style={{ fontSize: '0.72rem', textTransform: 'uppercase' }}>Starter</span>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#fff', marginTop: '8px' }}>Monthly Pass</h3>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', margin: '14px 0' }}>
-                <span style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--primary-cyan)' }}>
-                  {pricing.symbol}{pricing.monthly || 1499}
-                </span>
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>/ 30 days</span>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '20px' }}>
+          {[
+            {
+              id: 'monthly',
+              name: 'Monthly Pass',
+              badge: 'STARTER TIER',
+              badgeBg: 'rgba(56, 189, 248, 0.12)',
+              badgeColor: '#38bdf8',
+              badgeBorder: 'rgba(56, 189, 248, 0.3)',
+              price: pricing.monthly || 1499,
+              duration: '30 days',
+              perMonth: `${pricing.symbol}${pricing.monthly || 1499}/mo`,
+              description: 'Essential live GeM tender scanning for short-term bid discovery.',
+              features: [
+                'Full GeM Live Tender Scanning',
+                '11+ Service & Category Filters',
+                'Date & State-based Matching',
+                'Saved Bids Library & Bookmarking',
+                'Standard Email Notifications'
+              ]
+            },
+            {
+              id: 'quarterly',
+              name: 'Quarterly Pass',
+              badge: '🔥 MOST POPULAR',
+              badgeBg: 'rgba(16, 185, 129, 0.15)',
+              badgeColor: '#34d399',
+              badgeBorder: 'rgba(16, 185, 129, 0.4)',
+              savingsBadge: 'SAVE 11%',
+              price: pricing.quarterly || 3999,
+              duration: '90 days',
+              perMonth: `${pricing.symbol}${Math.round((pricing.quarterly || 3999) / 3).toLocaleString()}/mo`,
+              description: 'Optimal flexibility & best value for active government bidding contractors.',
+              features: [
+                'Everything in Monthly Pass',
+                'PDF Spec Sheet Auto-Exports',
+                'Excel / CSV Full Tender Downloads',
+                'Priority High-Speed Scans',
+                'Instant Key Delivery via UPI QR'
+              ]
+            },
+            {
+              id: 'yearly',
+              name: 'Professional Yearly',
+              badge: '⚡ BEST VALUE',
+              badgeBg: 'rgba(234, 179, 8, 0.15)',
+              badgeColor: '#fbbf24',
+              badgeBorder: 'rgba(234, 179, 8, 0.45)',
+              savingsBadge: 'SAVE 33%',
+              price: pricing.yearly || 11999,
+              duration: '365 days',
+              perMonth: `${pricing.symbol}${Math.round((pricing.yearly || 11999) / 12).toLocaleString()}/mo`,
+              description: 'Full-scale enterprise intelligence platform for dedicated contractors.',
+              features: [
+                'Everything in Quarterly Pass',
+                'Unlimited Live GeM Scans & Real-time Feeds',
+                'Dedicated Cryptographic License Key',
+                'Multi-device Access Support',
+                '24/7 Priority Dedicated VIP Support'
+              ]
+            }
+          ].map((plan) => {
+            const isSelected = selectedPlan === plan.id;
+            return (
+              <div
+                key={plan.id}
+                onClick={() => {
+                  setSelectedPlan(plan.id);
+                  setSelectedPlanForPayment(plan.id);
+                }}
+                className="glass-panel"
+                style={{
+                  padding: '24px',
+                  borderRadius: '18px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  cursor: 'pointer',
+                  position: 'relative',
+                  transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                  border: isSelected ? '2px solid #38bdf8' : '1px solid rgba(255, 255, 255, 0.1)',
+                  background: isSelected
+                    ? 'linear-gradient(145deg, rgba(6, 182, 212, 0.18), rgba(15, 23, 42, 0.98))'
+                    : 'linear-gradient(145deg, rgba(15, 23, 42, 0.8), rgba(30, 41, 59, 0.6))',
+                  boxShadow: isSelected
+                    ? '0 0 32px -4px rgba(6, 182, 212, 0.45), 0 16px 36px -8px rgba(0, 0, 0, 0.7)'
+                    : '0 4px 20px rgba(0, 0, 0, 0.2)',
+                  transform: isSelected ? 'translateY(-3px)' : 'none'
+                }}
+              >
+                {/* TOP ROW: Badge + Radio Checkmark Indicator */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+                  <span
+                    style={{
+                      fontSize: '0.72rem',
+                      fontWeight: 800,
+                      letterSpacing: '0.6px',
+                      padding: '4px 10px',
+                      borderRadius: '20px',
+                      background: plan.badgeBg,
+                      color: plan.badgeColor,
+                      border: `1px solid ${plan.badgeBorder}`,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}
+                  >
+                    {plan.badge}
+                  </span>
+
+                  {/* Radio selection circle */}
+                  <div
+                    style={{
+                      width: '24px',
+                      height: '24px',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'all 0.2s ease',
+                      background: isSelected
+                        ? 'linear-gradient(135deg, #06b6d4, #0284c7)'
+                        : 'rgba(255, 255, 255, 0.05)',
+                      border: isSelected
+                        ? '2px solid #38bdf8'
+                        : '2px solid rgba(255, 255, 255, 0.25)',
+                      boxShadow: isSelected ? '0 0 12px rgba(6, 182, 212, 0.6)' : 'none'
+                    }}
+                  >
+                    {isSelected ? (
+                      <Check style={{ width: '14px', height: '14px', color: '#fff', strokeWidth: 3 }} />
+                    ) : (
+                      <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'transparent' }} />
+                    )}
+                  </div>
+                </div>
+
+                {/* PLAN NAME & DESCRIPTION */}
+                <div>
+                  <h3 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#fff', margin: '0 0 6px 0' }}>
+                    {plan.name}
+                  </h3>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0 0 16px 0', minHeight: '34px', lineHeight: 1.4 }}>
+                    {plan.description}
+                  </p>
+
+                  {/* PRICE & BILLING CYCLE */}
+                  <div style={{ padding: '12px 14px', background: 'rgba(0, 0, 0, 0.25)', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.05)', marginBottom: '18px' }}>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+                      <span style={{ fontSize: '2.1rem', fontWeight: 900, color: isSelected ? '#38bdf8' : '#fff', letterSpacing: '-0.5px' }}>
+                        {pricing.symbol}{plan.price.toLocaleString()}
+                      </span>
+                      <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>/ {plan.duration}</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                      <span style={{ fontSize: '0.78rem', color: 'rgba(255, 255, 255, 0.7)', fontWeight: 600 }}>
+                        Effective: <strong style={{ color: '#38bdf8' }}>{plan.perMonth}</strong>
+                      </span>
+                      {plan.savingsBadge && (
+                        <span style={{ fontSize: '0.7rem', fontWeight: 800, padding: '2px 6px', borderRadius: '4px', background: 'rgba(16, 185, 129, 0.2)', color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+                          {plan.savingsBadge}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* FEATURES LIST */}
+                  <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 22px 0', fontSize: '0.85rem', color: '#cbd5e1', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    {plan.features.map((feat, i) => (
+                      <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '9px', lineHeight: 1.4 }}>
+                        <CheckCircle2 style={{ width: '16px', height: '16px', color: '#10b981', flexShrink: 0, marginTop: '2px' }} />
+                        <span>{feat}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* ACTION BUTTON */}
+                <div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openPaymentForPlan(plan.id);
+                    }}
+                    className={isSelected ? "btn-cyan" : "btn-secondary"}
+                    style={{
+                      width: '100%',
+                      justifyContent: 'center',
+                      padding: '12px 16px',
+                      fontSize: '0.92rem',
+                      fontWeight: 700,
+                      gap: '8px',
+                      borderRadius: '10px',
+                      boxShadow: isSelected ? '0 0 20px rgba(6, 182, 212, 0.45)' : 'none'
+                    }}
+                  >
+                    <CreditCard style={{ width: '16px', height: '16px' }} />
+                    {isSelected ? `Pay ${pricing.symbol}${plan.price.toLocaleString()} & Generate Key` : `Select & Pay ${pricing.symbol}${plan.price.toLocaleString()}`}
+                  </button>
+                </div>
               </div>
-
-              <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 20px 0', fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <CheckCircle2 style={{ width: '16px', color: 'var(--accent-green)', flexShrink: 0 }} /> Full GeM Live Tender Scanning
-                </li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <CheckCircle2 style={{ width: '16px', color: 'var(--accent-green)', flexShrink: 0 }} /> 11+ Service & Category Filters
-                </li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <CheckCircle2 style={{ width: '16px', color: 'var(--accent-green)', flexShrink: 0 }} /> Date & State-based Matching
-                </li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <CheckCircle2 style={{ width: '16px', color: 'var(--accent-green)', flexShrink: 0 }} /> Saved Bids Library
-                </li>
-              </ul>
-            </div>
-
-            <button
-              onClick={() => openPaymentForPlan('monthly')}
-              className="btn-cyan"
-              style={{ width: '100%', justifyContent: 'center', padding: '10px', fontSize: '0.92rem', gap: '8px' }}
-            >
-              <CreditCard style={{ width: '16px', height: '16px' }} />
-              Pay & Generate Key
-            </button>
-          </div>
-
-          {/* Quarterly Pass */}
-          <div
-            className="glass-panel"
-            style={{
-              padding: '24px',
-              borderRadius: '16px',
-              border: '2px solid var(--primary-cyan)',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.1), rgba(15, 23, 42, 0.8))',
-              position: 'relative'
-            }}
-          >
-            <div style={{ position: 'absolute', top: '-10px', right: '20px' }}>
-              <span className="badge badge-active" style={{ fontSize: '0.7rem', padding: '3px 8px' }}>POPULAR</span>
-            </div>
-
-            <div>
-              <span className="badge badge-published" style={{ fontSize: '0.72rem', textTransform: 'uppercase' }}>Quarterly</span>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#fff', marginTop: '8px' }}>Quarterly Pass</h3>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', margin: '14px 0' }}>
-                <span style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--primary-cyan)' }}>
-                  {pricing.symbol}{pricing.quarterly || 3999}
-                </span>
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>/ 90 days</span>
-              </div>
-
-              <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 20px 0', fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <CheckCircle2 style={{ width: '16px', color: 'var(--accent-green)', flexShrink: 0 }} /> Everything in Monthly
-                </li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <CheckCircle2 style={{ width: '16px', color: 'var(--accent-green)', flexShrink: 0 }} /> PDF Spec Sheet Exports
-                </li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <CheckCircle2 style={{ width: '16px', color: 'var(--accent-green)', flexShrink: 0 }} /> Excel / CSV Downloads
-                </li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <CheckCircle2 style={{ width: '16px', color: 'var(--accent-green)', flexShrink: 0 }} /> Priority Scanner Speed
-                </li>
-              </ul>
-            </div>
-
-            <button
-              onClick={() => openPaymentForPlan('quarterly')}
-              className="btn-cyan"
-              style={{ width: '100%', justifyContent: 'center', padding: '10px', fontSize: '0.92rem', gap: '8px' }}
-            >
-              <CreditCard style={{ width: '16px', height: '16px' }} />
-              Pay & Generate Key
-            </button>
-          </div>
-
-          {/* Yearly Pass */}
-          <div
-            className="glass-panel"
-            style={{
-              padding: '24px',
-              borderRadius: '16px',
-              border: '1px solid var(--border-color)',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              background: 'rgba(15, 23, 42, 0.7)'
-            }}
-          >
-            <div>
-              <span className="badge badge-published" style={{ fontSize: '0.72rem', textTransform: 'uppercase' }}>Best Value</span>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#fff', marginTop: '8px' }}>Professional Yearly</h3>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', margin: '14px 0' }}>
-                <span style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--primary-cyan)' }}>
-                  {pricing.symbol}{pricing.yearly || 11999}
-                </span>
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>/ 365 days</span>
-              </div>
-
-              <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 20px 0', fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <CheckCircle2 style={{ width: '16px', color: 'var(--accent-green)', flexShrink: 0 }} /> Everything in Quarterly
-                </li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <CheckCircle2 style={{ width: '16px', color: 'var(--accent-green)', flexShrink: 0 }} /> Unlimited Live GeM Scans
-                </li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <CheckCircle2 style={{ width: '16px', color: 'var(--accent-green)', flexShrink: 0 }} /> Dedicated Cryptographic Key
-                </li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <CheckCircle2 style={{ width: '16px', color: 'var(--accent-green)', flexShrink: 0 }} /> 24/7 Priority Support
-                </li>
-              </ul>
-            </div>
-
-            <button
-              onClick={() => openPaymentForPlan('yearly')}
-              className="btn-cyan"
-              style={{ width: '100%', justifyContent: 'center', padding: '10px', fontSize: '0.92rem', gap: '8px' }}
-            >
-              <CreditCard style={{ width: '16px', height: '16px' }} />
-              Pay & Generate Key
-            </button>
-          </div>
+            );
+          })}
         </div>
       </div>
 

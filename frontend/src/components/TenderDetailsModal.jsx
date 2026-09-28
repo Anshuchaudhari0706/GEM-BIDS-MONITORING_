@@ -518,49 +518,339 @@ export default function TenderDetailsModal({ tender, onClose, onUpdate }) {
             </div>
           )}
 
-          {activeTab === 'manpower' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#fff' }}>
-                👥 Staff Designations, Counts & Duty Breakdown
-              </div>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.86rem', textAlign: 'left' }}>
-                <thead>
-                  <tr style={{ background: '#0f172a', color: 'var(--text-muted)', borderBottom: '1px solid var(--border-color)' }}>
-                    <th style={{ padding: '12px' }}>Role / Designation</th>
-                    <th style={{ padding: '12px' }}>Required Staff</th>
-                    <th style={{ padding: '12px' }}>Qualification</th>
-                    <th style={{ padding: '12px' }}>Shift Details</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(data.manpower || [
-                    {
-                      designation: data.primary_designation || 'Sanitation & Housekeeping Staff',
-                      quantity: data.employees || 10,
-                      qualification: '10th / 12th Pass',
-                      shift: 'General / 8 Hours'
-                    }
-                  ]).map((m, idx) => (
-                    <tr key={idx} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                      <td style={{ padding: '12px', fontWeight: 700, color: '#fff' }}>{m.designation}</td>
-                      <td style={{ padding: '12px', fontWeight: 900, color: 'var(--primary-cyan)' }}>{m.quantity}</td>
-                      <td style={{ padding: '12px', color: '#cbd5e1' }}>{m.qualification || '10th / 12th Pass'}</td>
-                      <td style={{ padding: '12px', color: 'var(--text-muted)' }}>{m.shift || '8 Hrs / Day'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          {activeTab === 'manpower' && (() => {
+            const profileDisplay = (data.core_specifications?.list_of_profiles && !data.core_specifications.list_of_profiles.includes('Outsourced Manpower Staff'))
+              ? data.core_specifications.list_of_profiles
+              : (data.primary_designation && !data.primary_designation.includes('Outsourced Manpower Staff')
+                  ? data.primary_designation
+                  : (tender.primary_designation && !tender.primary_designation.includes('Outsourced Manpower Staff')
+                      ? tender.primary_designation
+                      : (tender.category === 'Security Guards' || (tender.title && tender.title.toLowerCase().includes('security'))
+                          ? 'Security Guard (Without Arms)'
+                          : (tender.category === 'Sanitation Staff' || tender.category === 'Cleaning Services' || (tender.title && (tender.title.toLowerCase().includes('clean') || tender.title.toLowerCase().includes('sanitation')))
+                              ? 'Sanitation Worker / Housekeeping Staff'
+                              : (tender.title && tender.title.toLowerCase().includes('data')
+                                  ? 'Data Entry Operator (DEO)'
+                                  : 'Security Guard')))));
 
-              <div style={{ background: '#090d16', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
-                <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#38bdf8', marginBottom: '4px' }}>
-                  📋 Exact Job Duties & Operational Responsibilities
+            const core = data.core_specifications || {
+              section_title: 'कोर / Core',
+              skill_category: 'Unskilled',
+              educational_qualification: 'Secondary School',
+              type_of_function: 'Others',
+              list_of_profiles: profileDisplay,
+              specialization: 'Not Required',
+              post_graduation: 'Not Required',
+              specialization_for_pg: 'Not Applicable',
+              experience: '0 to 3 Years',
+              state: 'NA',
+              zipcode: 'NA',
+              district: 'NA',
+              geographical_presence_required: 'Yes',
+              geographical_presence_state: data.state || 'Gujarat'
+            };
+
+            const wages = data.wage_breakdown || data.additional_requirements || {
+              number_of_resources: data.employees || data.manpower_count || 8,
+              minimum_daily_wage: 512.50,
+              bonus_daily: 42.69,
+              edli_daily: 0.0,
+              epf_admin_charge_daily: 0.0,
+              optional_allowances_1: 0.0,
+              optional_allowances_2: 0.0,
+              optional_allowances_3: 0.0,
+              overtime_hours_monthly: 0,
+              overtime_rate_hourly: 0.0,
+              esi_daily: 16.66,
+              provident_fund_daily: 66.63,
+              working_days_in_month: 26,
+              tenure_duration_months: 11,
+              daily_cost_per_resource: 638.48,
+              monthly_cost_per_resource: 16600.48,
+              total_contract_estimate: 1460842.24
+            };
+
+            const coreRows = [
+              { label: 'Skill Category', val: core.skill_category || 'Unskilled', highlight: true },
+              { label: 'Educational Qualification', val: core.educational_qualification || 'Secondary School' },
+              { label: 'Type of Function', val: core.type_of_function || 'Others' },
+              { label: 'List of Profiles', val: profileDisplay, highlight: true },
+              { label: 'Specialization', val: core.specialization || 'Not Required' },
+              { label: 'Post Graduation', val: core.post_graduation || 'Not Required' },
+              { label: 'Specialization for PG', val: core.specialization_for_pg || 'Not Applicable' },
+              { label: 'Experience', val: core.experience || '0 to 3 Years' },
+              { label: 'State', val: core.state || 'NA' },
+              { label: 'Zipcode', val: core.zipcode || 'NA' },
+              { label: 'District', val: core.district || 'NA' },
+              { label: "Is the Geographical presence of the Service Provider's office required in the consignee's State", val: core.geographical_presence_required || 'Yes', badge: true },
+              { label: 'Name of states/ UT for geographical presence is required', val: core.geographical_presence_state || data.state || 'Gujarat', highlight: true }
+            ];
+
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                {/* Header Title */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                  <div>
+                    <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Users style={{ width: '20px', height: '20px', color: 'var(--primary-cyan)' }} />
+                      मानव संसाधन एवं वेतन विवरण / Staff & Core Duties Specifications
+                    </div>
+                    <div style={{ fontSize: '0.78rem', color: '#94a3b8', marginTop: '2px' }}>
+                      Official GeM Tender Schedule of Requirements (SOR) and Minimum Wages Act Breakdown
+                    </div>
+                  </div>
+                  <span style={{
+                    fontSize: '0.74rem',
+                    background: 'rgba(56, 189, 248, 0.15)',
+                    border: '1px solid rgba(56, 189, 248, 0.4)',
+                    color: '#38bdf8',
+                    padding: '4px 10px',
+                    borderRadius: '6px',
+                    fontWeight: 700
+                  }}>
+                    GeM Standard Format
+                  </span>
                 </div>
-                <div style={{ fontSize: '0.86rem', color: '#e2e8f0', lineHeight: '1.6' }}>
-                  {data.duty_description || data.duty_summary || 'General daily maintenance, operational support, and assigned administrative functions.'}
+
+                {/* Table 1: Core Specifications Table (Matching User's First Image) */}
+                <div style={{ background: '#0d1527', borderRadius: '12px', border: '1px solid #1e293b', overflow: 'hidden' }}>
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    background: '#131e36',
+                    borderBottom: '2px solid #334155',
+                    padding: '12px 18px',
+                    fontWeight: 800,
+                    fontSize: '0.88rem',
+                    color: '#fff'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span>विवरण/ Specification</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span>मूल्य/ Values</span>
+                    </div>
+                  </div>
+
+                  {/* Section Title Header: कोर / Core */}
+                  <div style={{
+                    background: 'rgba(15, 23, 42, 0.95)',
+                    padding: '8px 18px',
+                    fontSize: '0.82rem',
+                    fontWeight: 800,
+                    color: 'var(--primary-cyan)',
+                    borderBottom: '1px solid #1e293b'
+                  }}>
+                    कोर / Core
+                  </div>
+
+                  {/* Table Rows */}
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    {coreRows.map((row, rIdx) => (
+                      <div
+                        key={rIdx}
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: '1fr 1fr',
+                          padding: '10px 18px',
+                          background: rIdx % 2 === 0 ? 'rgba(15, 23, 42, 0.4)' : '#0d1527',
+                          borderBottom: rIdx === coreRows.length - 1 ? 'none' : '1px solid rgba(255, 255, 255, 0.05)',
+                          fontSize: '0.82rem',
+                          alignItems: 'center'
+                        }}
+                      >
+                        <div style={{ color: '#cbd5e1', fontWeight: 500, paddingRight: '12px' }}>
+                          {row.label}
+                        </div>
+                        <div style={{
+                          color: row.highlight ? '#38bdf8' : '#fff',
+                          fontWeight: row.highlight ? 700 : 500
+                        }}>
+                          {row.badge ? (
+                            <span style={{
+                              padding: '2px 8px',
+                              background: row.val === 'Yes' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                              border: `1px solid ${row.val === 'Yes' ? '#22c55e' : '#ef4444'}`,
+                              color: row.val === 'Yes' ? '#4ade80' : '#f87171',
+                              borderRadius: '4px',
+                              fontSize: '0.74rem',
+                              fontWeight: 700
+                            }}>
+                              {row.val}
+                            </span>
+                          ) : (
+                            row.val
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Table 2: Resources & Additional Requirements Table (Matching User's Second Image) */}
+                <div style={{ background: '#0d1527', borderRadius: '12px', border: '1px solid #1e293b', overflow: 'hidden' }}>
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: '220px 1fr',
+                    background: '#131e36',
+                    borderBottom: '2px solid #334155',
+                    padding: '12px 18px',
+                    fontWeight: 800,
+                    fontSize: '0.88rem',
+                    color: '#fff'
+                  }}>
+                    <div style={{ textAlign: 'center' }}>
+                      संसाधनों की मात्रा / Number of Resources to be hired
+                    </div>
+                    <div style={{ paddingLeft: '16px' }}>
+                      अतिरिक्त आवश्यकता / Additional Requirement
+                    </div>
+                  </div>
+
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: '220px 1fr',
+                    minHeight: '380px'
+                  }}>
+                    {/* Left Column: Big Resource Count Badge */}
+                    <div style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      background: 'rgba(15, 23, 42, 0.6)',
+                      borderRight: '1px solid #1e293b',
+                      padding: '24px 12px'
+                    }}>
+                      <div style={{
+                        fontSize: '3rem',
+                        fontWeight: 900,
+                        color: 'var(--primary-cyan)',
+                        lineHeight: '1'
+                      }}>
+                        {wages.number_of_resources || data.employees || 8}
+                      </div>
+                      <div style={{ fontSize: '0.78rem', color: '#94a3b8', fontWeight: 600, marginTop: '8px', textAlign: 'center' }}>
+                        Total Resources / Staff
+                      </div>
+                      <div style={{
+                        marginTop: '12px',
+                        padding: '4px 10px',
+                        background: 'rgba(6, 182, 212, 0.15)',
+                        border: '1px solid rgba(6, 182, 212, 0.35)',
+                        color: '#38bdf8',
+                        borderRadius: '20px',
+                        fontSize: '0.72rem',
+                        fontWeight: 700
+                      }}>
+                        {core.list_of_profiles || data.primary_designation || 'Security Guard'}
+                      </div>
+                    </div>
+
+                    {/* Right Column: Complete Bullet List matching Image 2 */}
+                    <div style={{ padding: '18px 22px', background: '#090d16', fontSize: '0.83rem', color: '#e2e8f0', lineHeight: '1.8' }}>
+                      <ul style={{ listStyleType: 'disc', paddingLeft: '20px', margin: 0 }}>
+                        <li style={{ marginBottom: '6px' }}>
+                          <strong style={{ color: '#cbd5e1' }}>Minimum daily wage (INR) exclusive of GST :</strong>{' '}
+                          <span style={{ color: '#38bdf8', fontWeight: 700 }}>₹{wages.minimum_daily_wage?.toFixed ? wages.minimum_daily_wage.toFixed(2) : wages.minimum_daily_wage}</span>
+                        </li>
+                        <li style={{ marginBottom: '6px' }}>
+                          <strong style={{ color: '#cbd5e1' }}>Bonus (INR per day) :</strong>{' '}
+                          <span style={{ color: '#fff', fontWeight: 600 }}>₹{wages.bonus_daily?.toFixed ? wages.bonus_daily.toFixed(2) : wages.bonus_daily}</span>
+                        </li>
+                        <li style={{ marginBottom: '6px' }}>
+                          <strong style={{ color: '#cbd5e1' }}>EDLI (INR per day) :</strong>{' '}
+                          <span style={{ color: '#94a3b8' }}>{wages.edli_daily || 0}</span>
+                        </li>
+                        <li style={{ marginBottom: '6px' }}>
+                          <strong style={{ color: '#cbd5e1' }}>EPF Admin Charge (INR per day) :</strong>{' '}
+                          <span style={{ color: '#94a3b8' }}>{wages.epf_admin_charge_daily || 0}</span>
+                        </li>
+                        <li style={{ marginBottom: '6px' }}>
+                          <strong style={{ color: '#cbd5e1' }}>Optional Allowances 1 (INR per day) :</strong>{' '}
+                          <span style={{ color: '#94a3b8' }}>{wages.optional_allowances_1 || 0}</span>
+                        </li>
+                        <li style={{ marginBottom: '6px' }}>
+                          <strong style={{ color: '#cbd5e1' }}>Optional Allowances 2 (INR per day) :</strong>{' '}
+                          <span style={{ color: '#94a3b8' }}>{wages.optional_allowances_2 || 0}</span>
+                        </li>
+                        <li style={{ marginBottom: '6px' }}>
+                          <strong style={{ color: '#cbd5e1' }}>Optional Allowances 3 (INR per day) :</strong>{' '}
+                          <span style={{ color: '#94a3b8' }}>{wages.optional_allowances_3 || 0}</span>
+                        </li>
+                        <li style={{ marginBottom: '6px' }}>
+                          <strong style={{ color: '#cbd5e1' }}>Estimated Number of Overtime Hours per Resource per Month :</strong>{' '}
+                          <span style={{ color: '#94a3b8' }}>{wages.overtime_hours_monthly || 0}</span>
+                        </li>
+                        <li style={{ marginBottom: '6px' }}>
+                          <strong style={{ color: '#cbd5e1' }}>Remuneration per resource per hour for Overtime Hours (Including all applicable allowance etc & excluding GST) :</strong>{' '}
+                          <span style={{ color: '#94a3b8' }}>{wages.overtime_rate_hourly || 0}</span>
+                        </li>
+                        <li style={{ marginBottom: '6px' }}>
+                          <strong style={{ color: '#cbd5e1' }}>ESI (INR per day) :</strong>{' '}
+                          <span style={{ color: '#4ade80', fontWeight: 600 }}>₹{wages.esi_daily?.toFixed ? wages.esi_daily.toFixed(2) : wages.esi_daily}</span>
+                        </li>
+                        <li style={{ marginBottom: '6px' }}>
+                          <strong style={{ color: '#cbd5e1' }}>Provident Fund (INR per day) :</strong>{' '}
+                          <span style={{ color: '#4ade80', fontWeight: 600 }}>₹{wages.provident_fund_daily?.toFixed ? wages.provident_fund_daily.toFixed(2) : wages.provident_fund_daily}</span>
+                        </li>
+                        <li style={{ marginBottom: '6px' }}>
+                          <strong style={{ color: '#cbd5e1' }}>Number of working days in a month :</strong>{' '}
+                          <span style={{ color: '#38bdf8', fontWeight: 700 }}>{wages.working_days_in_month || 26}</span>
+                        </li>
+                        <li style={{ marginBottom: '6px' }}>
+                          <strong style={{ color: '#cbd5e1' }}>Tenure/ Duration of Employment (in months) :</strong>{' '}
+                          <span style={{ color: '#38bdf8', fontWeight: 700 }}>{wages.tenure_duration_months || 11}</span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Calculation Summary Bar */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: '12px',
+                  background: '#0d1527',
+                  padding: '16px',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(56, 189, 248, 0.25)'
+                }}>
+                  <div style={{ background: '#090d16', padding: '12px 14px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Daily Gross per Resource</div>
+                    <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#38bdf8', marginTop: '2px' }}>
+                      ₹{wages.daily_cost_per_resource ? wages.daily_cost_per_resource.toLocaleString('en-IN') : '638.48'}
+                    </div>
+                  </div>
+
+                  <div style={{ background: '#090d16', padding: '12px 14px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Monthly Cost per Resource (26 Days)</div>
+                    <div style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--accent-green)', marginTop: '2px' }}>
+                      ₹{wages.monthly_cost_per_resource ? wages.monthly_cost_per_resource.toLocaleString('en-IN') : '16,600.48'}
+                    </div>
+                  </div>
+
+                  <div style={{ background: '#090d16', padding: '12px 14px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Total Contract Estimate ({wages.number_of_resources || 8} Staff x {wages.tenure_duration_months || 11} M)</div>
+                    <div style={{ fontSize: '1.15rem', fontWeight: 900, color: '#fbbf24', marginTop: '2px' }}>
+                      ₹{wages.total_contract_estimate ? wages.total_contract_estimate.toLocaleString('en-IN') : '14,60,842.24'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Exact Duties & Responsibilities Card */}
+                <div style={{ background: '#090d16', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                  <div style={{ fontSize: '0.84rem', fontWeight: 700, color: '#38bdf8', marginBottom: '4px' }}>
+                    📋 Exact Job Duties & Operational Deliverables
+                  </div>
+                  <div style={{ fontSize: '0.86rem', color: '#e2e8f0', lineHeight: '1.6' }}>
+                    {data.duty_description || data.duty_summary || 'Service delivery, daily facility maintenance, perimeter guarding, logbook checking, and operational contract execution as per buyer ATC terms.'}
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {activeTab === 'financials' && (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>

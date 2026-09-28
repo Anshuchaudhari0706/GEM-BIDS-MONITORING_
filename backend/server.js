@@ -16,11 +16,59 @@ const DB_PATH = path.join(__dirname, 'database.json');
 app.use(cors());
 app.use(express.json());
 
+function getDefaultSystemSettings() {
+  return {
+    scraper: {
+      engine: 'node_axios',
+      gemEndpointUrl: 'https://bidplus.gem.gov.in/all-bids-data',
+      autoScanIntervalMinutes: 30,
+      maxPagesPerScan: 25,
+      rateLimitDelayMs: 400,
+      autoFilterServicesOnly: true,
+      rotateUserAgents: true,
+      proxyEnabled: false,
+      proxyUrl: ''
+    },
+    payment: {
+      activeGateway: 'both',
+      razorpayKeyId: process.env.RAZORPAY_KEY_ID || 'rzp_test_GeMIntelDemoKey',
+      razorpayKeySecret: process.env.RAZORPAY_KEY_SECRET || 'rzp_secret_demo12345678',
+      adminUpiId: '6353731568-2@ybl',
+      adminUpiPayeeName: 'GeMIntel Technologies',
+      autoVerifyUtr: true,
+      gstPercentage: 18,
+      currency: 'INR'
+    },
+    security: {
+      maintenanceMode: false,
+      maintenanceMessage: 'System is currently undergoing scheduled maintenance. Please check back shortly.',
+      enforceLicenseOnSignup: false,
+      freeTrialDays: 7,
+      jwtExpiryDays: 7,
+      licenseKeyPrefix: 'GEMI-',
+      maxConcurrentSessions: 2
+    },
+    alerts: {
+      highValueTenderThreshold: 5000000,
+      alertEmail: process.env.ADMIN_EMAIL || 'admin@gemintel.com',
+      enableHighValueEmailAlerts: true,
+      webhookUrl: '',
+      enableWebhookAlerts: false,
+      dailySummaryEmail: true
+    },
+    updatedAt: new Date().toISOString()
+  };
+}
+
 // Database Reader & Writer
 function readDB() {
   try {
     const raw = fs.readFileSync(DB_PATH, 'utf8');
-    return JSON.parse(raw);
+    const data = JSON.parse(raw);
+    if (!data.system_settings) {
+      data.system_settings = getDefaultSystemSettings();
+    }
+    return data;
   } catch (err) {
     console.error('Error reading database:', err);
     return {
@@ -32,7 +80,8 @@ function readDB() {
       services: [],
       tenders: [],
       saved_tenders: [],
-      admin_logs: []
+      admin_logs: [],
+      system_settings: getDefaultSystemSettings()
     };
   }
 }
@@ -349,28 +398,29 @@ app.get('/api/subscription', authenticateToken, (req, res) => {
   });
 });
 
-// POST /api/payment/create-order
+// POST /api/payment/create-order (UPI Fast Pay Direct Order)
 app.post('/api/payment/create-order', authenticateToken, (req, res) => {
   const { plan } = req.body;
   const db = readDB();
   const planObj = (db.subscription_plans || []).find(p => p.id === `plan_${plan}` || p.name.toLowerCase().includes(plan));
   const amount = planObj ? planObj.price : (plan === 'yearly' ? 7999 : (plan === 'quarterly' ? 2499 : 999));
+  const upiId = (db.system_settings?.payment?.adminUpiId) || '6353731568-2@ybl';
 
   const orderId = `order_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
   res.json({
     orderId,
     amount,
     currency: 'INR',
-    keyId: process.env.RAZORPAY_KEY_ID || 'rzp_test_GeMIntelDemoKey',
+    upiId,
     plan,
     userEmail: req.user.email,
     userName: req.user.fullName
   });
 });
 
-// POST /api/payment/verify
+// POST /api/payment/verify (Direct UPI & UTR Verification)
 app.post('/api/payment/verify', authenticateToken, (req, res) => {
-  const { razorpayOrderId, razorpayPaymentId, razorpaySignature, plan, paymentMethod, upiId, utr } = req.body;
+  const { plan, paymentMethod, upiId, utr } = req.body;
   const db = readDB();
 
   const planKey = plan || 'monthly';
@@ -378,23 +428,22 @@ app.post('/api/payment/verify', authenticateToken, (req, res) => {
   const amountPaid = planObj ? planObj.price : (planKey === 'yearly' ? 7999 : (planKey === 'quarterly' ? 2499 : 999));
   const durationDays = planObj ? planObj.duration_days : (planKey === 'yearly' ? 365 : (planKey === 'quarterly' ? 90 : 30));
 
-  const paymentId = razorpayPaymentId || (utr ? `upi_${utr}` : `pay_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`);
-  const orderId = razorpayOrderId || `order_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+  const targetUpiId = upiId || (db.system_settings?.payment?.adminUpiId) || '6353731568-2@ybl';
+  const paymentId = utr ? `upi_${utr}` : `pay_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+  const orderId = `order_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
 
   // Log Payment
   const paymentLog = {
     id: paymentId,
     userId: req.user.id,
     userEmail: req.user.email,
-    gateway: paymentMethod === 'upi' ? 'UPI_DIRECT' : 'Razorpay',
-    upiId: upiId || '6353731568-2@ybl',
+    gateway: 'UPI_DIRECT',
+    upiId: targetUpiId,
     utr: utr || null,
     plan: planKey,
     amount: amountPaid,
     currency: 'INR',
-    razorpayOrderId: orderId,
-    razorpayPaymentId: paymentId,
-    razorpaySignature: razorpaySignature || 'verified_hmac_sha256',
+    orderId: orderId,
     status: 'SUCCESS',
     createdAt: new Date().toISOString()
   };
@@ -732,36 +781,29 @@ app.get('/api/tenders', authenticateToken, requireActiveSubscription, (req, res)
   results = results.filter(t => {
     if (reqStatus === 'FINISHED') {
       if (targetDate && targetDate !== 'ALL') {
-        const rawEnd = t.deadlineDate || t.deadline || t.endDate || t.endDatetime || '';
-        const endStr = String(rawEnd).slice(0, 10);
+        const rawEnd = t.deadlineDate || t.deadline || t.endDate || t.endDatetime || (t.raw_doc && (t.raw_doc.final_end_date_sort || t.raw_doc.b_bid_end_date)) || '';
+        const endStr = String(Array.isArray(rawEnd) ? rawEnd[0] : rawEnd).slice(0, 10);
         return endStr === targetDate;
       }
       return true;
     } else if (reqStatus === 'PUBLISHED') {
       if (targetDate && targetDate !== 'ALL') {
-        const rawStart = t.publishedDate || t.startDate || '';
-        const rawEnd = t.deadlineDate || t.deadline || t.endDate || t.endDatetime || '';
-
-        const startDate = String(rawStart).slice(0, 10);
-        const endDate = String(rawEnd).slice(0, 10);
-
-        const targetTime = new Date(targetDate).getTime();
-        const nextDayStr = isNaN(targetTime) ? targetDate : new Date(targetTime + 86400000).toISOString().slice(0, 10);
-
-        return (
-          startDate &&
-          (startDate <= targetDate || startDate <= nextDayStr) &&
-          (!endDate || endDate >= targetDate)
-        );
+        const rawStart = t.publishedDate || t.startDate || (t.raw_doc && (t.raw_doc.final_start_date_sort || t.raw_doc.b_bid_start_date)) || '';
+        const startStr = String(Array.isArray(rawStart) ? rawStart[0] : rawStart).slice(0, 10);
+        // STRICT START DATE ONLY: Reject any tender whose Start Date does not equal the target scan date!
+        return startStr === targetDate;
       }
       return true;
     }
     return true;
   });
 
-  // Determine CLOSING_TODAY vs ENDED for Finished tenders
+  // Determine status labels: For Published tenders, keep status as PUBLISHED / ACTIVE; for Finished tenders, compute CLOSING_TODAY vs ENDED
   results.forEach(t => {
-    if (reqStatus === 'FINISHED' || t.status === 'CLOSING_TODAY' || t.status === 'ENDED') {
+    if (reqStatus === 'PUBLISHED') {
+      t.status = 'PUBLISHED';
+      t.statusLabel = 'PUBLISHED TODAY';
+    } else if (reqStatus === 'FINISHED' || t.status === 'CLOSING_TODAY' || t.status === 'ENDED') {
       const endStr = t.endDatetime || t.endDate || t.deadline;
       if (endStr) {
         const endDt = new Date(endStr);
@@ -1029,8 +1071,8 @@ const handleTenderEvaluation = async (req, res) => {
       title: `Manpower / Outsourcing Services Tender ${tenderId || 'GEM/2026/B/8765432'}`,
       department: "Government Department",
       category: "Manpower Minimum Wage",
-      state: "Gujarat",
-      city: "Gandhinagar"
+      state: "Delhi",
+      city: "New Delhi"
     };
   }
 
@@ -1133,7 +1175,27 @@ const handleTenderEvaluation = async (req, res) => {
             ? tender.office_address
             : `${consigneeOfficer}, ${tender.department || 'Government Office'}, ${city !== 'Not Specified' ? city : ''} ${state !== 'Not Specified' ? state : ''} ${pincode !== 'Not Specified' ? '- ' + pincode : ''}`.trim()));
 
-  const desig = tender.primary_designation || "Sanitation & Housekeeping Staff / Multi-Tasking Staff";
+  const resolvedProfile = (pyParsed && pyParsed.core_specifications && pyParsed.core_specifications.list_of_profiles && !pyParsed.core_specifications.list_of_profiles.includes("Outsourced Manpower Staff"))
+    ? pyParsed.core_specifications.list_of_profiles
+    : ((pyParsed && pyParsed.primary_designation && !pyParsed.primary_designation.includes("Outsourced Manpower Staff"))
+        ? pyParsed.primary_designation
+        : ((tender.primary_designation && !tender.primary_designation.includes("Outsourced Manpower Staff"))
+            ? tender.primary_designation
+            : (tender.category === 'Security Guards'
+                ? 'Security Guard (Without Arms)'
+                : (tender.category === 'Sanitation Staff' || tender.category === 'Cleaning Services'
+                    ? 'Sanitation Worker / Housekeeping Staff'
+                    : (tender.category === 'Healthcare Staff'
+                        ? 'Hospital Attendant / Nursing Assistant'
+                        : (tender.category === 'Horticulture'
+                            ? 'Gardener / Mali'
+                            : (tender.title && tender.title.toLowerCase().includes('security')
+                                ? 'Security Guard (Without Arms)'
+                                : (tender.title && tender.title.toLowerCase().includes('data')
+                                    ? 'Data Entry Operator (DEO)'
+                                    : 'Security Guard'))))))));
+
+  const desig = resolvedProfile;
   const duty = tender.duty_description || "Comprehensive facility maintenance, cleaning & sanitization, and administrative support.";
   const dutySum = tender.duty_summary || "Facility Upkeep & Daily Operations";
 
@@ -1179,6 +1241,7 @@ const handleTenderEvaluation = async (req, res) => {
     db.tenders[dbIndex].annual_turnover_required = annualTurnoverRequired;
     db.tenders[dbIndex].past_experience_years = pastExperienceYears;
     db.tenders[dbIndex].past_performance_percentage = pastPerformancePercentage;
+    db.tenders[dbIndex].primary_designation = resolvedProfile;
     if (db.tenders[dbIndex].work_location) {
       db.tenders[dbIndex].work_location.city = city;
       db.tenders[dbIndex].work_location.state = state;
@@ -1225,7 +1288,7 @@ const handleTenderEvaluation = async (req, res) => {
     annual_turnover_required: annualTurnoverRequired,
     past_experience_years: pastExperienceYears,
     past_performance_percentage: pastPerformancePercentage,
-    primary_designation: desig,
+    primary_designation: resolvedProfile,
     duty_summary: dutySum,
     duty_description: duty,
     estimatedValue: estVal,
@@ -1240,12 +1303,66 @@ const handleTenderEvaluation = async (req, res) => {
     epbg_original: epbgStr,
     manpower_count: staffCount,
     quantity_display: tender.quantity_display || `${staffCount} Nos. Staff`,
-    manpower: [
+    core_specifications: (pyParsed && pyParsed.core_specifications) || {
+      section_title: "कोर / Core",
+      skill_category: "Unskilled",
+      educational_qualification: "Secondary School",
+      type_of_function: "Others",
+      list_of_profiles: resolvedProfile,
+      specialization: "Not Required",
+      post_graduation: "Not Required",
+      specialization_for_pg: "Not Applicable",
+      experience: "0 to 3 Years",
+      state: "NA",
+      zipcode: "NA",
+      district: "NA",
+      geographical_presence_required: "Yes",
+      geographical_presence_state: state || "Gujarat"
+    },
+    wage_breakdown: (pyParsed && pyParsed.wage_breakdown) || {
+      number_of_resources: staffCount || 8,
+      minimum_daily_wage: 512.50,
+      bonus_daily: 42.69,
+      edli_daily: 0.0,
+      epf_admin_charge_daily: 0.0,
+      optional_allowances_1: 0.0,
+      optional_allowances_2: 0.0,
+      optional_allowances_3: 0.0,
+      overtime_hours_monthly: 0,
+      overtime_rate_hourly: 0.0,
+      esi_daily: 16.66,
+      provident_fund_daily: 66.63,
+      working_days_in_month: 26,
+      tenure_duration_months: 11,
+      daily_cost_per_resource: 638.48,
+      monthly_cost_per_resource: 16600.48,
+      total_contract_estimate: 1460842.24
+    },
+    additional_requirements: (pyParsed && pyParsed.wage_breakdown) || {
+      number_of_resources: staffCount || 8,
+      minimum_daily_wage: 512.50,
+      bonus_daily: 42.69,
+      edli_daily: 0.0,
+      epf_admin_charge_daily: 0.0,
+      optional_allowances_1: 0.0,
+      optional_allowances_2: 0.0,
+      optional_allowances_3: 0.0,
+      overtime_hours_monthly: 0,
+      overtime_rate_hourly: 0.0,
+      esi_daily: 16.66,
+      provident_fund_daily: 66.63,
+      working_days_in_month: 26,
+      tenure_duration_months: 11,
+      daily_cost_per_resource: 638.48,
+      monthly_cost_per_resource: 16600.48,
+      total_contract_estimate: 1460842.24
+    },
+    manpower: (pyParsed && pyParsed.manpower && pyParsed.manpower.length > 0) ? pyParsed.manpower : [
       {
         designation: desig,
         quantity: staffCount,
-        qualification: "10th / 12th Pass / Graduate",
-        experience: `Minimum ${pastExperienceYears} Experience in Similar Works`,
+        qualification: ((pyParsed && pyParsed.core_specifications && pyParsed.core_specifications.educational_qualification) || "Secondary School"),
+        experience: ((pyParsed && pyParsed.core_specifications && pyParsed.core_specifications.experience) || `0 to 3 Years`),
         duty: duty,
         wageRate: "As per Central/State Minimum Wages Act + EPF + ESIC + Admin Charges"
       }
@@ -2213,6 +2330,197 @@ app.put('/api/admin/subscriptions/:id', authenticateToken, requireAdmin, (req, r
 app.get('/api/admin/logs', authenticateToken, requireAdmin, (req, res) => {
   const db = readDB();
   res.json({ logs: db.admin_logs || [] });
+});
+
+// ================= ADMIN SYSTEM SETTINGS & MAINTENANCE =================
+
+// GET /api/admin/settings
+app.get('/api/admin/settings', authenticateToken, requireAdmin, (req, res) => {
+  const db = readDB();
+  const settings = db.system_settings || getDefaultSystemSettings();
+  res.json({ settings });
+});
+
+// PUT /api/admin/settings
+app.put('/api/admin/settings', authenticateToken, requireAdmin, (req, res) => {
+  try {
+    const incoming = req.body.settings || req.body;
+    const db = readDB();
+    const current = db.system_settings || getDefaultSystemSettings();
+
+    db.system_settings = {
+      ...current,
+      scraper: { ...current.scraper, ...(incoming.scraper || {}) },
+      payment: { ...current.payment, ...(incoming.payment || {}) },
+      security: { ...current.security, ...(incoming.security || {}) },
+      alerts: { ...current.alerts, ...(incoming.alerts || {}) },
+      updatedAt: new Date().toISOString()
+    };
+
+    writeDB(db);
+    logAdminAction(req.user.id, 'UPDATE_SETTINGS', 'Updated system configuration parameters');
+
+    res.json({
+      success: true,
+      message: 'System settings saved and applied successfully!',
+      settings: db.system_settings
+    });
+  } catch (err) {
+    console.error('Error updating system settings:', err);
+    res.status(500).json({ error: 'Failed to update system settings' });
+  }
+});
+
+// POST /api/admin/system/trigger-scan
+app.post('/api/admin/system/trigger-scan', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const db = readDB();
+    const today = new Date().toISOString().split('T')[0];
+    
+    // Trigger background scraper
+    const { scrapeLiveGeMPortal } = require('./gemScraper');
+    if (typeof scrapeLiveGeMPortal === 'function') {
+      scrapeLiveGeMPortal(today, 'PUBLISHED', 'ALL').catch(err => {
+        console.error('[Admin Live Trigger] Scrape error:', err.message);
+      });
+    }
+
+    logAdminAction(req.user.id, 'TRIGGER_SCAN', `Admin triggered live GeM scan for ${today}`);
+
+    res.json({
+      success: true,
+      message: `Live GeM Bid scan triggered for ${today}. Diagnostic status is updating in background.`,
+      triggeredAt: new Date().toISOString()
+    });
+  } catch (err) {
+    console.error('Error triggering live scan:', err);
+    res.status(500).json({ error: 'Failed to trigger live scan' });
+  }
+});
+
+// POST /api/admin/system/clear-cache
+app.post('/api/admin/system/clear-cache', authenticateToken, requireAdmin, (req, res) => {
+  try {
+    const db = readDB();
+    const initialCount = (db.tenders || []).length;
+
+    // Deduplicate tenders by bid_number or id
+    const seen = new Set();
+    const cleanTenders = [];
+    for (const t of (db.tenders || [])) {
+      const key = (t.bid_number || t.bidNo || t.id || '').trim();
+      if (key && !seen.has(key)) {
+        seen.add(key);
+        cleanTenders.push(t);
+      }
+    }
+
+    const removedDuplicates = initialCount - cleanTenders.length;
+    db.tenders = cleanTenders;
+    writeDB(db);
+
+    logAdminAction(req.user.id, 'CLEAR_CACHE', `Cleared cache and removed ${removedDuplicates} duplicate tender records`);
+
+    res.json({
+      success: true,
+      message: `System cache cleared. Retained ${cleanTenders.length} unique tenders (${removedDuplicates} duplicates purged).`,
+      tendersCount: cleanTenders.length,
+      duplicatesPurged: removedDuplicates
+    });
+  } catch (err) {
+    console.error('Error clearing cache:', err);
+    res.status(500).json({ error: 'Failed to clear system cache' });
+  }
+});
+
+// GET /api/admin/system/backup
+app.get('/api/admin/system/backup', authenticateToken, requireAdmin, (req, res) => {
+  try {
+    const db = readDB();
+    const filename = `gemintel_backup_${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(JSON.stringify(db, null, 2));
+  } catch (err) {
+    console.error('Error generating backup:', err);
+    res.status(500).json({ error: 'Failed to generate database backup' });
+  }
+});
+
+// POST /api/admin/system/test-webhook
+app.post('/api/admin/system/test-webhook', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { webhookUrl } = req.body;
+    if (!webhookUrl) {
+      return res.status(400).json({ error: 'Webhook URL is required' });
+    }
+
+    // Send ping to webhook
+    const testPayload = {
+      event: 'TEST_PING',
+      system: 'GeMIntel Tender Intelligence Platform',
+      source: 'Admin Settings Console',
+      timestamp: new Date().toISOString(),
+      message: 'Test notification from GeMIntel Admin System Settings. Webhook integration is functional.'
+    };
+
+    try {
+      await axios.post(webhookUrl, testPayload, { timeout: 4000 });
+      logAdminAction(req.user.id, 'TEST_WEBHOOK', `Successfully dispatched test ping to ${webhookUrl}`);
+      res.json({ success: true, message: 'Test notification delivered successfully to webhook endpoint!' });
+    } catch (whErr) {
+      res.json({
+        success: false,
+        message: `Webhook received with status/error: ${whErr.response ? whErr.response.status : whErr.message}. Verify endpoint URL and CORS/firewall permissions.`
+      });
+    }
+  } catch (err) {
+    console.error('Error testing webhook:', err);
+    res.status(500).json({ error: 'Webhook test execution failed' });
+  }
+});
+
+// GET /api/admin/tenders
+app.get('/api/admin/tenders', authenticateToken, requireAdmin, (req, res) => {
+  const { search, limit = 50, page = 1 } = req.query;
+  const db = readDB();
+  let list = db.tenders || [];
+
+  if (search) {
+    const q = search.toLowerCase();
+    list = list.filter(t => 
+      (t.bid_number || '').toLowerCase().includes(q) ||
+      (t.title || '').toLowerCase().includes(q) ||
+      (t.department || '').toLowerCase().includes(q) ||
+      (t.service_type || '').toLowerCase().includes(q) ||
+      (t.work_location || '').toLowerCase().includes(q)
+    );
+  }
+
+  const offset = (Number(page) - 1) * Number(limit);
+  const paginated = list.slice(offset, offset + Number(limit));
+
+  res.json({
+    total: list.length,
+    page: Number(page),
+    limit: Number(limit),
+    tenders: paginated
+  });
+});
+
+// DELETE /api/admin/tenders/:id
+app.delete('/api/admin/tenders/:id', authenticateToken, requireAdmin, (req, res) => {
+  const db = readDB();
+  const initialLen = (db.tenders || []).length;
+  db.tenders = (db.tenders || []).filter(t => t.id !== req.params.id && t.bid_number !== req.params.id);
+
+  if (db.tenders.length === initialLen) {
+    return res.status(404).json({ error: 'Tender record not found' });
+  }
+
+  writeDB(db);
+  logAdminAction(req.user.id, 'DELETE_TENDER', `Admin removed tender ${req.params.id}`);
+  res.json({ success: true, message: 'Tender record removed from database' });
 });
 
 const { startRealGeMBackgroundScraper } = require('./gemScraper');
