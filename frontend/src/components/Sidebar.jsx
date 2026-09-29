@@ -70,25 +70,25 @@ export default function Sidebar({ currentTab, setCurrentTab }) {
       {/* Sidebar Navigation Panel */}
       <aside
         style={{
-          width: '270px',
+          width: '195px',
           background: 'var(--bg-sidebar)',
           borderRight: '1px solid var(--border-color)',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
-          padding: '24px 18px',
+          padding: '12px 8px',
           flexShrink: 0
         }}
         className={`sidebar-panel ${mobileOpen ? 'mobile-show' : ''}`}
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {/* Main Navigation */}
           <div>
-            <div style={{ fontSize: '0.76rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1.2px', padding: '0 12px 10px 12px' }}>
+            <div style={{ fontSize: '0.64rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', padding: '0 6px 4px 6px' }}>
               Workspace
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
               {mainItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = currentTab === item.id;
@@ -100,8 +100,8 @@ export default function Sidebar({ currentTab, setCurrentTab }) {
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
-                      padding: '12px 16px',
-                      borderRadius: '12px',
+                      padding: '6px 8px',
+                      borderRadius: '6px',
                       border: isActive
                         ? '1px solid rgba(56, 189, 248, 0.4)'
                         : '1px solid transparent',
@@ -110,17 +110,17 @@ export default function Sidebar({ currentTab, setCurrentTab }) {
                         : 'transparent',
                       color: isActive ? '#fff' : 'var(--text-muted)',
                       fontWeight: isActive ? 700 : 600,
-                      fontSize: '0.95rem',
+                      fontSize: '0.78rem',
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',
-                      boxShadow: isActive ? '0 4px 14px rgba(6, 182, 212, 0.15)' : 'none'
+                      boxShadow: isActive ? '0 2px 8px rgba(6, 182, 212, 0.15)' : 'none'
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                      <Icon style={{ width: '20px', height: '20px', color: isActive ? 'var(--primary-cyan-bright)' : 'var(--text-muted)' }} />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
+                      <Icon style={{ width: '15px', height: '15px', color: isActive ? 'var(--primary-cyan-bright)' : 'var(--text-muted)' }} />
                       <span>{item.label}</span>
                     </div>
-                    {isActive && <ChevronRight style={{ width: '16px', height: '16px', color: 'var(--primary-cyan-bright)' }} />}
+                    {isActive && <ChevronRight style={{ width: '12px', height: '12px', color: 'var(--primary-cyan-bright)' }} />}
                   </button>
                 );
               })}
@@ -130,12 +130,12 @@ export default function Sidebar({ currentTab, setCurrentTab }) {
           {/* Administration Navigation */}
           {user?.role === 'admin' && (
             <div>
-              <div style={{ fontSize: '0.76rem', fontWeight: 800, color: '#f59e0b', textTransform: 'uppercase', letterSpacing: '1.2px', padding: '0 12px 10px 12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Crown style={{ width: '14px', height: '14px' }} />
+              <div style={{ fontSize: '0.64rem', fontWeight: 800, color: '#f59e0b', textTransform: 'uppercase', letterSpacing: '1px', padding: '0 6px 4px 6px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <Crown style={{ width: '11px', height: '11px' }} />
                 Admin Console
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                 {adminItems.map((item) => {
                   const Icon = item.icon;
                   const isActive = currentTab === item.id;
@@ -147,23 +147,23 @@ export default function Sidebar({ currentTab, setCurrentTab }) {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
-                        padding: '11px 16px',
-                        borderRadius: '12px',
+                        padding: '5px 8px',
+                        borderRadius: '6px',
                         border: isActive ? '1px solid rgba(245, 158, 11, 0.45)' : '1px solid transparent',
                         background: isActive ? 'rgba(245, 158, 11, 0.16)' : 'transparent',
                         color: isActive ? '#fff' : 'var(--text-muted)',
                         fontWeight: isActive ? 700 : 500,
-                        fontSize: '0.92rem',
+                        fontSize: '0.76rem',
                         cursor: 'pointer',
                         transition: 'all 0.2s ease',
-                        boxShadow: isActive ? '0 4px 14px rgba(245, 158, 11, 0.15)' : 'none'
+                        boxShadow: isActive ? '0 2px 8px rgba(245, 158, 11, 0.15)' : 'none'
                       }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <Icon style={{ width: '18px', height: '18px', color: isActive ? '#f59e0b' : 'var(--text-muted)' }} />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
+                        <Icon style={{ width: '14px', height: '14px', color: isActive ? '#f59e0b' : 'var(--text-muted)' }} />
                         <span>{item.label}</span>
                       </div>
-                      {isActive && <ChevronRight style={{ width: '14px', height: '14px', color: '#f59e0b' }} />}
+                      {isActive && <ChevronRight style={{ width: '11px', height: '11px', color: '#f59e0b' }} />}
                     </button>
                   );
                 })}
@@ -176,18 +176,18 @@ export default function Sidebar({ currentTab, setCurrentTab }) {
         <div
           className="glass-panel"
           style={{
-            padding: '16px',
-            borderRadius: '14px',
+            padding: '8px 10px',
+            borderRadius: '8px',
             background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%)',
             textAlign: 'center',
             border: '1px solid var(--border-color)'
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '6px' }}>
-            <ShieldCheck style={{ width: '22px', height: '22px', color: 'var(--primary-cyan-bright)' }} />
-            <span style={{ fontSize: '0.92rem', fontWeight: 800, color: '#fff' }}>GeMIntel Enterprise</span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', marginBottom: '2px' }}>
+            <ShieldCheck style={{ width: '14px', height: '14px', color: 'var(--primary-cyan-bright)' }} />
+            <span style={{ fontSize: '0.74rem', fontWeight: 800, color: '#fff' }}>GeMIntel Enterprise</span>
           </div>
-          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+          <div style={{ fontSize: '0.66rem', color: 'var(--text-muted)', fontWeight: 500 }}>
             v2.5 Live Scanner Active
           </div>
         </div>

@@ -242,13 +242,13 @@ def extract_wage_and_resource_breakdown(raw_text, resource_count=None, profile_n
     text = raw_text or ""
 
     # 1. Number of Resources
-    res_m = re.search(r"(?:Number\s+of\s+Resources\s+to\s+be\s+hired|संसाधनों\s*की\s*मात्रा)\s*[:\-]?\s*(\d+)", text, re.I)
+    res_m = re.search(r"(?:Number\s+of\s+Resources\s+to\s+be\s+hired|संसाधनों\s*की\s*मात्रा|Total\s+Quantity|कुल\s*मात्रा)\s*[:\-]?\s*(\d+)", text, re.I)
     if res_m:
         num_resources = int(res_m.group(1))
     elif resource_count and int(resource_count) > 0:
         num_resources = int(resource_count)
     else:
-        num_resources = 8
+        num_resources = 1
 
     # 2. Minimum daily wage (INR) exclusive of GST
     wage_m = re.search(r"(?:Minimum\s+daily\s+wage.*?exclusive\s+of\s+GST|दैनिक\s*मजदूरी)\s*[:\-]?\s*([0-9\.]+)", text, re.I)
@@ -332,3 +332,112 @@ def extract_wage_and_resource_breakdown(raw_text, resource_count=None, profile_n
         "monthly_cost_per_resource": round(monthly_cost_per_resource, 2),
         "total_contract_estimate": round(total_contract_estimate, 2)
     }
+
+def extract_multi_role_breakdown(raw_text):
+    """
+    Extracts multi-role / bunch schedule manpower requirements from GeM PDF text.
+    Returns a list of roles with individual designations, quantities, skill categories, qualifications, and duties.
+    """
+    if not raw_text:
+        return []
+
+    # Clean text: strip footer page numbers like "4 / 14"
+    cleaned_text = re.sub(r'\n\s*\d+\s*\/\s*\d+\s*\n', '\n', str(raw_text))
+    cleaned_text = re.sub(r'\(\s*\n\s*(\d+)\s*\)', r'(\1)', cleaned_text)
+
+    schedule_pattern = r'([A-Za-z\s\-\;\,]+(?:Manpower|Security|Sanitation|Housekeeping|Cleaning|Driver|Staff|Services|Fixed)[A-Za-z0-9\s\-\;\,\/]*)\s*\(\s*(\d+)\s*\)\s*\n\s*(?:[\?]+|[^\n\r]{0,40}?(?:Technical\s+Specifications|\/Technical\s+Specifications|\u0924\u0915\u0928\u0940\u0915\u0940))'
+    matches = list(re.finditer(schedule_pattern, cleaned_text, re.I))
+
+    roles = []
+    if matches:
+        for idx, m in enumerate(matches):
+            start_pos = m.start()
+            end_pos = matches[idx+1].start() if idx + 1 < len(matches) else len(cleaned_text)
+            block = cleaned_text[start_pos:end_pos]
+            
+            hdr_category = m.group(1).strip()
+            hdr_qty = int(m.group(2))
+            
+            prof_m = re.search(r'(?:List\s+of\s+Profiles|\u092a\u094d\u0930\u094b\u092b\u093e\u0907\u0932\s*\u0915\u0940\s*\u0938\u0942\u091a\u0940)\s*[:\|\-]?\s*([^\n\r\|]{2,80})', block, re.I)
+            desig_m = re.search(r'(?:Designation|\u092a\u0926\u0928\u093e\u092e)\s*[:\|\-]?\s*([^\n\r\|]{2,80})', block, re.I)
+            skill_m = re.search(r'(?:Skill\s+Category|\u0915\u094c\u0936\u0932\s*\u0936\u094d\u0930\u0947\u0923\u0940)\s*[:\|\-]?\s*([^\n\r\|]{2,60})', block, re.I)
+            edu_m = re.search(r'(?:Educational\s+Qualification|\u0936\u0948\u0915\u094d\u0937\u093f\u0915\s*\u092f\u094b\u0917\u094d\u092f\u0924\u093e)\s*[:\|\-]?\s*([^\n\r\|]{2,60})', block, re.I)
+            func_m = re.search(r'(?:Type\s+of\s+Function|\u0915\u093e\u0930\u094d\u092f\s*\u0915\u093e\s*\u092a\u094d\u0930\u0915\u093e\u0930)\s*[:\|\-]?\s*([^\n\r\|]{2,60})', block, re.I)
+            
+            table_qty_m = re.search(r'(?:Number\s+of\s+Resources\s+to\s+be\s+hired|\u0938\u0902\u0938\u093e\u0927\u0928\u094b\u0902\s*\u0915\u0940\s*\u092e\u093e\u0924\u094d\u0930\u093e)[\s\S]*?\n\s*(\d+)\s*\n\s*[^\n\r]+\n\s*[^\n\r]+\n\s*(\d+)\s*\n\s*Minimum\s+daily', block, re.I)
+            
+            qty = hdr_qty
+            if table_qty_m:
+                qty = int(table_qty_m.group(2))
+                
+            raw_prof = clean_extracted_profile(prof_m.group(1)) if prof_m else ""
+            raw_desig = clean_extracted_profile(desig_m.group(1)) if desig_m else ""
+            
+            designation = raw_desig or raw_prof or "Outsourced Staff"
+            profile = raw_prof or raw_desig or designation
+            skill = clean_extracted_profile(skill_m.group(1)) if skill_m else "Unskilled"
+            edu = clean_extracted_profile(edu_m.group(1)) if edu_m else "Secondary School"
+            func = clean_extracted_profile(func_m.group(1)) if func_m else "Others"
+            
+            # Canonical & duty mapping
+            role_lower = f"{designation} {profile}".lower()
+            if any(k in role_lower for k in ["data entry", "deo", "computer", "typist"]):
+                canonical = "Data Entry Operator (DEO)"
+                duty_sum = "Computer Data Entry & Records Management"
+                duty_desc = "Data entry into government portals, office record keeping, document scanning & desk support."
+            elif any(k in role_lower for k in ["khansama", "cook", "chef", "kitchen", "cater"]):
+                canonical = "Khansama / Cook"
+                duty_sum = "Meal Preparation & Kitchen Management"
+                duty_desc = "Hygienic cooking, pantry service, meal preparation and kitchen cleanliness."
+            elif any(k in role_lower for k in ["safai", "sweeper", "clean", "sanitation", "housekeep"]):
+                canonical = "Safaiwala / Sanitation Worker"
+                duty_sum = "Premises Cleaning & Sanitation"
+                duty_desc = "Daily sweeping, wet mopping, waste disposal and facility sanitization."
+            elif any(k in role_lower for k in ["mali", "gardener", "gardner", "horticulture"]):
+                canonical = "Mali / Gardener"
+                duty_sum = "Gardening & Plantation Upkeep"
+                duty_desc = "Gardening, lawn maintenance, tree trimming, soil fertilization and daily lawn watering."
+            elif any(k in role_lower for k in ["security", "guard", "watchman", "gate man", "un-armed security", "chaukidaar"]):
+                canonical = "Security Guard"
+                duty_sum = "Watch & Ward / Premises Security"
+                duty_desc = "24x7 premises guarding, access control, visitor logbook checking and night patrolling."
+            elif any(k in role_lower for k in ["driver", "chauffeur"]):
+                canonical = "Driver / Chauffeur"
+                duty_sum = "Vehicle Driving & Logbook Maintenance"
+                duty_desc = "Safe driving of departmental light motor vehicles (LMV), routine maintenance and logbook upkeep."
+            elif any(k in role_lower for k in ["electrician", "wireman"]):
+                canonical = "Electrician / Wireman"
+                duty_sum = "Electrical Wiring & Equipment Maintenance"
+                duty_desc = "Routine electrical maintenance, wiring inspection, panel checking and equipment troubleshooting."
+            elif any(k in role_lower for k in ["plumber"]):
+                canonical = "Plumber / Pipe Fitter"
+                duty_sum = "Sanitary Pipelines & Water Supply"
+                duty_desc = "Pipeline maintenance, tap repairs, drainage clearance and water line upkeep."
+            elif any(k in role_lower for k in ["mts", "peon", "helper", "office boy", "office attendant"]):
+                canonical = "Multi-Tasking Staff (MTS) / Peon"
+                duty_sum = "Office Maintenance & Document Movement"
+                duty_desc = "Physical movement of office files, tea/water service for meetings and desk support."
+            elif any(k in role_lower for k in ["nurse", "nursing", "hospital", "ward boy", "aya"]):
+                canonical = "Nursing Assistant / Hospital Staff"
+                duty_sum = "Patient Care & Ward Sanitization"
+                duty_desc = "Patient assistance, ward sanitization and supporting medical staff."
+            else:
+                canonical = designation.title()
+                duty_sum = f"{canonical} Operations & Support"
+                duty_desc = f"Operational execution of {canonical} deliverables as specified in the tender."
+
+            roles.append({
+                "schedule_no": idx + 1,
+                "designation": designation,
+                "canonical_designation": canonical,
+                "profile": profile,
+                "quantity": qty,
+                "skill_category": skill,
+                "educational_qualification": edu,
+                "type_of_function": func,
+                "duty_summary": duty_sum,
+                "duty": duty_desc
+            })
+
+    return roles
+

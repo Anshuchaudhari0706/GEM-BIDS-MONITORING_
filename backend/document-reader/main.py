@@ -29,6 +29,8 @@ class ParseRequest(BaseModel):
     existing_department: Optional[str] = None
     existing_value: Optional[float] = None
     existing_emd: Optional[float] = None
+    existing_employees: Optional[int] = None
+    existing_quantity: Optional[str] = None
 
 class ScanRequest(BaseModel):
     date: Optional[str] = None
@@ -96,23 +98,38 @@ def fetch_pdf_text_from_gem(tender_id, document_url=None, b_id=None):
     """
     Downloads and extracts all text from the official GeM Tender PDF copy.
     Tries document_url, b_id (internal ID), and tender_id tail.
+    Uses curl_cffi with browser impersonation for robust fetching from GeM portal.
     """
     try:
-        import requests, fitz
+        import fitz
         raw_id = (tender_id or "").split("/")[-1].strip()
         candidates = []
-        if document_url:
-            candidates.append(document_url)
         if b_id:
             candidates.append(f"https://bidplus.gem.gov.in/showbidDocument/{b_id}")
+        if document_url:
+            candidates.append(document_url)
         if raw_id:
             candidates.append(f"https://bidplus.gem.gov.in/showbidDocument/{raw_id}")
 
         for url in candidates:
             try:
-                res = requests.get(url, verify=False, timeout=10)
-                if res.status_code == 200 and len(res.content) > 1000:
-                    doc = fitz.open(stream=res.content, filetype="pdf")
+                content = None
+                try:
+                    from curl_cffi import requests as curl_req
+                    r = curl_req.get(url, verify=False, impersonate="chrome120", timeout=10)
+                    if r.status_code == 200 and len(r.content) > 1000:
+                        content = r.content
+                except Exception:
+                    pass
+
+                if not content:
+                    import requests
+                    r = requests.get(url, verify=False, timeout=10)
+                    if r.status_code == 200 and len(r.content) > 1000:
+                        content = r.content
+
+                if content:
+                    doc = fitz.open(stream=content, filetype="pdf")
                     text = ""
                     for p in doc:
                         text += p.get_text() + "\n"
@@ -174,6 +191,9 @@ def parse_document(req: ParseRequest):
     if req.consignee_box:
         if parsed_json.get('officeAddress'): parsed_json['officeAddress']['raw_consignee_box'] = req.consignee_box
         if parsed_json.get('workLocation'): parsed_json['workLocation']['raw_consignee_box'] = req.consignee_box
+
+    if (not parsed_json.get('totalStaffCount') or parsed_json.get('totalStaffCount') <= 0) and req.existing_employees:
+        parsed_json['totalStaffCount'] = req.existing_employees
 
     return parsed_json
 

@@ -41,7 +41,7 @@ export default function Header({ currentTab, setCurrentTab, searchQuery, setSear
   return (
     <header
       style={{
-        height: '76px',
+        height: '52px',
         background: 'var(--bg-header)',
         backdropFilter: 'blur(24px)',
         WebkitBackdropFilter: 'blur(24px)',
@@ -49,7 +49,7 @@ export default function Header({ currentTab, setCurrentTab, searchQuery, setSear
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '0 32px',
+        padding: '0 14px',
         position: 'sticky',
         top: 0,
         zIndex: 100
@@ -57,44 +57,44 @@ export default function Header({ currentTab, setCurrentTab, searchQuery, setSear
     >
       {/* Brand Logo */}
       <div
-        style={{ display: 'flex', alignItems: 'center', gap: '14px', cursor: 'pointer' }}
+        style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', flexShrink: 0 }}
         onClick={() => setCurrentTab('dashboard')}
       >
         <div
           style={{
-            width: '44px',
-            height: '44px',
-            borderRadius: '12px',
+            width: '28px',
+            height: '28px',
+            borderRadius: '6px',
             background: 'linear-gradient(135deg, #0284c7 0%, #2563eb 50%, #7c3aed 100%)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 0 20px rgba(37, 99, 235, 0.45)',
+            boxShadow: '0 0 12px rgba(37, 99, 235, 0.4)',
             border: '1px solid rgba(255, 255, 255, 0.2)'
           }}
         >
-          <Sparkles style={{ color: '#fff', width: '24px', height: '24px' }} />
+          <Sparkles style={{ color: '#fff', width: '16px', height: '16px' }} />
         </div>
         <div>
-          <div style={{ fontSize: '1.45rem', fontWeight: 900, color: '#fff', letterSpacing: '-0.03em', lineHeight: 1.1 }} className="brand-font">
+          <div style={{ fontSize: '1.05rem', fontWeight: 900, color: '#fff', letterSpacing: '-0.03em', lineHeight: 1.1 }} className="brand-font">
             GeM<span style={{ color: 'var(--primary-cyan-bright)', textShadow: '0 0 12px rgba(56, 189, 248, 0.4)' }}>Intel</span>
           </div>
-          <span style={{ fontSize: '0.8rem', display: 'block', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.02em', marginTop: '2px' }}>
+          <span style={{ fontSize: '0.62rem', display: 'block', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.02em' }}>
             Smart Tender Intelligence Platform
           </span>
         </div>
       </div>
 
       {/* Global Tender Search Bar */}
-      <div style={{ position: 'relative', width: '420px', maxWidth: '100%' }}>
+      <div style={{ position: 'relative', width: '280px', maxWidth: '100%', margin: '0 10px' }}>
         <Search
           style={{
             position: 'absolute',
-            left: '16px',
+            left: '10px',
             top: '50%',
             transform: 'translateY(-50%)',
-            width: '18px',
-            height: '18px',
+            width: '14px',
+            height: '14px',
             color: 'var(--text-muted)'
           }}
         />
@@ -105,38 +105,38 @@ export default function Header({ currentTab, setCurrentTab, searchQuery, setSear
           onChange={(e) => setSearchQuery(e.target.value)}
           className="input-control"
           style={{
-            paddingLeft: '46px',
-            paddingRight: '60px',
-            height: '46px',
-            fontSize: '0.94rem',
-            borderRadius: '12px'
+            paddingLeft: '32px',
+            paddingRight: '42px',
+            height: '32px',
+            fontSize: '0.78rem',
+            borderRadius: '6px'
           }}
         />
-        <div style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.08)', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '2px 8px', fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700 }}>
+        <div style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.08)', border: '1px solid var(--border-color)', borderRadius: '4px', padding: '1px 5px', fontSize: '0.62rem', color: 'var(--text-muted)', fontWeight: 700 }}>
           ⌘K
         </div>
       </div>
 
       {/* Right Navigation & Status Controls */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
         {/* License Status Badge */}
         {isLicenseActive() ? (
           <div
             className="badge badge-active"
             style={{
-              padding: '8px 16px',
-              fontSize: '0.86rem',
+              padding: '4px 8px',
+              fontSize: '0.7rem',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              gap: '10px',
-              borderRadius: '12px'
+              gap: '6px',
+              borderRadius: '6px'
             }}
             onClick={() => setCurrentTab('billing')}
           >
-            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 8px #10b981' }} />
+            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 8px #10b981' }} />
             <span style={{ fontWeight: 700 }}>Active License</span>
-            <span style={{ opacity: 0.9, fontSize: '0.78rem', background: 'rgba(16, 185, 129, 0.22)', padding: '3px 8px', borderRadius: '6px', fontWeight: 800 }}>
+            <span style={{ opacity: 0.9, fontSize: '0.66rem', background: 'rgba(16, 185, 129, 0.22)', padding: '1px 5px', borderRadius: '4px', fontWeight: 800 }}>
               {daysLeft}d left
             </span>
           </div>
@@ -144,22 +144,22 @@ export default function Header({ currentTab, setCurrentTab, searchQuery, setSear
           <div
             className="badge badge-expired"
             style={{
-              padding: '8px 16px',
-              fontSize: '0.86rem',
+              padding: '4px 8px',
+              fontSize: '0.7rem',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              gap: '10px',
-              borderRadius: '12px'
+              gap: '6px',
+              borderRadius: '6px'
             }}
             onClick={() => {
               setSelectedPlanForPayment('monthly');
               setShowPaymentModal(true);
             }}
           >
-            <ShieldAlert style={{ width: '18px', height: '18px' }} />
+            <ShieldAlert style={{ width: '13px', height: '13px' }} />
             <span>Subscription Inactive</span>
-            <span style={{ background: 'rgba(244, 63, 94, 0.35)', padding: '3px 8px', borderRadius: '6px', fontWeight: 800, textTransform: 'none' }}>
+            <span style={{ background: 'rgba(244, 63, 94, 0.35)', padding: '1px 5px', borderRadius: '4px', fontWeight: 800, textTransform: 'none' }}>
               Renew Now
             </span>
           </div>
@@ -172,9 +172,9 @@ export default function Header({ currentTab, setCurrentTab, searchQuery, setSear
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '12px',
-              padding: '8px 14px',
-              borderRadius: '12px',
+              gap: '6px',
+              padding: '3px 8px',
+              borderRadius: '6px',
               background: 'rgba(255, 255, 255, 0.05)',
               border: '1px solid var(--border-color)',
               cursor: 'pointer',
@@ -183,26 +183,26 @@ export default function Header({ currentTab, setCurrentTab, searchQuery, setSear
           >
             <div
               style={{
-                width: '38px',
-                height: '38px',
-                borderRadius: '10px',
+                width: '28px',
+                height: '28px',
+                borderRadius: '6px',
                 background: user?.role === 'admin' ? 'linear-gradient(135deg, #f59e0b, #ef4444)' : 'linear-gradient(135deg, #06b6d4, #2563eb)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontWeight: 800,
                 color: '#fff',
-                fontSize: '1rem',
+                fontSize: '0.82rem',
                 boxShadow: '0 2px 8px rgba(0,0,0,0.4)'
               }}
             >
               {user?.fullName ? user.fullName.charAt(0).toUpperCase() : 'U'}
             </div>
-            <div style={{ textAlign: 'left', lineHeight: '1.25' }}>
-              <div style={{ fontSize: '0.94rem', fontWeight: 700, color: '#fff' }}>{user?.fullName || 'User Profile'}</div>
-              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{user?.companyName || user?.email}</div>
+            <div style={{ textAlign: 'left', lineHeight: '1.2' }}>
+              <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#fff' }}>{user?.fullName || 'User Profile'}</div>
+              <div style={{ fontSize: '0.66rem', color: 'var(--text-muted)' }}>{user?.companyName || user?.email}</div>
             </div>
-            <ChevronDown style={{ width: '16px', height: '16px', color: 'var(--text-muted)', transform: showDropdown ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+            <ChevronDown style={{ width: '13px', height: '13px', color: 'var(--text-muted)', transform: showDropdown ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
           </div>
 
           {/* Dropdown Menu */}

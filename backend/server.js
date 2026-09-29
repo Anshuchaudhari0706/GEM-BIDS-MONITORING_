@@ -1079,6 +1079,14 @@ const handleTenderEvaluation = async (req, res) => {
   // Live Extraction from Official GeM PDF Document via Python Microservice
   // Live Extraction from Official GeM PDF Document via Python Microservice
   let pyParsed = null;
+  let rawTotalQty = tender.raw_doc && (tender.raw_doc.b_total_quantity || tender.raw_doc.total_quantity || tender.raw_doc.quantity);
+  if (Array.isArray(rawTotalQty) && rawTotalQty.length > 0) rawTotalQty = rawTotalQty[0];
+  const tenderQtyNum = (tender.employees && !isNaN(parseInt(tender.employees)))
+    ? parseInt(tender.employees)
+    : ((rawTotalQty && !isNaN(parseInt(rawTotalQty)))
+        ? parseInt(rawTotalQty)
+        : ((tender.quantity && !isNaN(parseInt(tender.quantity))) ? parseInt(tender.quantity) : 1));
+
   try {
     const rawNumId = (tenderId || '').split('/').pop();
     const bId = (tender.raw_doc && tender.raw_doc.b_id && tender.raw_doc.b_id.length > 0) ? String(tender.raw_doc.b_id[0]) : null;
@@ -1095,7 +1103,9 @@ const handleTenderEvaluation = async (req, res) => {
       existing_address: tender.address || tender.office_address,
       existing_department: tender.department,
       existing_value: tender.value || tender.estimatedValue,
-      existing_emd: tender.emdAmount
+      existing_emd: tender.emdAmount,
+      existing_employees: tenderQtyNum,
+      existing_quantity: tender.quantity || tender.quantity_display || String(tenderQtyNum)
     }, { timeout: 12000 });
     if (pyResp.data && pyResp.data.parserStatus === 'SUCCESS') {
       pyParsed = pyResp.data;
@@ -1104,10 +1114,9 @@ const handleTenderEvaluation = async (req, res) => {
     console.log('[Evaluation Document Reader Notice]:', err.message);
   }
 
-  let staffCount = tender.employees || 10;
-  if (pyParsed && pyParsed.totalStaffCount && pyParsed.totalStaffCount > 0) {
-    staffCount = pyParsed.totalStaffCount;
-  }
+  let staffCount = (pyParsed && pyParsed.totalStaffCount && pyParsed.totalStaffCount > 0)
+    ? pyParsed.totalStaffCount
+    : tenderQtyNum;
 
   // Estimated Value: strictly extracted, never artificially calculated
   let estVal = null;
@@ -1175,10 +1184,14 @@ const handleTenderEvaluation = async (req, res) => {
             ? tender.office_address
             : `${consigneeOfficer}, ${tender.department || 'Government Office'}, ${city !== 'Not Specified' ? city : ''} ${state !== 'Not Specified' ? state : ''} ${pincode !== 'Not Specified' ? '- ' + pincode : ''}`.trim()));
 
-  const resolvedProfile = (pyParsed && pyParsed.core_specifications && pyParsed.core_specifications.list_of_profiles && !pyParsed.core_specifications.list_of_profiles.includes("Outsourced Manpower Staff"))
-    ? pyParsed.core_specifications.list_of_profiles
-    : ((pyParsed && pyParsed.primary_designation && !pyParsed.primary_designation.includes("Outsourced Manpower Staff"))
-        ? pyParsed.primary_designation
+  const staffDetails = (pyParsed && pyParsed.staff_details && pyParsed.staff_details.length > 0)
+    ? pyParsed.staff_details
+    : (tender.staff_details || tender.manpower || []);
+
+  const resolvedProfile = (pyParsed && pyParsed.primary_designation && !pyParsed.primary_designation.includes("Outsourced Manpower Staff"))
+    ? pyParsed.primary_designation
+    : ((pyParsed && pyParsed.core_specifications && pyParsed.core_specifications.list_of_profiles && !pyParsed.core_specifications.list_of_profiles.includes("Outsourced Manpower Staff"))
+        ? pyParsed.core_specifications.list_of_profiles
         : ((tender.primary_designation && !tender.primary_designation.includes("Outsourced Manpower Staff"))
             ? tender.primary_designation
             : (tender.category === 'Security Guards'
@@ -1193,11 +1206,11 @@ const handleTenderEvaluation = async (req, res) => {
                                 ? 'Security Guard (Without Arms)'
                                 : (tender.title && tender.title.toLowerCase().includes('data')
                                     ? 'Data Entry Operator (DEO)'
-                                    : 'Security Guard'))))))));
+                                    : 'Outsourced Manpower Staff'))))))));
 
   const desig = resolvedProfile;
-  const duty = tender.duty_description || "Comprehensive facility maintenance, cleaning & sanitization, and administrative support.";
-  const dutySum = tender.duty_summary || "Facility Upkeep & Daily Operations";
+  const duty = (pyParsed && pyParsed.duty_description) || tender.duty_description || "Comprehensive facility maintenance, cleaning & sanitization, and administrative support.";
+  const dutySum = (pyParsed && pyParsed.duty_summary) || tender.duty_summary || "Facility Upkeep & Daily Operations";
 
   let advisoryBank = (pyParsed && pyParsed.advisoryBank) || tender.advisoryBank || tender.advisory_bank || "Bank Of Baroda";
 
@@ -1242,6 +1255,13 @@ const handleTenderEvaluation = async (req, res) => {
     db.tenders[dbIndex].past_experience_years = pastExperienceYears;
     db.tenders[dbIndex].past_performance_percentage = pastPerformancePercentage;
     db.tenders[dbIndex].primary_designation = resolvedProfile;
+    db.tenders[dbIndex].duty_summary = dutySum;
+    db.tenders[dbIndex].duty_description = duty;
+    db.tenders[dbIndex].staff_details = staffDetails;
+    db.tenders[dbIndex].manpower = staffDetails;
+    db.tenders[dbIndex].employees = staffCount;
+    db.tenders[dbIndex].quantity = String(staffCount);
+    db.tenders[dbIndex].quantity_display = String(staffCount);
     if (db.tenders[dbIndex].work_location) {
       db.tenders[dbIndex].work_location.city = city;
       db.tenders[dbIndex].work_location.state = state;
@@ -1339,7 +1359,7 @@ const handleTenderEvaluation = async (req, res) => {
       total_contract_estimate: 1460842.24
     },
     additional_requirements: (pyParsed && pyParsed.wage_breakdown) || {
-      number_of_resources: staffCount || 8,
+      number_of_resources: staffCount || 1,
       minimum_daily_wage: 512.50,
       bonus_daily: 42.69,
       edli_daily: 0.0,
@@ -1357,7 +1377,14 @@ const handleTenderEvaluation = async (req, res) => {
       monthly_cost_per_resource: 16600.48,
       total_contract_estimate: 1460842.24
     },
-    manpower: (pyParsed && pyParsed.manpower && pyParsed.manpower.length > 0) ? pyParsed.manpower : [
+    staff_details: (staffDetails && staffDetails.length > 0) ? staffDetails : [
+      {
+        designation: desig,
+        quantity: staffCount,
+        duty: duty
+      }
+    ],
+    manpower: (staffDetails && staffDetails.length > 0) ? staffDetails : [
       {
         designation: desig,
         quantity: staffCount,

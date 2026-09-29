@@ -170,9 +170,9 @@ export default function TenderDetailsModal({ tender, onClose, onUpdate }) {
       <div
         className="glass-panel"
         style={{
-          width: '100%',
-          maxWidth: '920px',
-          maxHeight: '92vh',
+          width: '96vw',
+          maxWidth: '1360px',
+          maxHeight: '94vh',
           borderRadius: '20px',
           display: 'flex',
           flexDirection: 'column',
@@ -319,6 +319,49 @@ export default function TenderDetailsModal({ tender, onClose, onUpdate }) {
                   </div>
                 </div>
               </div>
+
+              {/* Staff Details & Multi-Role Breakdown Card in Overview Tab */}
+              {((data.staff_details && data.staff_details.length > 0) || (data.manpower && data.manpower.length > 0)) && (
+                <div style={{ background: '#0d1527', padding: '16px', borderRadius: '12px', border: '1px solid rgba(56, 189, 248, 0.3)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                    <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Users style={{ width: '15px', height: '15px' }} /> मानव संसाधन पदनाम एवं संख्या / Required Staff & Role Breakdown
+                    </div>
+                    <span style={{ fontSize: '0.72rem', background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)', padding: '2px 8px', borderRadius: '4px', fontWeight: 700 }}>
+                      Total: {data.quantity_display || data.quantity || data.employees || '1'} Staff
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '10px' }}>
+                    {(data.staff_details || data.manpower).map((st, stIdx) => (
+                      <div key={stIdx} style={{
+                        padding: '10px 12px',
+                        background: 'rgba(15, 23, 42, 0.7)',
+                        border: '1px solid rgba(56, 189, 248, 0.2)',
+                        borderRadius: '8px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '4px'
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: '0.84rem', fontWeight: 800, color: '#fff' }}>{st.designation}</span>
+                          <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#38bdf8', background: 'rgba(56, 189, 248, 0.15)', padding: '1px 6px', borderRadius: '4px' }}>
+                            {st.quantity} Staff
+                          </span>
+                        </div>
+                        {st.skill_category && (
+                          <div style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
+                            Skill: <strong style={{ color: '#cbd5e1' }}>{st.skill_category}</strong> • Edu: <strong style={{ color: '#cbd5e1' }}>{st.educational_qualification || 'Secondary'}</strong>
+                          </div>
+                        )}
+                        <div style={{ fontSize: '0.72rem', color: '#38bdf8', marginTop: '2px' }}>
+                          📋 {st.duty_summary || st.duty || 'Facility & Operational Support'}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Department & Location Summary */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
@@ -586,6 +629,14 @@ export default function TenderDetailsModal({ tender, onClose, onUpdate }) {
               { label: 'Name of states/ UT for geographical presence is required', val: core.geographical_presence_state || data.state || 'Gujarat', highlight: true }
             ];
 
+            const staffList = (data.staff_details && data.staff_details.length > 0)
+              ? data.staff_details
+              : ((data.manpower && data.manpower.length > 0) ? data.manpower : []);
+
+            const totalStaffCount = staffList.length > 0
+              ? staffList.reduce((acc, s) => acc + (parseInt(s.quantity) || 1), 0)
+              : (wages.number_of_resources || data.employees || 8);
+
             return (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 {/* Header Title */}
@@ -611,6 +662,89 @@ export default function TenderDetailsModal({ tender, onClose, onUpdate }) {
                     GeM Standard Format
                   </span>
                 </div>
+
+                {/* Multi-Role Staff Breakdown Table */}
+                {staffList.length > 0 && (
+                  <div style={{ background: '#0d1527', borderRadius: '12px', border: '1px solid #1e293b', overflow: 'hidden' }}>
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      background: '#131e36',
+                      borderBottom: '2px solid #334155',
+                      padding: '12px 18px'
+                    }}>
+                      <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Users style={{ width: '16px', height: '16px', color: 'var(--primary-cyan)' }} />
+                        विस्तृत पदनाम एवं कार्य विवरण / Multi-Role Staff Breakdown
+                      </div>
+                      <span style={{ fontSize: '0.74rem', background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', padding: '2px 8px', borderRadius: '4px', fontWeight: 700 }}>
+                        {staffList.reduce((acc, s) => acc + (parseInt(s.quantity) || 1), 0)} Total Resources
+                      </span>
+                    </div>
+
+                    <div style={{ overflowX: 'auto' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', textAlign: 'left' }}>
+                        <thead>
+                          <tr style={{ background: 'rgba(15, 23, 42, 0.95)', borderBottom: '1px solid #1e293b', color: '#94a3b8' }}>
+                            <th style={{ padding: '10px 14px', width: '40px' }}>#</th>
+                            <th style={{ padding: '10px 14px' }}>पदनाम / Role Designation</th>
+                            <th style={{ padding: '10px 14px' }}>कौशल श्रेणी / Skill</th>
+                            <th style={{ padding: '10px 14px' }}>शैक्षिक योग्यता / Edu</th>
+                            <th style={{ padding: '10px 14px', textAlign: 'center' }}>संख्या / Qty</th>
+                            <th style={{ padding: '10px 14px' }}>कार्य एवं दायित्व / Duties & Scope</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {staffList.map((st, idx) => (
+                            <tr key={idx} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)', background: idx % 2 === 0 ? 'rgba(15, 23, 42, 0.4)' : '#0d1527' }}>
+                              <td style={{ padding: '10px 14px', color: '#64748b', fontWeight: 700 }}>{st.schedule_no || idx + 1}</td>
+                              <td style={{ padding: '10px 14px', color: '#fff', fontWeight: 800 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                  <span style={{ color: '#38bdf8' }}>●</span>
+                                  <span>{st.designation}</span>
+                                </div>
+                              </td>
+                              <td style={{ padding: '10px 14px', color: '#cbd5e1' }}>
+                                <span style={{
+                                  padding: '2px 6px',
+                                  background: st.skill_category === 'Skilled' ? 'rgba(56, 189, 248, 0.15)' : 'rgba(148, 163, 184, 0.15)',
+                                  border: `1px solid ${st.skill_category === 'Skilled' ? 'rgba(56, 189, 248, 0.3)' : 'rgba(148, 163, 184, 0.2)'}`,
+                                  color: st.skill_category === 'Skilled' ? '#38bdf8' : '#cbd5e1',
+                                  borderRadius: '4px',
+                                  fontSize: '0.72rem',
+                                  fontWeight: 600
+                                }}>
+                                  {st.skill_category || 'Unskilled'}
+                                </span>
+                              </td>
+                              <td style={{ padding: '10px 14px', color: '#cbd5e1' }}>{st.educational_qualification || 'Secondary School'}</td>
+                              <td style={{ padding: '10px 14px', textAlign: 'center' }}>
+                                <span style={{
+                                  padding: '3px 10px',
+                                  background: 'rgba(34, 197, 94, 0.15)',
+                                  border: '1px solid rgba(34, 197, 94, 0.3)',
+                                  color: '#4ade80',
+                                  borderRadius: '6px',
+                                  fontSize: '0.82rem',
+                                  fontWeight: 800
+                                }}>
+                                  {st.quantity} Staff
+                                </span>
+                              </td>
+                              <td style={{ padding: '10px 14px', color: '#94a3b8', lineHeight: '1.4' }}>
+                                <span style={{ color: '#e2e8f0', fontWeight: 600 }}>{st.duty_summary || st.duty}</span>
+                                {st.duty && st.duty !== st.duty_summary && (
+                                  <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '2px' }}>{st.duty}</div>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
 
                 {/* Table 1: Core Specifications Table (Matching User's First Image) */}
                 <div style={{ background: '#0d1527', borderRadius: '12px', border: '1px solid #1e293b', overflow: 'hidden' }}>
@@ -728,7 +862,7 @@ export default function TenderDetailsModal({ tender, onClose, onUpdate }) {
                         color: 'var(--primary-cyan)',
                         lineHeight: '1'
                       }}>
-                        {wages.number_of_resources || data.employees || 8}
+                        {totalStaffCount}
                       </div>
                       <div style={{ fontSize: '0.78rem', color: '#94a3b8', fontWeight: 600, marginTop: '8px', textAlign: 'center' }}>
                         Total Resources / Staff
@@ -741,9 +875,10 @@ export default function TenderDetailsModal({ tender, onClose, onUpdate }) {
                         color: '#38bdf8',
                         borderRadius: '20px',
                         fontSize: '0.72rem',
-                        fontWeight: 700
+                        fontWeight: 700,
+                        textAlign: 'center'
                       }}>
-                        {core.list_of_profiles || data.primary_designation || 'Security Guard'}
+                        {staffList.length > 1 ? `${staffList.length} Role Designations` : (core.list_of_profiles || data.primary_designation || 'Staff')}
                       </div>
                     </div>
 

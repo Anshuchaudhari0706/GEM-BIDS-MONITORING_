@@ -18,7 +18,8 @@ from validators import evaluate_field_confidence
 from table_parser import (
     extract_tables_from_text,
     extract_core_specifications,
-    extract_wage_and_resource_breakdown
+    extract_wage_and_resource_breakdown,
+    extract_multi_role_breakdown
 )
 
 """
@@ -95,29 +96,75 @@ def parse_tender_document(raw_text, tender_id=None):
         "confidence": addr_confidence
     }
 
-    # 5. Manpower Requirements
-    raw_manpower = extract_manpower_requirements(raw_text)
-    table_manpower = extract_tables_from_text(raw_text)
-    combined_manpower = raw_manpower + table_manpower
-    normalized_manpower = normalize_manpower_list(combined_manpower)
+    # 5. Multi-Role Manpower Requirements
+    multi_roles = extract_multi_role_breakdown(raw_text)
+    
+    if multi_roles and len(multi_roles) > 0:
+        manpower_results = [
+            {
+                "schedule_no": r.get("schedule_no", idx + 1),
+                "designation": r["designation"],
+                "canonical_designation": r.get("canonical_designation", r["designation"]),
+                "profile": r.get("profile", r["designation"]),
+                "quantity": r["quantity"],
+                "skill_category": r.get("skill_category", "Unskilled"),
+                "educational_qualification": r.get("educational_qualification", "Secondary School"),
+                "type_of_function": r.get("type_of_function", "Others"),
+                "duty_summary": r.get("duty_summary", "Operational Support"),
+                "duty": r.get("duty", "Contractual operational deliverables."),
+                "confidence": "HIGH"
+            }
+            for idx, r in enumerate(multi_roles)
+        ]
+        total_staff = sum(r["quantity"] for r in manpower_results)
+        
+        if len(manpower_results) > 1:
+            primary_profile = ", ".join([f"{r['quantity']} {r['designation']}" for r in manpower_results])
+            duty_summary = ", ".join(list(dict.fromkeys([r['duty_summary'].split('&')[0].strip() for r in manpower_results])))
+            duty_desc = "; ".join([f"{r['designation']} ({r['quantity']}): {r['duty']}" for r in manpower_results])
+        else:
+            primary_profile = manpower_results[0]["designation"]
+            duty_summary = manpower_results[0]["duty_summary"]
+            duty_desc = manpower_results[0]["duty"]
+    else:
+        raw_manpower = extract_manpower_requirements(raw_text)
+        table_manpower = extract_tables_from_text(raw_text)
+        combined_manpower = raw_manpower + table_manpower
+        normalized_manpower = normalize_manpower_list(combined_manpower)
 
-    manpower_results = []
-    for item in normalized_manpower:
-        manpower_results.append({
-            "designation": item["designation"],
-            "quantity": item["quantity"],
-            "confidence": "HIGH" if item["quantity"] > 0 else "MEDIUM"
-        })
+        manpower_results = []
+        for item in normalized_manpower:
+            manpower_results.append({
+                "designation": item["designation"],
+                "quantity": item["quantity"],
+                "confidence": "HIGH" if item["quantity"] > 0 else "MEDIUM"
+            })
+
+        total_staff = sum(i["quantity"] for i in manpower_results) if manpower_results else None
+        if total_staff is None:
+            qty_m = re.search(r"(?:Total\s+Quantity|कुल\s*मात्रा|Number\s+of\s+Resources\s+to\s+be\s+hired|संसाधनों\s*की\s*मात्रा|Quantity|मात्रा)\s*[:\-]?\s*(\d+)", raw_text, re.I)
+            if qty_m:
+                try:
+                    total_staff = int(qty_m.group(1))
+                except ValueError:
+                    pass
+
+        primary_profile = (manpower_results[0]["designation"] if manpower_results else "Outsourced Staff")
+        duty_summary = "Operational Support & Contract Deliverables"
+        duty_desc = "Execution of operational deliverables as specified by the buyer."
 
     # 6. Document Required from Seller & Exemption Criteria
     required_docs_info = extract_document_required_from_seller(raw_text)
     eligibility_info = extract_turnover_and_experience_criteria(raw_text)
 
     # 7. Core Specifications (विवरण/ Specification | मूल्य/ Values) & Wage Breakdown
-    total_staff = sum(i["quantity"] for i in manpower_results) if manpower_results else 8
-    primary_profile = (manpower_results[0]["designation"] if manpower_results else "Security Guard")
     core_specs = extract_core_specifications(raw_text, tender_title=raw_text[:200], tender_category="", tender_state=state)
-    wage_breakdown = extract_wage_and_resource_breakdown(raw_text, resource_count=total_staff, profile_name=core_specs.get("list_of_profiles", primary_profile))
+    if multi_roles and len(multi_roles) == 1:
+        core_specs["list_of_profiles"] = multi_roles[0]["designation"]
+        core_specs["skill_category"] = multi_roles[0].get("skill_category", core_specs.get("skill_category"))
+        core_specs["educational_qualification"] = multi_roles[0].get("educational_qualification", core_specs.get("educational_qualification"))
+
+    wage_breakdown = extract_wage_and_resource_breakdown(raw_text, resource_count=total_staff or 1, profile_name=primary_profile)
 
     return {
         "bidNumber": bid_number,
@@ -134,8 +181,14 @@ def parse_tender_document(raw_text, tender_id=None):
         "pincode": pincode,
         "address": (consignee_info and consignee_info.get("address")) or raw_office_addr,
         "manpower": manpower_results,
+        "staff_details": manpower_results,
         "totalStaffCount": total_staff,
-        "primary_designation": core_specs.get("list_of_profiles", primary_profile),
+        "primary_designation": primary_profile if (multi_roles and len(multi_roles) > 1) else core_specs.get("list_of_profiles", primary_profile),
+        "duty_summary": duty_summary,
+        "duty_description": duty_desc,
+        "quantity": str(total_staff) if total_staff else "1",
+        "quantity_display": str(total_staff) if total_staff else "1",
+        "employees": total_staff or 1,
         "core_specifications": core_specs,
         "wage_breakdown": wage_breakdown,
         "additional_requirements": wage_breakdown,

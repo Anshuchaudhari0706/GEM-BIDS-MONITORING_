@@ -1165,7 +1165,7 @@ def extract_staff_and_duty(display_title, cat_raw, full_text, core_service, empl
     Returns (primary_designation, staff_count_str, duty_summary, duty_description).
     """
     text = f"{display_title} {cat_raw} {full_text}".lower()
-    count_val = employees_count if (employees_count and employees_count > 0) else 10
+    count_val = employees_count if (employees_count is not None and employees_count > 0) else 1
 
     # 1. Sanitation & Cleaning
     if any(k in text for k in ["cleaning", "sanitation", "housekeeping", "sweeper", "safai", "disinfection", "cleaner"]):
@@ -1265,9 +1265,9 @@ def extract_staff_and_duty(display_title, cat_raw, full_text, core_service, empl
         duty_summary = "Computer Data Entry & Records Management"
         duty_desc = "Data entry into government portals, office record keeping, document scanning & desk support."
     else:
-        desig = "Security Guard"
-        duty_summary = "Watch & Ward / Premises Security"
-        duty_desc = "24x7 premises guarding, access control, visitor logbook checking, and facility oversight."
+        desig = "Outsourced Manpower Staff"
+        duty_summary = "Administrative & Facility Support"
+        duty_desc = "Outsourced manpower operations, administrative tasks, and facility maintenance support."
 
     return desig, f"{count_val} Staff", duty_summary, duty_desc
 
@@ -1903,6 +1903,8 @@ class GeMLiveScraper:
             val_num, is_high_val, formatted_val, emd_num, emd_str, epbg_num, epbg_str = extract_real_estimated_value(doc, full_text, employees, core_service)
             eval_method = extract_evaluation_method(full_text, doc)
 
+            resolved_qty_num = employees if (employees is not None and employees > 0) else (real_qty_num if (real_qty_num is not None and real_qty_num > 0) else 1)
+
             parsed_bids.append({
                 "id": str(bid_no),
                 "title": display_title,
@@ -1910,9 +1912,9 @@ class GeMLiveScraper:
                 "category": core_service,
                 "category_code": cat_code,
                 "category_raw": cat_raw,
-                "employees": employees or (int(staff_count_str.split()[0]) if staff_count_str and staff_count_str.split()[0].isdigit() else 10),
-                "quantity": staff_count_str,
-                "quantity_display": staff_count_str,
+                "employees": resolved_qty_num,
+                "quantity": str(resolved_qty_num),
+                "quantity_display": str(resolved_qty_num),
                 "publishedDate": start_date_str,
                 "startDate": start_date_str,
                 "startDateFormatted": start_fmt,
@@ -1958,7 +1960,7 @@ class GeMLiveScraper:
                 "staff_details": [
                     {
                         "designation": primary_desig,
-                        "quantity": employees or (int(staff_count_str.split()[0]) if staff_count_str and staff_count_str.split()[0].isdigit() else 10),
+                        "quantity": resolved_qty_num,
                         "duty": duty_desc
                     }
                 ],
@@ -2052,7 +2054,24 @@ class GeMLiveScraper:
                             b["emdAmount"] = parsed_res["emdAmount"]["value"]
                             b["emd_original"] = parsed_res["emdAmount"]["display"]
 
+                        if parsed_res.get("primary_designation") and "Outsourced Manpower Staff" not in parsed_res.get("primary_designation"):
+                            b["primary_designation"] = parsed_res["primary_designation"]
+
+                        if parsed_res.get("duty_summary"):
+                            b["duty_summary"] = parsed_res["duty_summary"]
+
+                        if parsed_res.get("duty_description"):
+                            b["duty_description"] = parsed_res["duty_description"]
+
+                        if parsed_res.get("staff_details") and len(parsed_res.get("staff_details")) > 0:
+                            b["staff_details"] = parsed_res["staff_details"]
+                            b["manpower"] = parsed_res["staff_details"]
+
                         if parsed_res.get("totalStaffCount") and parsed_res["totalStaffCount"] > 0:
+                            b["employees"] = parsed_res["totalStaffCount"]
+                            b["quantity"] = str(parsed_res["totalStaffCount"])
+                            b["quantity_display"] = str(parsed_res["totalStaffCount"])
+                        elif parsed_res.get("manpower") and len(parsed_res.get("manpower")) > 0 and parsed_res.get("totalStaffCount") and parsed_res["totalStaffCount"] > 0:
                             b["employees"] = parsed_res["totalStaffCount"]
                             b["quantity"] = str(parsed_res["totalStaffCount"])
                             b["quantity_display"] = str(parsed_res["totalStaffCount"])
